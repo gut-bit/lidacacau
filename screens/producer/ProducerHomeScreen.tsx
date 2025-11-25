@@ -139,7 +139,7 @@ export default function ProducerHomeScreen() {
         </View>
 
         <View style={styles.tapHint}>
-          <ThemedText type="caption" style={{ color: colors.primary }}>
+          <ThemedText type="small" style={{ color: colors.primary }}>
             Toque para ver detalhes
           </ThemedText>
           <Feather name="chevron-right" size={18} color={colors.primary} />
