@@ -48,6 +48,16 @@ export interface Property {
   longitude: number;
 }
 
+export interface SocialLinks {
+  whatsapp?: string;         // Numero de telefone ou link de grupo
+  whatsappGroup?: string;    // Link do grupo WhatsApp da comunidade
+  instagram?: string;        // @usuario ou link completo
+  facebook?: string;         // Link do perfil ou pagina
+  telegram?: string;         // @usuario ou link de grupo
+  youtube?: string;          // Link do canal
+  linkedin?: string;         // Link do perfil
+}
+
 export interface ProfileCompletion {
   hasAvatar: boolean;
   hasBio: boolean;
@@ -57,6 +67,7 @@ export interface ProfileCompletion {
   hasSkills: boolean;
   hasEquipment: boolean;
   hasAvailability: boolean;
+  hasSocialLinks: boolean;
   percentage: number;
 }
 
@@ -118,6 +129,7 @@ export interface User {
   goals?: Goal[];
   profileCompletion?: ProfileCompletion;
   searchRadius?: number;
+  socialLinks?: SocialLinks;
   createdAt: string;
 }
 
