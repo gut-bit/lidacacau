@@ -25,6 +25,7 @@ export interface User {
   totalReviews?: number;
   averageRating?: number;
   properties?: Property[];
+  tutorialCompleted?: boolean;
   createdAt: string;
 }
 

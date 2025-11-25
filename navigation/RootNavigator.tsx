@@ -12,10 +12,12 @@ import CreateJobScreen from '@/screens/producer/CreateJobScreen';
 import ProducerPropertiesScreen from '@/screens/producer/ProducerPropertiesScreen';
 import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
+import TutorialScreen from '@/screens/shared/TutorialScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 
 export type RootStackParamList = {
   Login: undefined;
+  Tutorial: undefined;
   ProducerTabs: undefined;
   WorkerTabs: undefined;
   AdminStack: undefined;
@@ -46,6 +48,12 @@ export default function RootNavigator() {
         <Stack.Screen
           name="Login"
           component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+      ) : !user?.tutorialCompleted && user?.role !== 'admin' ? (
+        <Stack.Screen
+          name="Tutorial"
+          component={TutorialScreen}
           options={{ headerShown: false }}
         />
       ) : user?.role === 'admin' ? (

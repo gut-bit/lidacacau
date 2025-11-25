@@ -112,10 +112,36 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 
 ## New Features (Latest Update)
 
+### Interactive Tutorial System (2025-11-25)
+Novo sistema de onboarding interativo como em jogos, que guia novos usuários através das funcionalidades principais:
+- **Tela de Tutorial**: Guia passo-a-passo com 6 etapas diferentes para Produtores e Trabalhadores
+- **Design Gamificado**: Ícones visuais, progress bar, dicas úteis em cada etapa
+- **Role-Specific**: Diferentes tutoriais adaptados para cada tipo de usuário (Produtor vs Trabalhador)
+- **Fácil de Pular**: Usuários podem pular o tutorial ou voltar para etapas anteriores
+- **Persistência**: Tutorial só aparece uma vez (rastreado com `tutorialCompleted`)
+- **Componentes**: TutorialScreen com FlatList para navegação suave entre etapas
+
+**Tutorial para Produtores (6 etapas)**:
+1. Bem-vindo ao Agro work (visão geral)
+2. Crie Sua Primeira Demanda (criar jobs)
+3. Gerenciar Propriedades (GPS + localização)
+4. Receba Propostas (análise de trabalhadores)
+5. Acompanhe o Trabalho (GPS tracking)
+6. Avalie o Trabalhador (sistema de avaliação)
+
+**Tutorial para Trabalhadores (6 etapas)**:
+1. Bem-vindo ao Agro work (ganhar dinheiro)
+2. Explore Trabalhos Disponíveis (buscar jobs)
+3. Envie Suas Propostas (bidding)
+4. Acompanhe Seus Níveis (gamificação N1-N5)
+5. Execute e Rastreie (GPS check-in/out)
+6. Receba Avaliações (feedback sistema)
+
 ### Property Management System
 - Produtores podem adicionar propriedades através da tela "Gerenciar Propriedades"
 - Localização automática com GPS (reverse geocoding)
-- Nome customizável para cada propriedade
+- Nome customizável para cada propriedade com modal
+- Rename propriedades já existentes via botão Edit
 - Removê-las quando necessário
 - Acessível via menu do Perfil do Produtor
 
