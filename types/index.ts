@@ -403,3 +403,94 @@ export const DEFAULT_GOALS: Goal[] = [
     icon: 'dollar-sign',
   },
 ];
+
+export type SkillLevel = 'teaser' | 'N1_assistido' | 'N2_autonomo' | 'N3_mentoravel';
+
+export interface QuizQuestion {
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+  explanation?: string;
+}
+
+export interface Quiz {
+  id: string;
+  skillId: string;
+  title: string;
+  passPercent: number;
+  xp: {
+    baseComplete: number;
+    passBonus: number;
+    maxScoreBonus: number;
+  };
+  questions: QuizQuestion[];
+}
+
+export interface CourseModule {
+  id: string;
+  title: string;
+  description: string;
+  contentType: 'text' | 'video' | 'checklist';
+  content: string[];
+  duration?: string;
+  icon: string;
+}
+
+export interface Course {
+  id: string;
+  skillId: string;
+  level: SkillLevel;
+  title: string;
+  description: string;
+  coverImage?: string;
+  duration: string;
+  modules: CourseModule[];
+  quizId?: string;
+  xpReward: number;
+  prerequisites?: string[];
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  minLevel: number;
+  courses: Course[];
+  progressionRules: {
+    level: SkillLevel;
+    xpRequired: number;
+    title: string;
+    description: string;
+  }[];
+}
+
+export interface SkillProgress {
+  skillId: string;
+  xpTotal: number;
+  level: SkillLevel;
+  coursesCompleted: string[];
+  quizzesCompleted: {
+    quizId: string;
+    bestScore: number;
+    attempts: number;
+    lastAttempt: string;
+  }[];
+  updatedAt: string;
+}
+
+export interface QuizAttempt {
+  id: string;
+  quizId: string;
+  userId: string;
+  totalQuestions: number;
+  correctQuestions: number;
+  percent: number;
+  passed: boolean;
+  xpCalculated: number;
+  xpAwarded: number;
+  answers: number[];
+  createdAt: string;
+}

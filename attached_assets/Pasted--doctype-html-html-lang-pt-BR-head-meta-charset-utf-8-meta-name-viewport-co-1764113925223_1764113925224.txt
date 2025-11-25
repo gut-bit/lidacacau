@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz – Poda de Limpeza (Teaser)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1a33; --muted:#9fb0d0; --text:#eaf0ff;
+      --accent:#10b981; --accent2:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --r:18px;
+      font-synthesis-weight:none;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; display:grid; place-items:center;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(16,185,129,.16), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(99,102,241,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    .wrap{width:min(920px, 92vw); padding:20px 0}
+    .top{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .brand{display:flex; flex-direction:column; gap:6px}
+    .title{font-size:22px; font-weight:800; letter-spacing:.2px}
+    .subtitle{color:var(--muted); font-size:14px; line-height:1.35}
+    .chiprow{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      padding:8px 10px; border-radius:999px; font-size:12px; color:var(--muted)
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .progressbar{
+      height:10px; background: rgba(255,255,255,.06);
+    }
+    .progressbar > div{
+      height:10px; width:0%;
+      background: linear-gradient(90deg, var(--accent), #60a5fa);
+      transition: width .25s ease;
+    }
+    .content{padding:18px 18px 16px}
+    .qhdr{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .qnum{color:var(--muted); font-size:13px}
+    .qprompt{font-size:18px; font-weight:750; line-height:1.2; margin:6px 0 0}
+    .choices{display:grid; gap:10px; margin-top:12px}
+    .choice{
+      display:flex; align-items:flex-start; gap:12px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(15,26,51,.55);
+      cursor:pointer;
+      transition: transform .05s ease, border-color .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .choice:hover{border-color: rgba(16,185,129,.55)}
+    .choice:active{transform: scale(.995)}
+    .dot{
+      width:18px; height:18px; border-radius:999px; margin-top:2px;
+      border:2px solid rgba(255,255,255,.25);
+      display:grid; place-items:center; flex:0 0 auto;
+    }
+    .dot > div{
+      width:9px; height:9px; border-radius:999px; background: transparent;
+      transition: background .15s ease;
+    }
+    .choice[data-selected="true"]{border-color: rgba(16,185,129,.9); background: rgba(16,185,129,.10)}
+    .choice[data-selected="true"] .dot{border-color: rgba(16,185,129,.9)}
+    .choice[data-selected="true"] .dot > div{background: rgba(16,185,129,.95)}
+    .ctas{
+      display:flex; gap:10px; justify-content:space-between; align-items:center;
+      margin-top:16px;
+    }
+    .btnrow{display:flex; gap:10px; align-items:center}
+    button{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      transition: transform .05s ease, border-color .15s ease, background .15s ease;
+    }
+    button:hover{border-color: rgba(255,255,255,.22)}
+    button:active{transform: scale(.995)}
+    .primary{
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-color: transparent;
+      color:#062016;
+    }
+    .primary:hover{filter: brightness(1.03)}
+    .ghost{background: rgba(0,0,0,.0)}
+    .danger{
+      background: rgba(239,68,68,.10);
+      border-color: rgba(239,68,68,.45);
+      color: #ffd3d3;
+    }
+    .hint{color:var(--muted); font-size:12px}
+    .hr{height:1px; background: var(--line); margin:14px 0}
+    .result{
+      display:grid; gap:10px;
+    }
+    .banner{
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .pill{
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .ok{border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.10); color:#bff7d4}
+    .bad{border-color: rgba(239,68,68,.55); background: rgba(239,68,68,.10); color:#ffd3d3}
+    .warn{border-color: rgba(245,158,11,.55); background: rgba(245,158,11,.12); color:#ffe6b7}
+    .list{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    .row{
+      padding:12px 12px;
+      border-top:1px solid var(--line);
+      background: rgba(15,26,51,.45);
+      display:grid; gap:6px;
+    }
+    .row:first-child{border-top:none}
+    .row h4{margin:0; font-size:14px}
+    .row .meta{color:var(--muted); font-size:12px}
+    .row .tag{font-size:12px; font-weight:800}
+    .tag.ok{color:#a7f3d0}
+    .tag.bad{color:#fecaca}
+    .foot{margin-top:12px; color:var(--muted); font-size:12px}
+    .small{font-size:12px; color:var(--muted)}
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      padding:1px 6px; border-radius:6px; border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="title" id="quizTitle">Quiz</div>
+        <div class="subtitle" id="quizSubtitle"></div>
+        <div class="chiprow">
+          <div class="chip" id="chipPass"></div>
+          <div class="chip" id="chipXP"></div>
+          <div class="chip" id="chipSave"></div>
+        </div>
+      </div>
+      <div class="small">
+        Dica: use <span class="kbd">1</span>-<span class="kbd">4</span> para marcar opção e <span class="kbd">Enter</span> para avançar.
+      </div>
+    </div>
+
+    <div class="card" role="application" aria-label="Quiz interativo">
+      <div class="progressbar" aria-hidden="true"><div id="bar"></div></div>
+      <div class="content" id="app"></div>
+    </div>
+
+    <div class="foot">
+      Integração (opcional): ao final, basta fazer POST em <span class="kbd">/api/quizzes/submit</span> com <span class="kbd">{quizId, answers, score}</span>.
+    </div>
+  </div>
+
+<script>
+  // ====== CONFIG DO QUIZ (troque/importe do seu DB depois) ======
+  const QUIZ = {
+    id: "quiz_poda_limpeza_final",
+    title: "Poda de Limpeza – Quiz Final (Teaser)",
+    subtitle: "Responda e ganhe XP. Aprovado libera o próximo passo (Desafio de Campo com mentor).",
+    passPercent: 80,
+    xp: { baseComplete: 50, passBonus: 50, maxScoreBonus: 40 }, // bônus por pontuação acima de 80%
+    persistKey: "quiz_poda_limpeza_progress_v1",
+    questions: [
+      {
+        prompt: "Qual é o objetivo principal da poda de limpeza no cacaueiro?",
+        choices: [
+          "Aumentar o diâmetro do tronco rapidamente",
+          "Arejar a copa, melhorar luz difusa e remover ramos problemáticos",
+          "Abrir o máximo de sol direto possível dentro da copa",
+          "Cortar metade dos galhos em qualquer época"
+        ],
+        correctIndex: 1,
+        explanation: "A limpeza busca funcionalidade: arejamento, luz difusa e retirada de ramos que atrapalham (cruzados, internos, pendentes, chupons, secos/doentes)."
+      },
+      {
+        prompt: "Qual destes é um erro comum por excesso de poda?",
+        choices: [
+          "Remover chupons",
+          "Remover ramos cruzados",
+          "Abrir um 'clarão' de sol dentro da copa",
+          "Fazer cortes limpos"
+        ],
+        correctIndex: 2,
+        explanation: "Abrir 'clarão' desequilibra a copa e pode elevar estresse/queima. A meta é luz difusa."
+      },
+      {
+        prompt: "Qual é a sequência recomendada para execução da limpeza?",
+        choices: [
+          "De fora para dentro; depois remover cruzados",
+          "Apenas cortar os galhos mais altos",
+          "De dentro para fora, destravando cruzamentos e o centro da copa",
+          "Começar pelo tronco e cortar tudo ao redor"
+        ],
+        correctIndex: 2,
+        explanation: "Comece destravando o interior (cruzados/internos), depois pendentes/chupons e finalize ajustando arejamento sem exagero."
+      },
+      {
+        prompt: "Chupões são…",
+        choices: [
+          "Insetos praga de tronco",
+          "Ramos vigorosos (geralmente base/tronco) que drenam energia e atrapalham formação",
+          "Frutos secos",
+          "Folhas novas saudáveis"
+        ],
+        correctIndex: 1,
+        explanation: "Chupões competem por energia e costumam ser improdutivos. Em enxertados, podem vir do porta-enxerto."
+      },
+      {
+        prompt: "Qual prática ajuda a reduzir disseminação de doenças (quando houver necessidade)?",
+        choices: [
+          "Usar lâmina cega",
+          "Higienizar ferramentas quando houver risco fitossanitário",
+          "Cortar e deixar tudo no chão sempre",
+          "Trabalhar sem EPI"
+        ],
+        correctIndex: 1,
+        explanation: "Higienização em situações de risco reduz transmissão mecânica."
+      },
+      {
+        prompt: "Um corte tecnicamente melhor tende a ser…",
+        choices: [
+          "Com rasgo e farpas",
+          "Com toco longo (muito distante da inserção)",
+          "Limpo, sem rasgo e sem ferir o ramo principal/tronco",
+          "Feito arrancando no braço para ganhar tempo"
+        ],
+        correctIndex: 2,
+        explanation: "Corte limpo evita danos e facilita cicatrização; arrancar rasga e abre porta para problemas."
+      },
+      {
+        prompt: "Ramos pendentes para o solo costumam…",
+        choices: [
+          "Melhorar ventilação e facilitar colheita",
+          "Atrapalhar manejo e aumentar contato com umidade/pragas",
+          "Não ter qualquer efeito",
+          "Sempre produzir mais que os demais"
+        ],
+        correctIndex: 1,
+        explanation: "Pendentes atrapalham trânsito, roçada e aumentam riscos sanitários."
+      },
+      {
+        prompt: "No clonal (enxertado), chupons podem surgir do…",
+        choices: [
+          "Fruto",
+          "Porta-enxerto (base/caule)",
+          "Somente da raiz invisível",
+          "Somente das folhas novas"
+        ],
+        correctIndex: 1,
+        explanation: "É comum o porta-enxerto emitir brotações que devem ser removidas no padrão de limpeza."
+      },
+      {
+        prompt: "Por que registrar evidências (fotos/checklist) no app é útil?",
+        choices: [
+          "Só burocracia",
+          "Evita que o trabalhador aprenda",
+          "Comprova execução, reduz conflito e melhora confiança pós-serviço",
+          "Substitui a necessidade de mentor"
+        ],
+        correctIndex: 2,
+        explanation: "Evidências e checklists tornam o serviço auditável e alinhado ao padrão combinado."
+      },
+      {
+        prompt: "Qual conjunto representa melhor o padrão mínimo de qualidade?",
+        choices: [
+          "Copa aberta demais + tronco ferido",
+          "Cruzados resolvidos + chupons removidos + cortes limpos + sem 'clarão'",
+          "Apenas cortar galhos altos",
+          "Deixar ramos internos para sombrear"
+        ],
+        correctIndex: 1,
+        explanation: "Qualidade mínima = alvos resolvidos + cortes limpos + manejo seguro + sem excesso."
+      }
+    ],
+  };
+
+  // ====== ESTADO / HELPERS ======
+  const el = (id) => document.getElementById(id);
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(QUIZ.persistKey);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || data.quizId !== QUIZ.id) return null;
+      return data;
+    } catch { return null; }
+  }
+
+  function saveProgress(state) {
+    const payload = {
+      quizId: QUIZ.id,
+      idx: state.idx,
+      answers: state.answers,
+      startedAt: state.startedAt,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(QUIZ.persistKey, JSON.stringify(payload));
+  }
+
+  function clearProgress() {
+    localStorage.removeItem(QUIZ.persistKey);
+  }
+
+  function computeScore(answers) {
+    const total = QUIZ.questions.length;
+    let correct = 0;
+    QUIZ.questions.forEach((q, i) => {
+      if (answers[i] === q.correctIndex) correct++;
+    });
+    const percent = Math.round((correct / total) * 100);
+    return { total, correct, percent };
+  }
+
+  function computeXP(scorePercent) {
+    // XP = baseComplete + passBonus(if pass) + bonus por pontuação acima de 80%
+    const base = QUIZ.xp.baseComplete;
+    const pass = scorePercent >= QUIZ.passPercent ? QUIZ.xp.passBonus : 0;
+    const bonus = Math.max(0, Math.min(QUIZ.xp.maxScoreBonus, Math.floor((scorePercent - QUIZ.passPercent) * 2)));
+    return base + pass + bonus;
+  }
+
+  // (opcional) enviar resultado pro backend
+  async function submitResultToBackend({answers, score, xp}) {
+    // Troque a URL conforme seu backend
+    const url = "/api/quizzes/submit";
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          quizId: QUIZ.id,
+          answers,
+          score,
+          xpEarned: xp
+        })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err) {
+      // MVP: se offline/sem backend, seguimos sem travar
+      return { ok:false, error: String(err) };
+    }
+  }
+
+  // ====== UI RENDER ======
+  const app = el("app");
+  el("quizTitle").textContent = QUIZ.title;
+  el("quizSubtitle").textContent = QUIZ.subtitle;
+  el("chipPass").textContent = `Aprovação: ≥ ${QUIZ.passPercent}%`;
+  el("chipXP").textContent = `XP: base ${QUIZ.xp.baseComplete} + bônus`;
+  el("chipSave").textContent = `Auto-save: ligado`;
+
+  const persisted = loadProgress();
+  const state = {
+    idx: persisted?.idx ?? 0,
+    answers: Array.isArray(persisted?.answers) ? persisted.answers : Array(QUIZ.questions.length).fill(null),
+    startedAt: persisted?.startedAt ?? new Date().toISOString(),
+    mode: "quiz", // quiz | result
+    lastSubmit: null
+  };
+
+  function render() {
+    el("bar").style.width = ((state.idx) / QUIZ.questions.length) * 100 + "%";
+
+    if (state.mode === "result") {
+      const s = computeScore(state.answers);
+      const xp = computeXP(s.percent);
+      const passed = s.percent >= QUIZ.passPercent;
+
+      const wrongList = QUIZ.questions.map((q, i) => {
+        const a = state.answers[i];
+        const ok = a === q.correctIndex;
+        return { i, ok, q, a };
+      });
+
+      app.innerHTML = `
+        <div class="result">
+          <div class="banner">
+            <div class="pill ${passed ? "ok" : "bad"}">${passed ? "APROVADO" : "REPROVADO"}</div>
+            <div style="flex:1">
+              <div style="font-weight:800; font-size:18px; margin-bottom:4px;">
+                Você acertou ${s.correct} de ${s.total} (${s.percent}%)
+              </div>
+              <div class="hint">
+                XP ganho: <b>${xp}</b> (base ${QUIZ.xp.baseComplete} + bônus por aprovação/pontuação)
+              </div>
+              <div class="hint" style="margin-top:6px;">
+                ${passed ? "Próximo passo sugerido: Desafio de Campo (20 plantas com mentor) para liberar N1 Assistido." :
+                  "Sugestão: revise os tópicos marcados abaixo e tente novamente."}
+              </div>
+            </div>
+          </div>
+
+          <div class="list" aria-label="Revisão das questões">
+            ${wrongList.map(item => {
+              const your = item.a;
+              const yourText = (your === null || your === undefined) ? "Sem resposta" : item.q.choices[your];
+              const correctText = item.q.choices[item.q.correctIndex];
+              return `
+                <div class="row">
+                  <div style="display:flex; gap:10px; align-items:center; justify-content:space-between;">
+                    <h4>Q${item.i+1}. ${item.q.prompt}</h4>
+                    <div class="tag ${item.ok ? "ok" : "bad"}">${item.ok ? "certo" : "errado"}</div>
+                  </div>
+                  <div class="meta"><b>Sua resposta:</b> ${escapeHtml(yourText)}</div>
+                  <div class="meta"><b>Correta:</b> ${escapeHtml(correctText)}</div>
+                  <div class="meta"><b>Por quê:</b> ${escapeHtml(item.q.explanation || "")}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+
+          <div class="ctas">
+            <div class="hint">Progresso salvo: ${new Date(state.startedAt).toLocaleString("pt-BR")}</div>
+            <div class="btnrow">
+              <button class="ghost" id="btnClear">Resetar</button>
+              <button class="primary" id="btnRetry">Tentar de novo</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // opcional: enviar para backend
+      submitResultToBackend({answers: state.answers, score: s, xp})
+        .then(r => { state.lastSubmit = r; })
+        .catch(() => {});
+
+      app.querySelector("#btnRetry").onclick = () => {
+        state.idx = 0;
+        state.mode = "quiz";
+        saveProgress(state);
+        render();
+      };
+      app.querySelector("#btnClear").onclick = () => {
+        state.idx = 0;
+        state.answers = Array(QUIZ.questions.length).fill(null);
+        state.mode = "quiz";
+        clearProgress();
+        render();
+      };
+      // set progress bar to 100
+      el("bar").style.width = "100%";
+      return;
+    }
+
+    // QUIZ MODE
+    const q = QUIZ.questions[state.idx];
+    const answered = state.answers[state.idx] !== null;
+
+    app.innerHTML = `
+      <div class="qhdr">
+        <div>
+          <div class="qnum">Questão ${state.idx + 1} de ${QUIZ.questions.length}</div>
+          <div class="qprompt">${escapeHtml(q.prompt)}</div>
+        </div>
+        <div class="pill">${Math.round(((state.idx+1)/QUIZ.questions.length)*100)}%</div>
+      </div>
+
+      <div class="choices" role="radiogroup" aria-label="Alternativas">
+        ${q.choices.map((c, i) => `
+          <div class="choice" role="radio" tabindex="0"
+               aria-checked="${state.answers[state.idx] === i}"
+               data-index="${i}" data-selected="${state.answers[state.idx] === i}">
+            <div class="dot" aria-hidden="true"><div></div></div>
+            <div>${escapeHtml(c)}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="ctas">
+        <div class="hint">
+          ${answered ? "Resposta marcada. Você pode avançar." : "Escolha uma alternativa para continuar."}
+        </div>
+        <div class="btnrow">
+          <button id="btnPrev" ${state.idx === 0 ? "disabled" : ""}>Voltar</button>
+          <button class="${(state.idx === QUIZ.questions.length - 1) ? "primary" : "primary"}"
+                  id="btnNext" ${answered ? "" : "disabled"}>
+            ${(state.idx === QUIZ.questions.length - 1) ? "Finalizar" : "Próxima"}
+          </button>
+        </div>
+      </div>
+    `;
+
+    // handlers
+    const choices = app.querySelectorAll(".choice");
+    choices.forEach(node => {
+      node.addEventListener("click", () => selectChoice(parseInt(node.dataset.index, 10)));
+      node.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectChoice(parseInt(node.dataset.index, 10));
+        }
+      });
+    });
+
+    app.querySelector("#btnPrev").onclick = () => {
+      state.idx = clamp(state.idx - 1, 0, QUIZ.questions.length - 1);
+      saveProgress(state);
+      render();
+    };
+
+    app.querySelector("#btnNext").onclick = () => {
+      if (state.answers[state.idx] === null) return;
+      if (state.idx === QUIZ.questions.length - 1) {
+        state.mode = "result";
+        clearProgress(); // ao concluir, limpa o autosave (opcional)
+        render();
+        return;
+      }
+      state.idx = clamp(state.idx + 1, 0, QUIZ.questions.length - 1);
+      saveProgress(state);
+      render();
+    };
+  }
+
+  function selectChoice(index) {
+    state.answers[state.idx] = index;
+    saveProgress(state);
+    render();
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // Atalhos teclado: 1-4 e Enter
+  window.addEventListener("keydown", (e) => {
+    if (state.mode !== "quiz") return;
+    const n = parseInt(e.key, 10);
+    if (!Number.isNaN(n) && n >= 1 && n <= 4) {
+      const q = QUIZ.questions[state.idx];
+      if (q.choices[n-1] !== undefined) selectChoice(n-1);
+    }
+    if (e.key === "Enter") {
+      const nextBtn = document.getElementById("btnNext");
+      if (nextBtn && !nextBtn.disabled) nextBtn.click();
+    }
+  });
+
+  // boot
+  render();
+</script>
+</body>
+</html>
