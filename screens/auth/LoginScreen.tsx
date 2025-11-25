@@ -76,10 +76,10 @@ export default function LoginScreen() {
             contentFit="contain"
           />
           <ThemedText type="h1" style={styles.appName}>
-            CacauServ
+            Agro work
           </ThemedText>
-          <ThemedText type="small" style={[styles.tagline, { color: colors.textSecondary }]}>
-            Serviços rurais para a cadeia do cacau
+          <ThemedText type="body" style={[styles.tagline, { color: colors.textSecondary }]}>
+            Trabalho rural na palma da mão
           </ThemedText>
         </View>
 
@@ -102,15 +102,21 @@ export default function LoginScreen() {
                   onPress={() => setRole('producer')}
                 >
                   <Feather
-                    name="user"
-                    size={20}
+                    name="home"
+                    size={28}
                     color={role === 'producer' ? '#FFFFFF' : colors.text}
                   />
                   <ThemedText
-                    type="small"
-                    style={{ color: role === 'producer' ? '#FFFFFF' : colors.text }}
+                    type="body"
+                    style={{ color: role === 'producer' ? '#FFFFFF' : colors.text, fontWeight: '600' }}
                   >
-                    Produtor
+                    Sou Produtor
+                  </ThemedText>
+                  <ThemedText
+                    type="caption"
+                    style={{ color: role === 'producer' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
+                  >
+                    Tenho propriedade
                   </ThemedText>
                 </Pressable>
                 <Pressable
@@ -124,15 +130,21 @@ export default function LoginScreen() {
                   onPress={() => setRole('worker')}
                 >
                   <Feather
-                    name="briefcase"
-                    size={20}
+                    name="tool"
+                    size={28}
                     color={role === 'worker' ? '#FFFFFF' : colors.text}
                   />
                   <ThemedText
-                    type="small"
-                    style={{ color: role === 'worker' ? '#FFFFFF' : colors.text }}
+                    type="body"
+                    style={{ color: role === 'worker' ? '#FFFFFF' : colors.text, fontWeight: '600' }}
                   >
-                    Trabalhador
+                    Sou Trabalhador
+                  </ThemedText>
+                  <ThemedText
+                    type="caption"
+                    style={{ color: role === 'worker' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
+                  >
+                    Busco trabalho
                   </ThemedText>
                 </Pressable>
               </View>
@@ -162,8 +174,8 @@ export default function LoginScreen() {
           )}
 
           <View style={styles.inputContainer}>
-            <ThemedText type="small" style={styles.label}>
-              Email
+            <ThemedText type="body" style={styles.label}>
+              Seu Email
             </ThemedText>
             <View
               style={[
@@ -171,10 +183,10 @@ export default function LoginScreen() {
                 { backgroundColor: colors.backgroundDefault, borderColor: colors.border },
               ]}
             >
-              <Feather name="mail" size={20} color={colors.textSecondary} />
+              <Feather name="mail" size={24} color={colors.textSecondary} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
-                placeholder="seu@email.com"
+                placeholder="Digite seu email"
                 placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
@@ -186,8 +198,8 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <ThemedText type="small" style={styles.label}>
-              Senha
+            <ThemedText type="body" style={styles.label}>
+              Sua Senha
             </ThemedText>
             <View
               style={[
@@ -195,20 +207,20 @@ export default function LoginScreen() {
                 { backgroundColor: colors.backgroundDefault, borderColor: colors.border },
               ]}
             >
-              <Feather name="lock" size={20} color={colors.textSecondary} />
+              <Feather name="lock" size={24} color={colors.textSecondary} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
-                placeholder="Sua senha"
+                placeholder="Digite sua senha"
                 placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
+              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
                 <Feather
                   name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
+                  size={24}
                   color={colors.textSecondary}
                 />
               </Pressable>
@@ -280,13 +292,14 @@ const styles = StyleSheet.create({
   },
   roleButton: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.lg,
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xl,
     borderRadius: BorderRadius.sm,
-    borderWidth: 1,
+    borderWidth: 2,
+    minHeight: 100,
   },
   inputContainer: {
     marginBottom: Spacing.lg,
@@ -306,10 +319,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 18,
+  },
+  eyeButton: {
+    padding: Spacing.sm,
   },
   submitButton: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   toggleContainer: {
     flexDirection: 'row',

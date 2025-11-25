@@ -78,57 +78,71 @@ export default function ProducerHomeScreen() {
           <View style={[styles.iconContainer, { backgroundColor: colors.primary + '20' }]}>
             <Feather
               name={serviceType?.icon as any || 'briefcase'}
-              size={20}
+              size={28}
               color={colors.primary}
             />
           </View>
           <View style={styles.jobInfo}>
-            <ThemedText type="h4">{serviceType?.name || 'Serviço'}</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
+            <ThemedText type="h3">{serviceType?.name || 'Serviço'}</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
               {formatQuantityWithUnit(item.quantity, serviceType?.unit || '')}
-            </ThemedText>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(item.status, colors) + '20' },
-            ]}
-          >
-            <ThemedText
-              type="caption"
-              style={{ color: getStatusColor(item.status, colors), fontWeight: '600' }}
-            >
-              {getStatusLabel(item.status)}
             </ThemedText>
           </View>
         </View>
 
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.status, colors) + '20' },
+          ]}
+        >
+          <Feather 
+            name={item.status === 'open' ? 'clock' : item.status === 'assigned' ? 'user-check' : 'check-circle'} 
+            size={18} 
+            color={getStatusColor(item.status, colors)} 
+          />
+          <ThemedText
+            type="body"
+            style={{ color: getStatusColor(item.status, colors), fontWeight: '600' }}
+          >
+            {getStatusLabel(item.status)}
+          </ThemedText>
+        </View>
+
         <View style={styles.jobDetails}>
           <View style={styles.detailRow}>
-            <Feather name="map-pin" size={14} color={colors.textSecondary} />
-            <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
+            <Feather name="map-pin" size={20} color={colors.textSecondary} />
+            <ThemedText type="body" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
               {item.locationText}
             </ThemedText>
           </View>
           <View style={styles.detailRow}>
-            <Feather name="dollar-sign" size={14} color={colors.accent} />
-            <ThemedText type="body" style={{ color: colors.accent, fontWeight: '600' }}>
+            <Feather name="dollar-sign" size={20} color={colors.accent} />
+            <ThemedText type="h3" style={{ color: colors.accent }}>
               {formatCurrency(item.offer)}
             </ThemedText>
           </View>
         </View>
 
         <View style={styles.jobFooter}>
-          <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>
             {getRelativeTime(item.createdAt)}
           </ThemedText>
           {item.status === 'open' && bidCount > 0 && (
             <View style={[styles.bidBadge, { backgroundColor: colors.primary }]}>
-              <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+              <Feather name="users" size={16} color="#FFFFFF" />
+              <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                 {bidCount} {bidCount === 1 ? 'proposta' : 'propostas'}
               </ThemedText>
             </View>
           )}
+        </View>
+
+        <View style={styles.tapHint}>
+          <ThemedText type="caption" style={{ color: colors.primary }}>
+            Toque para ver detalhes
+          </ThemedText>
+          <Feather name="chevron-right" size={18} color={colors.primary} />
         </View>
       </Pressable>
     );
@@ -136,12 +150,14 @@ export default function ProducerHomeScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Feather name="inbox" size={64} color={colors.textSecondary} />
-      <ThemedText type="h3" style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-        Nenhuma demanda ativa
+      <View style={[styles.emptyIcon, { backgroundColor: colors.primary + '15' }]}>
+        <Feather name="plus-circle" size={80} color={colors.primary} />
+      </View>
+      <ThemedText type="h2" style={[styles.emptyTitle, { color: colors.text }]}>
+        Sem demandas
       </ThemedText>
       <ThemedText type="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
-        Crie uma nova demanda para encontrar trabalhadores
+        Toque no botão verde abaixo para criar sua primeira demanda de trabalho
       </ThemedText>
     </View>
   );
@@ -155,10 +171,10 @@ export default function ProducerHomeScreen() {
             style={styles.headerLogo}
             contentFit="contain"
           />
-          <View>
-            <ThemedText type="h3">CacauServ</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              Olá, {user?.name?.split(' ')[0]}
+          <View style={{ flex: 1 }}>
+            <ThemedText type="h3">Agro work</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
+              Olá, {user?.name?.split(' ')[0]}!
             </ThemedText>
           </View>
         </View>
@@ -220,9 +236,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 56,
+    height: 56,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -230,9 +246,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xs,
   },
   jobDetails: {
     gap: Spacing.sm,
@@ -248,22 +267,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bidBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
+  },
+  tapHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing['3xl'],
+    paddingHorizontal: Spacing['2xl'],
+  },
+  emptyIcon: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
   emptyTitle: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
     textAlign: 'center',
   },
   emptyText: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     textAlign: 'center',
+    lineHeight: 24,
   },
 });

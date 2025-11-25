@@ -120,23 +120,23 @@ export default function WorkerProfileScreen() {
 
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: colors.card }, Shadows.card]}>
-            <Feather name="briefcase" size={24} color={colors.primary} />
-            <ThemedText type="h3">{stats.completedServices}</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              Serviços
+            <Feather name="briefcase" size={32} color={colors.primary} />
+            <ThemedText type="h2">{stats.completedServices}</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
+              Trabalhos
             </ThemedText>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }, Shadows.card]}>
-            <Feather name="star" size={24} color={colors.accent} />
-            <ThemedText type="h3">{user?.averageRating?.toFixed(1) || '0.0'}</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              Média
+            <Feather name="star" size={32} color={colors.accent} />
+            <ThemedText type="h2">{user?.averageRating?.toFixed(1) || '0.0'}</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
+              Nota
             </ThemedText>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }, Shadows.card]}>
-            <Feather name="message-circle" size={24} color={colors.success} />
-            <ThemedText type="h3">{user?.totalReviews || 0}</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
+            <Feather name="award" size={32} color={colors.success} />
+            <ThemedText type="h2">{user?.totalReviews || 0}</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
               Avaliações
             </ThemedText>
           </View>
@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing['2xl'],
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
   name: {
     marginTop: Spacing.lg,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.sm,
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: Spacing.sm,
   },
   menuContainer: {
     gap: Spacing.md,
@@ -255,9 +255,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -74,13 +74,13 @@ export default function WorkerJobsScreen() {
           <View style={[styles.iconContainer, { backgroundColor: colors.primary + '20' }]}>
             <Feather
               name={serviceType?.icon as any || 'briefcase'}
-              size={20}
+              size={28}
               color={colors.primary}
             />
           </View>
           <View style={styles.jobInfo}>
-            <ThemedText type="h4">{serviceType?.name || 'Serviço'}</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
+            <ThemedText type="h3">{serviceType?.name || 'Serviço'}</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
               {formatQuantityWithUnit(item.quantity, serviceType?.unit || '')}
             </ThemedText>
           </View>
@@ -91,40 +91,48 @@ export default function WorkerJobsScreen() {
                 { backgroundColor: LevelColors[`N${serviceType.minLevel}` as keyof typeof LevelColors] },
               ]}
             >
-              <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+              <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                 {getLevelLabel(serviceType.minLevel)}+
               </ThemedText>
             </View>
           )}
         </View>
 
+        <View style={styles.priceBox}>
+          <Feather name="dollar-sign" size={24} color={colors.accent} />
+          <ThemedText type="h2" style={{ color: colors.accent }}>
+            {formatCurrency(item.offer)}
+          </ThemedText>
+        </View>
+
         <View style={styles.jobDetails}>
           <View style={styles.detailRow}>
-            <Feather name="map-pin" size={14} color={colors.textSecondary} />
-            <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
+            <Feather name="map-pin" size={20} color={colors.textSecondary} />
+            <ThemedText type="body" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
               {item.locationText}
-            </ThemedText>
-          </View>
-          <View style={styles.detailRow}>
-            <Feather name="dollar-sign" size={14} color={colors.accent} />
-            <ThemedText type="body" style={{ color: colors.accent, fontWeight: '600' }}>
-              {formatCurrency(item.offer)}
             </ThemedText>
           </View>
         </View>
 
         <View style={styles.jobFooter}>
-          <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>
             {getRelativeTime(item.createdAt)}
           </ThemedText>
-          {hasBid && (
+          {hasBid ? (
             <View style={[styles.bidBadge, { backgroundColor: colors.success + '20' }]}>
-              <Feather name="check" size={12} color={colors.success} />
-              <ThemedText type="caption" style={{ color: colors.success, fontWeight: '600' }}>
+              <Feather name="check-circle" size={18} color={colors.success} />
+              <ThemedText type="body" style={{ color: colors.success, fontWeight: '600' }}>
                 Proposta enviada
               </ThemedText>
             </View>
-          )}
+          ) : null}
+        </View>
+
+        <View style={styles.tapHint}>
+          <ThemedText type="caption" style={{ color: colors.primary }}>
+            {hasBid ? 'Toque para acompanhar' : 'Toque para enviar proposta'}
+          </ThemedText>
+          <Feather name="chevron-right" size={18} color={colors.primary} />
         </View>
       </Pressable>
     );
@@ -132,12 +140,14 @@ export default function WorkerJobsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Feather name="search" size={64} color={colors.textSecondary} />
-      <ThemedText type="h3" style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-        Nenhum trabalho disponível
+      <View style={[styles.emptyIcon, { backgroundColor: colors.accent + '15' }]}>
+        <Feather name="clock" size={80} color={colors.accent} />
+      </View>
+      <ThemedText type="h2" style={[styles.emptyTitle, { color: colors.text }]}>
+        Aguarde novas vagas
       </ThemedText>
       <ThemedText type="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
-        Novos trabalhos aparecerão aqui quando produtores publicarem demandas
+        Quando produtores postarem trabalho, vai aparecer aqui. Volte depois!
       </ThemedText>
     </View>
   );
@@ -151,10 +161,10 @@ export default function WorkerJobsScreen() {
             style={styles.headerLogo}
             contentFit="contain"
           />
-          <View>
-            <ThemedText type="h3">CacauServ</ThemedText>
-            <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              Olá, {user?.name?.split(' ')[0]}
+          <View style={{ flex: 1 }}>
+            <ThemedText type="h3">Agro work</ThemedText>
+            <ThemedText type="body" style={{ color: colors.textSecondary }}>
+              Olá, {user?.name?.split(' ')[0]}!
             </ThemedText>
           </View>
         </View>
@@ -229,9 +239,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 56,
+    height: 56,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -239,9 +249,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   levelBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
+  },
+  priceBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: '#FFF8E1',
+    borderRadius: BorderRadius.xs,
   },
   jobDetails: {
     gap: Spacing.sm,
@@ -259,23 +278,42 @@ const styles = StyleSheet.create({
   bidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
+  },
+  tapHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing['3xl'],
+    paddingHorizontal: Spacing['2xl'],
+  },
+  emptyIcon: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
   emptyTitle: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
     textAlign: 'center',
   },
   emptyText: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     textAlign: 'center',
+    lineHeight: 24,
   },
 });

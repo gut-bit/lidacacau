@@ -73,8 +73,8 @@ export const Spacing = {
   "3xl": 32,
   "4xl": 40,
   "5xl": 48,
-  inputHeight: 48,
-  buttonHeight: 52,
+  inputHeight: 56,
+  buttonHeight: 58,
 };
 
 export const BorderRadius = {
@@ -90,35 +90,35 @@ export const BorderRadius = {
 
 export const Typography = {
   h1: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "700" as const,
   },
   h2: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "600" as const,
   },
   h3: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600" as const,
   },
   h4: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600" as const,
   },
   body: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "400" as const,
   },
   small: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "400" as const,
   },
   link: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "400" as const,
   },
   caption: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "400" as const,
   },
 };
