@@ -1,0 +1,138 @@
+Segue um texto **pronto para colar no Replit AI Agent** (em PT-BR), já com contexto, objetivo, escopo, critérios de aceite e instruções para ele implementar/rodar o MVP.
+
+---
+
+### PROMPT PARA O REPLIT AI AGENT (cole inteiro)
+
+Você é um engenheiro full-stack sênior. Construa um **MVP web** (teste rápido) de uma **plataforma estilo “Uber do serviço rural”** para a cadeia do cacau em Uruará/PA. O MVP deve rodar dentro do Replit.
+
+## Contexto do produto
+
+Queremos organizar contratação de serviços rurais por tarefa (poda, enxertia, colheita, roçagem, aplicação, operador de trator etc.). O fluxo é:
+
+1. Produtor publica uma demanda por tarefa (quantidade, local, janela, padrão desejado, oferta/preço).
+2. Trabalhadores próximos visualizam e enviam proposta (bid) com preço e mensagem.
+3. Produtor aceita uma proposta e isso gera uma **Ordem de Serviço (OS)** com preço final.
+4. Trabalhador executa e registra **check-in / check-out** (GPS) + evidências (fotos antes/depois).
+5. Produtor confirma conclusão.
+6. Ambos deixam **avaliação bilateral (0–5)**.
+7. O trabalhador tem um **nível (N1–N5)** que pode evoluir com avaliações (gamificação responsável).
+
+Internet pode ser instável no campo, então o UX deve ser simples. Este MVP tem UI básica (não precisa ser bonita), mas tem que ser funcional.
+
+## Stack obrigatória (para facilitar no Replit)
+
+* Node.js + Express
+* Templates simples (EJS ou equivalente)
+* Banco local SQLite (pode usar better-sqlite3)
+* Upload de imagens: multer salvando em /uploads
+* Auth: sessões/cookies simples com JWT ou cookie session
+* CSS simples (pode ser um arquivo único em /public)
+
+## Papéis de usuário (roles)
+
+* `producer` (produtor)
+* `worker` (trabalhador)
+* `admin` (administrador)
+
+## Requisitos funcionais (MVP)
+
+### Autenticação
+
+* Cadastro e login para producer e worker.
+* Admin pode ser criado por bootstrap via environment variables:
+
+  * `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+  * rota `/admin/bootstrap` cria admin se não existir.
+
+### Serviços e tabela base
+
+* Tabela de tipos de serviço (seed inicial):
+
+  * Poda (unidade planta, base_price 2.0, min_level 1)
+  * Enxertia (unidade enxerto, base_price 4.0, min_level 2)
+  * Colheita (unidade kg, base_price 0.6, min_level 1)
+  * Roçagem (unidade ha, base_price 180.0, min_level 1)
+  * Aplicação/manejo (unidade ha, base_price 220.0, min_level 2)
+  * Operador de trator (unidade hora, base_price 45.0, min_level 2)
+  * Motorista/logística (unidade km, base_price 2.5, min_level 2)
+* Admin consegue adicionar novos serviços via painel.
+
+### Demandas (Jobs)
+
+* Producer cria job com:
+
+  * service_type_id, qty, location_text, oferta (R$ total)
+  * lat/lng opcional
+  * janela inicio/fim opcional
+  * notes (padrão desejado)
+* Jobs começam `open`, ao aceitar proposta vira `assigned`, após conclusão vira `closed`.
+
+### Propostas (Bids)
+
+* Worker lista jobs abertos (até 200) e pode abrir um e enviar/atualizar proposta:
+
+  * price, message opcional
+* Worker só pode ofertar se seu nível >= min_level do serviço.
+
+### Ordem de Serviço (Work Order)
+
+* Quando producer aceita um bid:
+
+  * rejeitar outros bids
+  * criar work_order com worker_id e final_price
+  * status inicial `assigned`
+* Worker faz `check-in` → muda para `checked_in` salvando GPS e timestamp.
+* Worker faz `check-out` → `checked_out`, salva GPS e timestamp + arquivos `before`/`after` (opcionais).
+* Producer confirma → `completed` e job vira `closed`.
+
+### Avaliação bilateral (Reviews)
+
+* Após `completed`, producer e worker podem enviar uma avaliação (uma por lado) com:
+
+  * quality, safety, punctuality, communication, fairness (1..5), comment opcional.
+* A avaliação deve atualizar “nível do trabalhador” de forma simples.
+
+  * Regra aceitável: nível sobe conforme quantidade de reviews e média >= 4.0 (cap 5).
+
+### Gamificação (MVP)
+
+* Mostrar no painel do worker:
+
+  * nível atual
+  * “próximo nível” e critério resumido (ex.: “precisa X avaliações com média >= 4.0”)
+* Bloqueio por segurança não precisa no MVP, mas deixe estrutura para evoluir.
+
+## Requisitos não funcionais
+
+* Simplicidade e robustez: erros tratados, validação básica.
+* Não precisa pagamento real (PIX/escrow ficam para V1), apenas registre valores.
+* Deve rodar com um comando `npm start`.
+* Sem dependências complexas de build.
+
+## Critérios de aceite (o que tem que funcionar)
+
+1. Cadastro/login de producer e worker.
+2. Producer cria job e visualiza bids.
+3. Worker envia bid.
+4. Producer aceita bid e OS é criada.
+5. Worker check-in/out com GPS (navigator.geolocation) e upload de fotos.
+6. Producer confirma conclusão.
+7. Ambos avaliam; worker nível ajusta.
+8. Admin painel com lista de usuários, serviços, stats; admin consegue criar serviços.
+
+## Entregáveis no repositório
+
+* Estrutura organizada (`src/`, `views/`, `public/`, `uploads/`)
+* `README.md` com:
+
+  * como rodar
+  * rotas principais
+  * fluxo de teste
+  * variáveis de ambiente necessárias
+
+Agora implemente esse MVP inteiro.
+
+---
+
+Se o agente do Replit pedir um “escopo menor”, você pode responder: “não, entregue o fluxo completo acima; UI simples é suficiente”.
