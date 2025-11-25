@@ -1,7 +1,7 @@
-# CacauServ - Marketplace de Serviços Rurais para Cacau
+# Agro work - Marketplace de Serviços Rurais para Cacau
 
 ## Overview
-CacauServ é um aplicativo mobile (Expo React Native) de marketplace que conecta produtores de cacau com trabalhadores rurais em Uruará/PA, Brasil. O app permite publicação de demandas de serviço, sistema de propostas, rastreamento GPS de trabalho, upload de fotos e avaliações bilaterais.
+Agro work é um aplicativo mobile (Expo React Native) de marketplace que conecta produtores de cacau com trabalhadores rurais em Uruará/PA, Brasil. O app permite publicação de demandas de serviço, sistema de propostas, rastreamento GPS de trabalho, upload de fotos e avaliações bilaterais.
 
 ## Project Status: MVP Completo
 - Autenticação com 3 perfis: Produtor, Trabalhador e Admin
