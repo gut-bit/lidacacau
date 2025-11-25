@@ -121,6 +121,27 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 - Navegação: React Navigation 7+
 - Tema: Suporte dark/light mode
 
+### Legal Contract System - "Empreitada" (2025-11-25)
+Sistema de contrato de empreitada totalmente amparado juridicamente:
+- **ContractGenerator (utils/contractGenerator.ts)**: Geração automática de contratos
+  - Adaptados para cada tipo de serviço e termos de pagamento negociados
+  - Baseados em lei brasileira de empreitada
+  - Cláusulas completas: Objeto, Período, Pagamento, Obrigações, Segurança, Conclusão, Disposições Gerais
+  - Suporte a todos os 7 tipos de pagamento (por unidade, hora, diária, split, etc.)
+- **ContractSigningScreen**: Tela para visualizar e assinar contratos
+  - Exibe status de assinatura para produtor e trabalhador
+  - Visualização completa do contrato em scroll
+  - Checkbox de aceitação obrigatório
+  - Rastreamento de assinatura com timestamp
+  - Feedback visual de assinatura completada
+  - Status "Pronto para Começar" quando ambas as partes assinam
+- **Fluxo de Assinatura**:
+  - Após negociação de pagamento aceita, botão "Assinar Contrato de Empreitada" aparece
+  - Ambas as partes assinam digitalmente
+  - Contrato armazenado em SignedContract e vinculado ao WorkOrder
+  - Ambas as partes podem confirmar assinatura da outra pessoa em tempo real
+- **Types adicionados**: SignedContract com campos para nomes, emails, timestamps, texto completo
+
 ## New Features (Latest Update)
 
 ### Negotiation System with Match Animation (2025-11-25)

@@ -16,6 +16,7 @@ import TutorialScreen from '@/screens/shared/TutorialScreen';
 import NFSeScreen from '@/screens/producer/NFSeScreen';
 import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
 import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
+import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User } from '@/types';
 
@@ -45,6 +46,10 @@ export type RootStackParamList = {
     producer: User;
     serviceName: string;
     price: number;
+    isProducer: boolean;
+  };
+  ContractSigning: {
+    workOrderId: string;
     isProducer: boolean;
   };
 };
@@ -125,6 +130,11 @@ export default function RootNavigator() {
             component={NegotiationTermsScreen}
             options={{ title: 'Negociar Pagamento' }}
           />
+          <Stack.Screen
+            name="ContractSigning"
+            component={ContractSigningScreen}
+            options={{ title: 'Assinar Contrato de Empreitada' }}
+          />
         </>
       ) : (
         <>
@@ -142,6 +152,11 @@ export default function RootNavigator() {
             name="ActiveWorkOrder"
             component={ActiveWorkOrderScreen}
             options={{ title: 'Serviço em Andamento' }}
+          />
+          <Stack.Screen
+            name="ContractSigning"
+            component={ContractSigningScreen}
+            options={{ title: 'Assinar Contrato de Empreitada' }}
           />
           <Stack.Screen
             name="Review"

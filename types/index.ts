@@ -158,6 +158,23 @@ export interface Bid {
   createdAt: string;
 }
 
+export interface SignedContract {
+  id: string;
+  text: string;
+  producerName: string;
+  producerEmail: string;
+  workerName: string;
+  workerEmail: string;
+  serviceType: string;
+  startDate?: string;
+  endDate?: string;
+  totalValue: number;
+  paymentTermsType: PaymentTermType;
+  producerSignedAt?: string;
+  workerSignedAt?: string;
+  createdAt: string;
+}
+
 export interface WorkOrder {
   id: string;
   jobId: string;
@@ -168,6 +185,7 @@ export interface WorkOrder {
   paymentTerms?: PaymentTerms;
   negotiationHistory?: NegotiationProposal[];
   negotiationStatus?: NegotiationStatus;
+  signedContract?: SignedContract;
   checkInTime?: string;
   checkInLatitude?: number;
   checkInLongitude?: number;

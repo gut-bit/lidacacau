@@ -471,6 +471,23 @@ export default function JobDetailScreen() {
           </Button>
         </View>
       )}
+
+      {workOrder && workOrder.status === 'assigned' && (
+        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
+          <Button
+            onPress={() =>
+              navigation.navigate('ContractSigning', {
+                workOrderId: workOrder.id,
+                isProducer: isProducer,
+              })
+            }
+            disabled={submitting}
+          >
+            <Feather name="file-text" size={18} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
+            Assinar Contrato de Empreitada
+          </Button>
+        </View>
+      )}
     </ThemedView>
   );
 }
