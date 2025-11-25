@@ -123,6 +123,27 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 
 ## New Features (Latest Update)
 
+### Negotiation System with Match Animation (2025-11-25)
+Sistema de negociação interativo com animação estilo "Match":
+- **NegotiationMatchScreen**: Animação de celebração quando proposta é aceita (estilo Tinder/Uber)
+  - Animação de check com haptic feedback
+  - Avatares conectados com linha animada
+  - Confetti decorativo
+  - Transição suave para tela de negociação
+- **NegotiationTermsScreen**: Menu de negociação de pagamento com opções:
+  - 100% Após Conclusão (Popular)
+  - 50% Antes, 50% Depois
+  - 30% Antes, 70% Depois
+  - Por Unidade (planta, saca, hectare)
+  - Por Hora
+  - Por Diária
+  - Adiantamento Personalizado
+- **Fluxo de Negociação**:
+  - Produtor aceita proposta → Animação de Match → Menu de Negociação
+  - Ambas as partes podem propor termos de pagamento
+  - Histórico de propostas salvo no WorkOrder
+- **Types adicionados**: PaymentTermType, PaymentTerms, NegotiationProposal, NegotiationStatus
+
 ### NFS-e Integration (2025-11-25)
 Sistema de acesso rápido à emissão de Nota Fiscal Eletrônica:
 - **Tela NFSeScreen**: Acesso direto ao portal ISSIntegra da Prefeitura de Uruará
