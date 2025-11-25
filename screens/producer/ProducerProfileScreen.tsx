@@ -37,6 +37,7 @@ export default function ProducerProfileScreen() {
   const menuItems = [
     { icon: 'file-text', label: 'Nota Fiscal Eletronica', onPress: () => navigation.navigate('NFSe'), highlight: true },
     { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },
+    { icon: 'book-open', label: 'Capacitacao', onPress: () => navigation.navigate('Education'), color: colors.primary },
     { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },
     { icon: 'bell', label: 'Notificacoes', onPress: () => {} },
