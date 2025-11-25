@@ -4,6 +4,38 @@ export type JobStatus = 'open' | 'assigned' | 'closed';
 
 export type WorkOrderStatus = 'assigned' | 'checked_in' | 'checked_out' | 'completed';
 
+export type PaymentTermType = 
+  | 'per_unit'       // Por unidade (planta, saca, hectare)
+  | 'per_hour'       // Por hora trabalhada
+  | 'per_day'        // Por diária
+  | 'full_after'     // 100% após conclusão
+  | 'split_50_50'    // 50% antes, 50% depois
+  | 'split_30_70'    // 30% antes, 70% depois
+  | 'advance_custom'; // Adiantamento personalizado
+
+export type NegotiationStatus = 'pending' | 'proposed' | 'counter' | 'accepted' | 'rejected';
+
+export interface PaymentTerms {
+  type: PaymentTermType;
+  advancePercentage?: number;    // Para split_custom: % de adiantamento
+  unitPrice?: number;            // Para per_unit: preço por unidade
+  estimatedUnits?: number;       // Quantidade estimada de unidades
+  hourlyRate?: number;           // Para per_hour: valor por hora
+  dailyRate?: number;            // Para per_day: valor por diária
+  notes?: string;                // Observações sobre o pagamento
+}
+
+export interface NegotiationProposal {
+  id: string;
+  proposerId: string;
+  proposerRole: 'producer' | 'worker';
+  paymentTerms: PaymentTerms;
+  totalPrice: number;
+  message?: string;
+  status: NegotiationStatus;
+  createdAt: string;
+}
+
 export type WorkerLevel = 1 | 2 | 3 | 4 | 5;
 
 export type ProducerLevel = 1 | 2 | 3 | 4 | 5;
@@ -121,6 +153,7 @@ export interface Bid {
   workerId: string;
   price: number;
   message?: string;
+  proposedTerms?: PaymentTerms;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
 }
@@ -132,6 +165,9 @@ export interface WorkOrder {
   producerId: string;
   finalPrice: number;
   status: WorkOrderStatus;
+  paymentTerms?: PaymentTerms;
+  negotiationHistory?: NegotiationProposal[];
+  negotiationStatus?: NegotiationStatus;
   checkInTime?: string;
   checkInLatitude?: number;
   checkInLongitude?: number;

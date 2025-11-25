@@ -142,6 +142,12 @@ export default function JobDetailScreen() {
       return;
     }
 
+    const selectedBid = bids.find(b => b.id === selectedBidId);
+    if (!selectedBid) {
+      Alert.alert('Erro', 'Proposta não encontrada');
+      return;
+    }
+
     Alert.alert(
       'Confirmar',
       'Deseja aceitar esta proposta? As outras propostas serão rejeitadas.',
@@ -152,9 +158,15 @@ export default function JobDetailScreen() {
           onPress: async () => {
             setSubmitting(true);
             try {
-              await acceptBid(selectedBidId);
-              Alert.alert('Sucesso', 'Proposta aceita! Ordem de serviço criada.');
-              await loadJobDetails();
+              const newWorkOrder = await acceptBid(selectedBidId);
+              navigation.navigate('NegotiationMatch', {
+                workOrderId: newWorkOrder.id,
+                worker: selectedBid.worker,
+                producer: producer!,
+                serviceName: serviceType?.name || 'Serviço',
+                price: selectedBid.price,
+                isProducer: true,
+              });
             } catch (error: any) {
               Alert.alert('Erro', error.message || 'Não foi possível aceitar a proposta');
             } finally {
@@ -316,7 +328,7 @@ export default function JobDetailScreen() {
                             { backgroundColor: LevelColors[`N${bid.worker.level || 1}` as keyof typeof LevelColors] },
                           ]}
                         >
-                          <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                          <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 11 }}>
                             {getLevelLabel(bid.worker.level || 1)}
                           </ThemedText>
                         </View>
@@ -359,7 +371,7 @@ export default function JobDetailScreen() {
                     { backgroundColor: LevelColors[`N${worker.level || 1}` as keyof typeof LevelColors] },
                   ]}
                 >
-                  <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                  <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 11 }}>
                     {getLevelLabel(worker.level || 1)}
                   </ThemedText>
                 </View>

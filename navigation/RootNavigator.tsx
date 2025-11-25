@@ -14,7 +14,10 @@ import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
 import TutorialScreen from '@/screens/shared/TutorialScreen';
 import NFSeScreen from '@/screens/producer/NFSeScreen';
+import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
+import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
+import { User } from '@/types';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -28,6 +31,22 @@ export type RootStackParamList = {
   NFSe: undefined;
   ActiveWorkOrder: { workOrderId: string };
   Review: { workOrderId: string; revieweeId: string; revieweeName: string };
+  NegotiationMatch: {
+    workOrderId: string;
+    worker: User;
+    producer: User;
+    serviceName: string;
+    price: number;
+    isProducer: boolean;
+  };
+  NegotiationTerms: {
+    workOrderId: string;
+    worker: User;
+    producer: User;
+    serviceName: string;
+    price: number;
+    isProducer: boolean;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -96,6 +115,16 @@ export default function RootNavigator() {
             component={ReviewScreen}
             options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
           />
+          <Stack.Screen
+            name="NegotiationMatch"
+            component={NegotiationMatchScreen}
+            options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="NegotiationTerms"
+            component={NegotiationTermsScreen}
+            options={{ title: 'Negociar Pagamento' }}
+          />
         </>
       ) : (
         <>
@@ -118,6 +147,16 @@ export default function RootNavigator() {
             name="Review"
             component={ReviewScreen}
             options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="NegotiationMatch"
+            component={NegotiationMatchScreen}
+            options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="NegotiationTerms"
+            component={NegotiationTermsScreen}
+            options={{ title: 'Negociar Pagamento' }}
           />
         </>
       )}
