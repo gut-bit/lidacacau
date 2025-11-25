@@ -8,6 +8,7 @@ import { ScreenKeyboardAwareScrollView } from '@/components/ScreenKeyboardAwareS
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/Button';
+import { SocialLinksDisplay } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
@@ -342,6 +343,11 @@ export default function JobDetailScreen() {
                         "{bid.message}"
                       </ThemedText>
                     )}
+                    {bid.worker.socialLinks && Object.keys(bid.worker.socialLinks).length > 0 && (
+                      <View style={styles.socialLinksRow}>
+                        <SocialLinksDisplay socialLinks={bid.worker.socialLinks} size="small" />
+                      </View>
+                    )}
                     {selectedBidId === bid.id && (
                       <View style={styles.selectedIndicator}>
                         <Feather name="check-circle" size={16} color={colors.primary} />
@@ -388,6 +394,44 @@ export default function JobDetailScreen() {
                   {getStatusLabel(workOrder.status)}
                 </ThemedText>
               </View>
+              {worker?.socialLinks && Object.keys(worker.socialLinks).length > 0 && (
+                <View style={styles.socialLinksSection}>
+                  <ThemedText type="small" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
+                    Contato do Trabalhador
+                  </ThemedText>
+                  <SocialLinksDisplay socialLinks={worker.socialLinks} size="small" />
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {isWorker && producer && (
+          <View style={styles.section}>
+            <ThemedText type="h4" style={styles.sectionTitle}>
+              Contato do Produtor
+            </ThemedText>
+            <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
+              <View style={styles.detailRow}>
+                <Feather name="user" size={16} color={colors.textSecondary} />
+                <ThemedText type="body">{producer.name}</ThemedText>
+              </View>
+              {producer.phone && (
+                <View style={styles.detailRow}>
+                  <Feather name="phone" size={16} color={colors.textSecondary} />
+                  <ThemedText type="body" style={{ color: colors.textSecondary }}>
+                    {producer.phone}
+                  </ThemedText>
+                </View>
+              )}
+              {producer.socialLinks && Object.keys(producer.socialLinks).length > 0 && (
+                <View style={styles.socialLinksSection}>
+                  <ThemedText type="small" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
+                    Redes Sociais
+                  </ThemedText>
+                  <SocialLinksDisplay socialLinks={producer.socialLinks} size="small" />
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -580,6 +624,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
     marginTop: Spacing.sm,
+  },
+  socialLinksRow: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  socialLinksSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   inputContainer: {
     gap: Spacing.sm,
