@@ -65,9 +65,9 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 #### 2. Sistema de Níveis (Gamificação)
 - N1 (Iniciante): Novos trabalhadores
 - N2 (Experiente): 5+ avaliações, média 3.5+
-- N3 (Profissional): 15+ avaliações, média 4.0+
-- N4 (Especialista): 30+ avaliações, média 4.3+
-- N5 (Mestre): 50+ avaliações, média 4.5+
+- N3 (Profissional): 10+ avaliações, média 4.0+
+- N4 (Especialista): 15+ avaliações, média 4.3+
+- N5 (Mestre): 20+ avaliações, média 4.5+
 
 #### 3. Critérios de Avaliação
 - Qualidade do trabalho

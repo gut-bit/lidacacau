@@ -2,16 +2,13 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { Platform, StyleSheet, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { Colors, Spacing, Shadows, BorderRadius } from '@/constants/theme';
+import { Colors, Shadows } from '@/constants/theme';
 import ProducerHomeScreen from '@/screens/producer/ProducerHomeScreen';
+import CreateJobScreen from '@/screens/producer/CreateJobScreen';
 import ProducerHistoryScreen from '@/screens/producer/ProducerHistoryScreen';
 import ProducerProfileScreen from '@/screens/producer/ProducerProfileScreen';
-import { RootStackParamList } from '@/navigation/RootNavigator';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export type ProducerTabParamList = {
   ProducerHome: undefined;
@@ -22,26 +19,14 @@ export type ProducerTabParamList = {
 
 const Tab = createBottomTabNavigator<ProducerTabParamList>();
 
-function PlaceholderScreen() {
-  return null;
-}
-
-function CreateButton() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+function CreateButtonIcon({ color, focused }: { color: string; focused: boolean }) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
-
+  
   return (
-    <Pressable
-      onPress={() => navigation.navigate('CreateJob')}
-      style={({ pressed }) => [
-        styles.createButton,
-        { backgroundColor: colors.accent, opacity: pressed ? 0.9 : 1 },
-        Shadows.fab,
-      ]}
-    >
+    <View style={[styles.createButton, { backgroundColor: focused ? colors.primary : colors.accent }, Shadows.fab]}>
       <Feather name="plus" size={28} color="#FFFFFF" />
-    </Pressable>
+    </View>
   );
 }
 
@@ -59,6 +44,7 @@ export default function ProducerTabNavigator() {
           backgroundColor: Platform.select({
             ios: 'transparent',
             android: colors.backgroundRoot,
+            web: colors.backgroundRoot,
           }),
           borderTopWidth: 0,
           elevation: 0,
@@ -84,15 +70,10 @@ export default function ProducerTabNavigator() {
       />
       <Tab.Screen
         name="ProducerCreate"
-        component={PlaceholderScreen}
+        component={CreateJobScreen}
         options={{
           title: '',
-          tabBarIcon: () => <CreateButton />,
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-          },
+          tabBarIcon: ({ color, focused }) => <CreateButtonIcon color={color} focused={focused} />,
         }}
       />
       <Tab.Screen

@@ -1,17 +1,29 @@
+import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { Spacing } from "@/constants/theme";
 
-export function useScreenInsets() {
+interface ScreenInsetsOptions {
+  hasTabBar?: boolean;
+  hasHeader?: boolean;
+}
+
+const DEFAULT_TAB_BAR_HEIGHT = 80;
+const DEFAULT_HEADER_HEIGHT = 56;
+
+export function useScreenInsets(options: ScreenInsetsOptions = { hasTabBar: true, hasHeader: true }) {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
-  const tabBarHeight = useBottomTabBarHeight();
+  const { hasTabBar = true, hasHeader = true } = options;
+
+  const tabBarHeight = hasTabBar ? DEFAULT_TAB_BAR_HEIGHT : 0;
+  const headerHeight = hasHeader ? DEFAULT_HEADER_HEIGHT : 0;
 
   return {
-    paddingTop: headerHeight + Spacing.xl,
-    paddingBottom: tabBarHeight + Spacing.xl,
+    paddingTop: hasHeader ? headerHeight + Spacing.xl : insets.top + Spacing.xl,
+    paddingBottom: hasTabBar ? tabBarHeight + Spacing.xl : insets.bottom + Spacing.xl,
     scrollInsetBottom: insets.bottom + 16,
+    tabBarHeight,
+    headerHeight,
+    insets,
   };
 }
