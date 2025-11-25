@@ -123,6 +123,18 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 
 ## New Features (Latest Update)
 
+### NFS-e Integration (2025-11-25)
+Sistema de acesso rápido à emissão de Nota Fiscal Eletrônica:
+- **Tela NFSeScreen**: Acesso direto ao portal ISSIntegra da Prefeitura de Uruará
+- **Botão Principal**: Abre o portal em navegador integrado (expo-web-browser)
+- **Guia Passo-a-Passo**: 3 etapas para emitir nota fiscal
+- **Serviços Concluídos**: Lista de trabalhos que podem precisar de nota fiscal
+- **Links Úteis**: Acesso ao site da Prefeitura
+- **Info Nota Avulsa**: Informação sobre NFS-e avulsa (R$ 22,90)
+- **Acesso via Perfil**: Menu "Nota Fiscal Eletrônica" no perfil do produtor
+
+Portal: https://uruara-pa.issintegra.com.br/usuarios/entrar
+
 ### Interactive Tutorial System (2025-11-25)
 Novo sistema de onboarding interativo como em jogos, que guia novos usuários através das funcionalidades principais:
 - **Tela de Tutorial**: Guia passo-a-passo com 6 etapas diferentes para Produtores e Trabalhadores

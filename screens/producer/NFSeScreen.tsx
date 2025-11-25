@@ -91,10 +91,10 @@ export default function NFSeScreen() {
             <Feather name="file-text" size={32} color="#FFFFFF" />
           </View>
           <ThemedText type="h3" style={styles.headerTitle}>
-            Nota Fiscal Eletronica
+            Nota Fiscal Eletrônica
           </ThemedText>
           <ThemedText type="small" style={styles.headerSubtitle}>
-            Emita suas notas fiscais de servico diretamente pelo portal ISSIntegra da Prefeitura de Uruara
+            Emita suas notas fiscais de serviço diretamente pelo portal ISSIntegra da Prefeitura de Uruará
           </ThemedText>
         </View>
 
@@ -147,10 +147,10 @@ export default function NFSeScreen() {
             </View>
             <View style={styles.stepContent}>
               <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Faca Login
+                Faça Login
               </ThemedText>
               <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                Use seu CPF/CNPJ e inscricao municipal para entrar
+                Use seu CPF/CNPJ e inscrição municipal para entrar
               </ThemedText>
             </View>
           </View>
@@ -164,7 +164,7 @@ export default function NFSeScreen() {
                 Emita a Nota
               </ThemedText>
               <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                Preencha os dados do servico e do tomador
+                Preencha os dados do serviço e do tomador
               </ThemedText>
             </View>
           </View>
@@ -173,7 +173,7 @@ export default function NFSeScreen() {
         {completedOrders.length > 0 ? (
           <View style={styles.ordersSection}>
             <ThemedText type="h4" style={styles.sectionTitle}>
-              Servicos Concluidos
+              Serviços Concluídos
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary, marginBottom: Spacing.md }}>
               Trabalhos que podem precisar de nota fiscal
@@ -194,7 +194,7 @@ export default function NFSeScreen() {
                   </View>
                   <View style={styles.orderInfo}>
                     <ThemedText type="body" style={{ fontWeight: '600' }}>
-                      {order.serviceType?.name || 'Servico'}
+                      {order.serviceType?.name || 'Serviço'}
                     </ThemedText>
                     <ThemedText type="small" style={{ color: colors.textSecondary }}>
                       {order.worker?.name || 'Trabalhador'}
@@ -212,7 +212,7 @@ export default function NFSeScreen() {
                 <View style={[styles.orderStatus, { backgroundColor: colors.success + '15' }]}>
                   <Feather name="check-circle" size={14} color={colors.success} />
                   <ThemedText type="small" style={{ color: colors.success, fontWeight: '500' }}>
-                    Concluido
+                    Concluído
                   </ThemedText>
                 </View>
               </View>
@@ -222,7 +222,7 @@ export default function NFSeScreen() {
 
         <View style={styles.linksSection}>
           <ThemedText type="h4" style={styles.sectionTitle}>
-            Links Uteis
+            Links Úteis
           </ThemedText>
 
           <Pressable
@@ -254,7 +254,7 @@ export default function NFSeScreen() {
                 Nota Fiscal Avulsa
               </ThemedText>
               <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                Para quem nao possui inscricao municipal, e possivel emitir nota fiscal avulsa pelo portal por R$ 22,90 por nota.
+                Para quem não possui inscrição municipal, é possível emitir nota fiscal avulsa pelo portal por R$ 22,90 por nota.
               </ThemedText>
             </View>
           </View>
