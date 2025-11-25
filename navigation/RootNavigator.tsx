@@ -1,0 +1,112 @@
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
+import LoginScreen from '@/screens/auth/LoginScreen';
+import ProducerTabNavigator from '@/navigation/ProducerTabNavigator';
+import WorkerTabNavigator from '@/navigation/WorkerTabNavigator';
+import AdminStackNavigator from '@/navigation/AdminStackNavigator';
+import JobDetailScreen from '@/screens/shared/JobDetailScreen';
+import CreateJobScreen from '@/screens/producer/CreateJobScreen';
+import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
+import ReviewScreen from '@/screens/shared/ReviewScreen';
+import { getCommonScreenOptions } from '@/navigation/screenOptions';
+
+export type RootStackParamList = {
+  Login: undefined;
+  ProducerTabs: undefined;
+  WorkerTabs: undefined;
+  AdminStack: undefined;
+  JobDetail: { jobId: string };
+  CreateJob: undefined;
+  ActiveWorkOrder: { workOrderId: string };
+  Review: { workOrderId: string; revieweeId: string; revieweeName: string };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function RootNavigator() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const { theme, isDark } = useTheme();
+
+  if (isLoading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.link} />
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={getCommonScreenOptions({ theme, isDark, transparent: false })}>
+      {!isAuthenticated ? (
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+      ) : user?.role === 'admin' ? (
+        <Stack.Screen
+          name="AdminStack"
+          component={AdminStackNavigator}
+          options={{ headerShown: false }}
+        />
+      ) : user?.role === 'producer' ? (
+        <>
+          <Stack.Screen
+            name="ProducerTabs"
+            component={ProducerTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="JobDetail"
+            component={JobDetailScreen}
+            options={{ title: 'Detalhes da Demanda' }}
+          />
+          <Stack.Screen
+            name="CreateJob"
+            component={CreateJobScreen}
+            options={{ title: 'Nova Demanda', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="Review"
+            component={ReviewScreen}
+            options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen
+            name="WorkerTabs"
+            component={WorkerTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="JobDetail"
+            component={JobDetailScreen}
+            options={{ title: 'Detalhes do Trabalho' }}
+          />
+          <Stack.Screen
+            name="ActiveWorkOrder"
+            component={ActiveWorkOrderScreen}
+            options={{ title: 'Serviço em Andamento' }}
+          />
+          <Stack.Screen
+            name="Review"
+            component={ReviewScreen}
+            options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
+          />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

@@ -9,13 +9,14 @@ import Animated, {
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing, Colors } from "@/constants/theme";
 
 interface ButtonProps {
   onPress?: () => void;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  variant?: "primary" | "secondary" | "outline";
 }
 
 const springConfig: WithSpringConfig = {
@@ -33,8 +34,10 @@ export function Button({
   children,
   style,
   disabled = false,
+  variant = "primary",
 }: ButtonProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -53,6 +56,18 @@ export function Button({
     }
   };
 
+  const getBackgroundColor = () => {
+    if (variant === "outline") return "transparent";
+    if (variant === "secondary") return colors.backgroundSecondary;
+    return colors.primary;
+  };
+
+  const getTextColor = () => {
+    if (variant === "outline") return colors.primary;
+    if (variant === "secondary") return colors.text;
+    return "#FFFFFF";
+  };
+
   return (
     <AnimatedPressable
       onPress={disabled ? undefined : onPress}
@@ -62,8 +77,10 @@ export function Button({
       style={[
         styles.button,
         {
-          backgroundColor: theme.link,
+          backgroundColor: getBackgroundColor(),
           opacity: disabled ? 0.5 : 1,
+          borderWidth: variant === "outline" ? 2 : 0,
+          borderColor: variant === "outline" ? colors.primary : undefined,
         },
         style,
         animatedStyle,
@@ -71,7 +88,7 @@ export function Button({
     >
       <ThemedText
         type="body"
-        style={[styles.buttonText, { color: theme.buttonText }]}
+        style={[styles.buttonText, { color: getTextColor() }]}
       >
         {children}
       </ThemedText>
@@ -82,9 +99,10 @@ export function Button({
 const styles = StyleSheet.create({
   button: {
     height: Spacing.buttonHeight,
-    borderRadius: BorderRadius.full,
+    borderRadius: BorderRadius.xs,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: Spacing["2xl"],
   },
   buttonText: {
     fontWeight: "600",

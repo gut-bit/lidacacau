@@ -1,22 +1,22 @@
 import React from "react";
-import { View, StyleSheet, Image } from "react-native";
-
+import { View, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/theme";
 
 interface HeaderTitleProps {
-  title: string;
+  title?: string;
 }
 
-export function HeaderTitle({ title }: HeaderTitleProps) {
+export function HeaderTitle({ title = "CacauServ" }: HeaderTitleProps) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../assets/images/icon.png")}
+        source={require("@/assets/images/icon.png")}
         style={styles.icon}
-        resizeMode="contain"
+        contentFit="contain"
       />
-      <ThemedText style={styles.title}>{title}</ThemedText>
+      <ThemedText type="h4">{title}</ThemedText>
     </View>
   );
 }
@@ -26,14 +26,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
+    gap: Spacing.sm,
   },
   icon: {
     width: 28,
     height: 28,
-    marginRight: Spacing.sm,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
+    borderRadius: 6,
   },
 });
