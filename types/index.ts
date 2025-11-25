@@ -6,6 +6,14 @@ export type WorkOrderStatus = 'assigned' | 'checked_in' | 'checked_out' | 'compl
 
 export type WorkerLevel = 1 | 2 | 3 | 4 | 5;
 
+export interface Property {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -16,6 +24,7 @@ export interface User {
   level?: WorkerLevel;
   totalReviews?: number;
   averageRating?: number;
+  properties?: Property[];
   createdAt: string;
 }
 
@@ -40,6 +49,7 @@ export interface Job {
   endDate?: string;
   offer: number;
   notes?: string;
+  photos?: string[];
   status: JobStatus;
   createdAt: string;
 }

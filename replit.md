@@ -12,6 +12,10 @@ Agro work é um aplicativo mobile (Expo React Native) de marketplace que conecta
 - Interface 100% em Português (PT-BR)
 
 ## Recent Changes
+- 2025-11-25 (Latest): Integração de gerenciamento de propriedades com GPS (expo-location) e upload de múltiplas fotos para demandas
+  - ProducerPropertiesScreen: Tela para adicionar/remover propriedades com localização automática
+  - Enhanced CreateJobScreen: Upload de até 5 fotos com preview e descrição incentivada
+  - Property management no perfil do produtor
 - 2025-11-25: Criação completa do MVP com todas as telas e funcionalidades
 
 ## Project Architecture
@@ -101,7 +105,26 @@ Produtor -> Cria Demanda -> Trabalhador Envia Proposta
 
 ## Technical Notes
 - Persistência: AsyncStorage (offline-first)
-- Localização: expo-location (check-in/check-out GPS)
-- Fotos: expo-image-picker (antes/depois do serviço)
+- Localização: expo-location (check-in/check-out GPS + gerenciamento de propriedades)
+- Fotos: expo-image-picker (criação de demandas com até 5 fotos + antes/depois do serviço)
 - Navegação: React Navigation 7+
 - Tema: Suporte dark/light mode
+
+## New Features (Latest Update)
+
+### Property Management System
+- Produtores podem adicionar propriedades através da tela "Gerenciar Propriedades"
+- Localização automática com GPS (reverse geocoding)
+- Nome customizável para cada propriedade
+- Removê-las quando necessário
+- Acessível via menu do Perfil do Produtor
+
+### Enhanced Job Creation
+- Upload de múltiplas fotos (até 5) para melhorar visibilidade da demanda
+- Preview em miniatura com opção de remoção
+- Campo de descrição obrigatório com dicas:
+  - Incentiva descrição detalhada
+  - Sugere incluir: padrão desejado, requisitos especiais, urgência, contatos
+  - Dica visual com ícone de lightbulb
+- Validação de descrição não-vazia
+- Fotos armazenadas com a demanda

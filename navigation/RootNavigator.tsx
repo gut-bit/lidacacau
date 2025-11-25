@@ -9,6 +9,7 @@ import WorkerTabNavigator from '@/navigation/WorkerTabNavigator';
 import AdminStackNavigator from '@/navigation/AdminStackNavigator';
 import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
+import ProducerPropertiesScreen from '@/screens/producer/ProducerPropertiesScreen';
 import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   AdminStack: undefined;
   JobDetail: { jobId: string };
   CreateJob: undefined;
+  ProducerProperties: undefined;
   ActiveWorkOrder: { workOrderId: string };
   Review: { workOrderId: string; revieweeId: string; revieweeName: string };
 };
@@ -68,6 +70,11 @@ export default function RootNavigator() {
             name="CreateJob"
             component={CreateJobScreen}
             options={{ title: 'Nova Demanda', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="ProducerProperties"
+            component={ProducerPropertiesScreen}
+            options={{ title: 'Minhas Propriedades' }}
           />
           <Stack.Screen
             name="Review"

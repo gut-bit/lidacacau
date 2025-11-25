@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
@@ -10,8 +12,10 @@ import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export default function ProducerProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme, isDark } = useTheme();
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
@@ -30,10 +34,10 @@ export default function ProducerProfileScreen() {
   };
 
   const menuItems = [
+    { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },
     { icon: 'bell', label: 'Notificações', onPress: () => {} },
     { icon: 'help-circle', label: 'Ajuda', onPress: () => {} },
-    { icon: 'info', label: 'Sobre o App', onPress: () => {} },
   ];
 
   return (
