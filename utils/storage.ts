@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Job, Bid, WorkOrder, Review } from '@/types';
+import { User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
 const STORAGE_KEYS = {
@@ -9,6 +9,8 @@ const STORAGE_KEYS = {
   BIDS: '@cacauserv:bids',
   WORK_ORDERS: '@cacauserv:work_orders',
   REVIEWS: '@cacauserv:reviews',
+  SKILL_PROGRESS: '@cacauserv:skill_progress',
+  QUIZ_ATTEMPTS: '@cacauserv:quiz_attempts',
   INITIALIZED: '@cacauserv:initialized',
 };
 
@@ -484,5 +486,145 @@ export const clearAllData = async (): Promise<void> => {
     await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
   } catch (error) {
     console.error('Error clearing data:', error);
+  }
+};
+
+export const getAllSkillProgress = async (userId: string): Promise<SkillProgress[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SKILL_PROGRESS);
+    const allProgress: SkillProgress[] = data ? JSON.parse(data) : [];
+    return allProgress.filter((p) => p.skillId.startsWith(userId + '_') || allProgress.some(sp => sp.skillId === p.skillId));
+  } catch (error) {
+    console.error('Error getting all skill progress:', error);
+    return [];
+  }
+};
+
+export const getSkillProgress = async (userId: string, skillId: string): Promise<SkillProgress | null> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SKILL_PROGRESS);
+    const allProgress: SkillProgress[] = data ? JSON.parse(data) : [];
+    const key = `${userId}_${skillId}`;
+    return allProgress.find((p) => p.skillId === key) || null;
+  } catch (error) {
+    console.error('Error getting skill progress:', error);
+    return null;
+  }
+};
+
+export const updateSkillProgress = async (
+  userId: string,
+  skillId: string,
+  updates: Partial<SkillProgress>
+): Promise<SkillProgress> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SKILL_PROGRESS);
+    const allProgress: SkillProgress[] = data ? JSON.parse(data) : [];
+    const key = `${userId}_${skillId}`;
+    const index = allProgress.findIndex((p) => p.skillId === key);
+    
+    const defaultProgress: SkillProgress = {
+      skillId: key,
+      xpTotal: 0,
+      level: 'teaser',
+      coursesCompleted: [],
+      quizzesCompleted: [],
+      updatedAt: new Date().toISOString(),
+    };
+    
+    if (index === -1) {
+      const newProgress = { ...defaultProgress, ...updates, skillId: key };
+      allProgress.push(newProgress);
+      await AsyncStorage.setItem(STORAGE_KEYS.SKILL_PROGRESS, JSON.stringify(allProgress));
+      return newProgress;
+    } else {
+      allProgress[index] = { 
+        ...allProgress[index], 
+        ...updates, 
+        updatedAt: new Date().toISOString() 
+      };
+      await AsyncStorage.setItem(STORAGE_KEYS.SKILL_PROGRESS, JSON.stringify(allProgress));
+      return allProgress[index];
+    }
+  } catch (error) {
+    console.error('Error updating skill progress:', error);
+    throw error;
+  }
+};
+
+export const addXPToSkill = async (
+  userId: string,
+  skillId: string,
+  xpAmount: number,
+  courseId?: string,
+  quizResult?: { quizId: string; score: number }
+): Promise<SkillProgress> => {
+  try {
+    const current = await getSkillProgress(userId, skillId);
+    const currentXP = current?.xpTotal || 0;
+    const coursesCompleted = current?.coursesCompleted || [];
+    const quizzesCompleted = current?.quizzesCompleted || [];
+    
+    if (courseId && !coursesCompleted.includes(courseId)) {
+      coursesCompleted.push(courseId);
+    }
+    
+    if (quizResult) {
+      const existingQuiz = quizzesCompleted.find(q => q.quizId === quizResult.quizId);
+      if (existingQuiz) {
+        if (quizResult.score > existingQuiz.bestScore) {
+          existingQuiz.bestScore = quizResult.score;
+        }
+        existingQuiz.attempts++;
+        existingQuiz.lastAttempt = new Date().toISOString();
+      } else {
+        quizzesCompleted.push({
+          quizId: quizResult.quizId,
+          bestScore: quizResult.score,
+          attempts: 1,
+          lastAttempt: new Date().toISOString(),
+        });
+      }
+    }
+    
+    return await updateSkillProgress(userId, skillId, {
+      xpTotal: currentXP + xpAmount,
+      coursesCompleted,
+      quizzesCompleted,
+    });
+  } catch (error) {
+    console.error('Error adding XP to skill:', error);
+    throw error;
+  }
+};
+
+export const getQuizAttempts = async (userId: string, quizId: string): Promise<QuizAttempt[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.QUIZ_ATTEMPTS);
+    const allAttempts: QuizAttempt[] = data ? JSON.parse(data) : [];
+    return allAttempts.filter((a) => a.userId === userId && a.quizId === quizId);
+  } catch (error) {
+    console.error('Error getting quiz attempts:', error);
+    return [];
+  }
+};
+
+export const saveQuizAttempt = async (attempt: Omit<QuizAttempt, 'id' | 'createdAt'>): Promise<QuizAttempt> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.QUIZ_ATTEMPTS);
+    const allAttempts: QuizAttempt[] = data ? JSON.parse(data) : [];
+    
+    const newAttempt: QuizAttempt = {
+      ...attempt,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+    
+    allAttempts.push(newAttempt);
+    await AsyncStorage.setItem(STORAGE_KEYS.QUIZ_ATTEMPTS, JSON.stringify(allAttempts));
+    return newAttempt;
+  } catch (error) {
+    console.error('Error saving quiz attempt:', error);
+    throw error;
   }
 };

@@ -18,6 +18,10 @@ import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
 import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
 import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
 import SocialLinksScreen from '@/screens/shared/SocialLinksScreen';
+import EducationScreen from '@/screens/education/EducationScreen';
+import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
+import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
+import QuizScreen from '@/screens/education/QuizScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User } from '@/types';
 
@@ -54,6 +58,10 @@ export type RootStackParamList = {
     isProducer: boolean;
   };
   SocialLinks: undefined;
+  Education: undefined;
+  SkillDetail: { skillId: string };
+  CourseDetail: { courseId: string };
+  Quiz: { quizId: string; skillId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -142,6 +150,26 @@ export default function RootNavigator() {
             component={SocialLinksScreen}
             options={{ title: 'Redes Sociais' }}
           />
+          <Stack.Screen
+            name="Education"
+            component={EducationScreen}
+            options={{ title: 'Capacitacao' }}
+          />
+          <Stack.Screen
+            name="SkillDetail"
+            component={SkillDetailScreen}
+            options={{ title: 'Detalhes da Habilidade' }}
+          />
+          <Stack.Screen
+            name="CourseDetail"
+            component={CourseDetailScreen}
+            options={{ title: 'Curso' }}
+          />
+          <Stack.Screen
+            name="Quiz"
+            component={QuizScreen}
+            options={{ title: 'Quiz' }}
+          />
         </>
       ) : (
         <>
@@ -184,6 +212,26 @@ export default function RootNavigator() {
             name="SocialLinks"
             component={SocialLinksScreen}
             options={{ title: 'Redes Sociais' }}
+          />
+          <Stack.Screen
+            name="Education"
+            component={EducationScreen}
+            options={{ title: 'Capacitacao' }}
+          />
+          <Stack.Screen
+            name="SkillDetail"
+            component={SkillDetailScreen}
+            options={{ title: 'Detalhes da Habilidade' }}
+          />
+          <Stack.Screen
+            name="CourseDetail"
+            component={CourseDetailScreen}
+            options={{ title: 'Curso' }}
+          />
+          <Stack.Screen
+            name="Quiz"
+            component={QuizScreen}
+            options={{ title: 'Quiz' }}
           />
         </>
       )}
