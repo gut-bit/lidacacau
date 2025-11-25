@@ -13,6 +13,7 @@ import ProducerPropertiesScreen from '@/screens/producer/ProducerPropertiesScree
 import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
 import TutorialScreen from '@/screens/shared/TutorialScreen';
+import NFSeScreen from '@/screens/producer/NFSeScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 
 export type RootStackParamList = {
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   JobDetail: { jobId: string };
   CreateJob: undefined;
   ProducerProperties: undefined;
+  NFSe: undefined;
   ActiveWorkOrder: { workOrderId: string };
   Review: { workOrderId: string; revieweeId: string; revieweeName: string };
 };
@@ -83,6 +85,11 @@ export default function RootNavigator() {
             name="ProducerProperties"
             component={ProducerPropertiesScreen}
             options={{ title: 'Minhas Propriedades' }}
+          />
+          <Stack.Screen
+            name="NFSe"
+            component={NFSeScreen}
+            options={{ title: 'Nota Fiscal' }}
           />
           <Stack.Screen
             name="Review"
