@@ -219,3 +219,27 @@ Novo sistema de onboarding interativo como em jogos, que guia novos usuários at
   - Dica visual com ícone de lightbulb
 - Validação de descrição não-vazia
 - Fotos armazenadas com a demanda
+
+### Social Media Integration (2025-11-25)
+Sistema completo de integração de redes sociais opcionais no perfil:
+- **Campos Suportados** (todos opcionais):
+  - WhatsApp (link direto wa.me)
+  - Instagram (link instagram.com)
+  - Facebook (link facebook.com)
+  - Telegram (link t.me)
+  - YouTube (link youtube.com)
+  - LinkedIn (link linkedin.com)
+- **Componentes**:
+  - `SocialLinksDisplay`: Exibe ícones coloridos das redes sociais com cores de marca
+  - `SocialLinksEditor`: Formulário para editar links no perfil
+  - `CommunityWhatsAppButton`: Botão para grupo da comunidade Agro work
+- **Integração**:
+  - Tela `SocialLinksScreen` para edição completa de links
+  - Menu "Redes Sociais" nos perfis de Produtor e Trabalhador
+  - Exibição de redes sociais nas propostas (para produtor ver do trabalhador)
+  - Exibição na ordem de serviço (produtor vê contatos do trabalhador)
+  - Seção "Contato do Produtor" para trabalhadores (nome, telefone, redes sociais)
+- **UX**: 
+  - Ícones com cores de marca (WhatsApp verde, Instagram gradiente, etc.)
+  - Links abrem diretamente no app ou navegador
+  - Tamanhos "small" e "medium" para diferentes contextos
