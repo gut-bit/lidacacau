@@ -17,6 +17,7 @@ import NFSeScreen from '@/screens/producer/NFSeScreen';
 import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
 import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
 import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
+import SocialLinksScreen from '@/screens/shared/SocialLinksScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User } from '@/types';
 
@@ -52,6 +53,7 @@ export type RootStackParamList = {
     workOrderId: string;
     isProducer: boolean;
   };
+  SocialLinks: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -135,6 +137,11 @@ export default function RootNavigator() {
             component={ContractSigningScreen}
             options={{ title: 'Assinar Contrato de Empreitada' }}
           />
+          <Stack.Screen
+            name="SocialLinks"
+            component={SocialLinksScreen}
+            options={{ title: 'Redes Sociais' }}
+          />
         </>
       ) : (
         <>
@@ -172,6 +179,11 @@ export default function RootNavigator() {
             name="NegotiationTerms"
             component={NegotiationTermsScreen}
             options={{ title: 'Negociar Pagamento' }}
+          />
+          <Stack.Screen
+            name="SocialLinks"
+            component={SocialLinksScreen}
+            options={{ title: 'Redes Sociais' }}
           />
         </>
       )}

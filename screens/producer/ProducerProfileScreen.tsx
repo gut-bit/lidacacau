@@ -9,6 +9,7 @@ import { Image } from 'expo-image';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { SocialLinksDisplay, CommunityWhatsAppButton } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -34,10 +35,11 @@ export default function ProducerProfileScreen() {
   };
 
   const menuItems = [
-    { icon: 'file-text', label: 'Nota Fiscal Eletrônica', onPress: () => navigation.navigate('NFSe'), highlight: true },
+    { icon: 'file-text', label: 'Nota Fiscal Eletronica', onPress: () => navigation.navigate('NFSe'), highlight: true },
     { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },
+    { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },
-    { icon: 'bell', label: 'Notificações', onPress: () => {} },
+    { icon: 'bell', label: 'Notificacoes', onPress: () => {} },
     { icon: 'help-circle', label: 'Ajuda', onPress: () => {} },
   ];
 
@@ -67,6 +69,14 @@ export default function ProducerProfileScreen() {
           <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.sm }}>
             {user?.email}
           </ThemedText>
+
+          <View style={styles.socialLinksContainer}>
+            <SocialLinksDisplay socialLinks={user?.socialLinks} size="medium" />
+          </View>
+        </View>
+
+        <View style={styles.communityContainer}>
+          <CommunityWhatsAppButton />
         </View>
 
         <View style={styles.menuContainer}>
@@ -136,6 +146,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
     marginTop: Spacing.sm,
+  },
+  socialLinksContainer: {
+    marginTop: Spacing.lg,
+  },
+  communityContainer: {
+    marginBottom: Spacing['2xl'],
   },
   menuContainer: {
     gap: Spacing.md,

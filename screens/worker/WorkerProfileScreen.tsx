@@ -2,19 +2,23 @@ import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { SocialLinksDisplay, CommunityWhatsAppButton } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { getWorkOrdersByWorker, getReviewsByUser } from '@/utils/storage';
 import { getLevelLabel, getLevelRequirement } from '@/utils/format';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export default function WorkerProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme, isDark } = useTheme();
   const { user, logout, refreshUser } = useAuth();
   const insets = useSafeAreaInsets();
@@ -58,8 +62,9 @@ export default function WorkerProfileScreen() {
   const nextLevelColor = LevelColors[`N${nextLevel}` as keyof typeof LevelColors];
 
   const menuItems = [
+    { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },
-    { icon: 'bell', label: 'Notificações', onPress: () => {} },
+    { icon: 'bell', label: 'Notificacoes', onPress: () => {} },
     { icon: 'help-circle', label: 'Ajuda', onPress: () => {} },
     { icon: 'info', label: 'Sobre o App', onPress: () => {} },
   ];
@@ -89,6 +94,14 @@ export default function WorkerProfileScreen() {
           <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.sm }}>
             {user?.email}
           </ThemedText>
+
+          <View style={styles.socialLinksContainer}>
+            <SocialLinksDisplay socialLinks={user?.socialLinks} size="medium" />
+          </View>
+        </View>
+
+        <View style={styles.communityContainer}>
+          <CommunityWhatsAppButton />
         </View>
 
         {level < 5 && (
@@ -206,6 +219,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     marginTop: Spacing.sm,
+  },
+  socialLinksContainer: {
+    marginTop: Spacing.lg,
+  },
+  communityContainer: {
+    marginBottom: Spacing.lg,
   },
   progressCard: {
     padding: Spacing.lg,
