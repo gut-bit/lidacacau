@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, Pressable } from 'react-native';
-import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from './ThemedText';
 import { MapActivity, MapRegion, VILA_ALVORADA_KM140 } from '@/types';
 import { Spacing } from '@/constants/theme';
+
+let MapView: any = null;
+let Marker: any = null;
+let Circle: any = null;
+let PROVIDER_DEFAULT: any = null;
+
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  Circle = Maps.Circle;
+  PROVIDER_DEFAULT = Maps.PROVIDER_DEFAULT;
+}
 
 interface MapHubProps {
   activities?: MapActivity[];
@@ -26,7 +38,7 @@ export function MapHub({
   height = 250,
 }: MapHubProps) {
   const { theme: colors } = useTheme();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
@@ -96,7 +108,7 @@ export function MapHub({
 
   const handleRadiusSelect = (radius: number) => {
     onRadiusChange(radius);
-    if (mapRef.current) {
+    if (mapRef.current && Platform.OS !== 'web') {
       const delta = calculateDelta(radius);
       mapRef.current.animateToRegion({
         ...centerLocation,
@@ -106,58 +118,87 @@ export function MapHub({
     }
   };
 
+  const renderWebFallback = () => (
+    <View style={[styles.webFallback, { backgroundColor: colors.primary + '10' }]}>
+      <View style={[styles.webFallbackIcon, { backgroundColor: colors.primary + '20' }]}>
+        <Feather name="map" size={48} color={colors.primary} />
+      </View>
+      <ThemedText type="h4" style={{ color: colors.text, marginTop: Spacing.md }}>
+        Mapa da Regiao
+      </ThemedText>
+      <ThemedText type="body" style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>
+        {VILA_ALVORADA_KM140.name}
+      </ThemedText>
+      <ThemedText type="small" style={{ color: colors.textSecondary, textAlign: 'center' }}>
+        Raio: {searchRadius}km
+      </ThemedText>
+      {activities.length > 0 ? (
+        <View style={[styles.webActivityBadge, { backgroundColor: colors.accent }]}>
+          <Feather name="activity" size={14} color="#FFFFFF" />
+          <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600', marginLeft: 4 }}>
+            {activities.length} {activities.length === 1 ? 'atividade' : 'atividades'} na area
+          </ThemedText>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const renderNativeMap = () => (
+    <MapView
+      ref={mapRef}
+      style={styles.map}
+      provider={PROVIDER_DEFAULT}
+      initialRegion={initialRegion}
+      showsUserLocation={true}
+      showsMyLocationButton={false}
+      showsCompass={false}
+      onMapReady={() => setMapReady(true)}
+      mapType="standard"
+    >
+      <Circle
+        center={centerLocation}
+        radius={radiusInMeters}
+        strokeColor={colors.primary + '80'}
+        fillColor={colors.primary + '15'}
+        strokeWidth={2}
+      />
+
+      <Marker
+        coordinate={centerLocation}
+        title={VILA_ALVORADA_KM140.name}
+        description={`${VILA_ALVORADA_KM140.city}/${VILA_ALVORADA_KM140.state}`}
+        pinColor={colors.primary}
+      />
+
+      {activities.map((activity) => (
+        <Marker
+          key={activity.id}
+          coordinate={{
+            latitude: activity.latitude,
+            longitude: activity.longitude,
+          }}
+          title={activity.title}
+          description={activity.subtitle}
+          onPress={() => onActivityPress?.(activity)}
+        >
+          <View style={[
+            styles.customMarker,
+            { backgroundColor: getMarkerColor(activity) }
+          ]}>
+            <Feather 
+              name={activity.icon as any} 
+              size={16} 
+              color="#FFFFFF" 
+            />
+          </View>
+        </Marker>
+      ))}
+    </MapView>
+  );
+
   return (
     <View style={[styles.container, { height }]}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={initialRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        onMapReady={() => setMapReady(true)}
-        mapType="standard"
-      >
-        <Circle
-          center={centerLocation}
-          radius={radiusInMeters}
-          strokeColor={colors.primary + '80'}
-          fillColor={colors.primary + '15'}
-          strokeWidth={2}
-        />
-
-        <Marker
-          coordinate={centerLocation}
-          title={VILA_ALVORADA_KM140.name}
-          description={`${VILA_ALVORADA_KM140.city}/${VILA_ALVORADA_KM140.state}`}
-          pinColor={colors.primary}
-        />
-
-        {activities.map((activity) => (
-          <Marker
-            key={activity.id}
-            coordinate={{
-              latitude: activity.latitude,
-              longitude: activity.longitude,
-            }}
-            title={activity.title}
-            description={activity.subtitle}
-            onPress={() => onActivityPress?.(activity)}
-          >
-            <View style={[
-              styles.customMarker,
-              { backgroundColor: getMarkerColor(activity) }
-            ]}>
-              <Feather 
-                name={activity.icon as any} 
-                size={16} 
-                color="#FFFFFF" 
-              />
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      {Platform.OS === 'web' ? renderWebFallback() : renderNativeMap()}
 
       <View style={[styles.radiusSelector, { backgroundColor: colors.card + 'E6' }]}>
         <View style={styles.radiusHeader}>
@@ -286,5 +327,28 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  webFallback: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: Spacing.lg,
+  },
+  webFallbackIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webActivityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: Spacing.md,
   },
 });

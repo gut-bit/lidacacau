@@ -12,7 +12,16 @@ Agro work é um aplicativo mobile (Expo React Native) de marketplace que conecta
 - Interface 100% em Português (PT-BR)
 
 ## Recent Changes
-- 2025-11-25 (Latest): Home screen hub com atividade da comunidade
+- 2025-11-25 (Latest): Dual-role system, MapHub, and enhanced profiles
+  - **Dual-Role Architecture**: Users can be both Produtor and Trabalhador
+  - **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA"
+    - Radius selector (10km, 25km, 50km, 75km, 100km)
+    - Activity markers for jobs and workers
+    - Web fallback placeholder (react-native-maps not supported on web)
+  - **RoleSwitcher Component**: Easy role switching in header
+  - **ProfileStats Component**: Enhanced profile with badges, goals, completion tracking
+  - **Home Screens Updated**: Both producer and worker screens have MapHub and RoleSwitcher
+- 2025-11-25: Home screen hub com atividade da comunidade
   - ProducerHomeScreen: Feed de "Atividade na Região" com jobs de outros usuários
   - WorkerJobsScreen: Seções "Trabalhando Agora" (live), "Conquistas Recentes", e "Trabalhos Disponíveis"
   - Sample data em data/sampleData.ts para demonstrar funcionalidades

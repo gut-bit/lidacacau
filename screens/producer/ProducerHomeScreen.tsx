@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, FlatList, Pressable, RefreshControl, SectionList } from 'react-native';
+import { StyleSheet, View, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -8,20 +8,22 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { MapHub } from '@/components/MapHub';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
-import { Job, JobWithDetails } from '@/types';
-import { getJobsByProducer, getUserById, getBidsByJob } from '@/utils/storage';
-import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
-import { formatCurrency, formatQuantityWithUnit, getStatusLabel, getStatusColor, getRelativeTime, getLevelLabel } from '@/utils/format';
-import { SAMPLE_ACTIVITY, ActivityItem, getActivityItems } from '@/data/sampleData';
+import { Job, MapActivity } from '@/types';
+import { getJobsByProducer, getBidsByJob } from '@/utils/storage';
+import { getServiceTypeById } from '@/data/serviceTypes';
+import { formatCurrency, getStatusColor, getRelativeTime, getLevelLabel } from '@/utils/format';
+import { SAMPLE_ACTIVITY, ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
 
 export default function ProducerHomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme, isDark } = useTheme();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -31,6 +33,8 @@ export default function ProducerHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
+  const [mapActivities, setMapActivities] = useState<MapActivity[]>([]);
+  const [searchRadius, setSearchRadius] = useState(user?.searchRadius || 50);
 
   const loadJobs = useCallback(async () => {
     if (!user) return;
@@ -45,12 +49,13 @@ export default function ProducerHomeScreen() {
       }
       setBidCounts(counts);
       setActivityFeed(getActivityItems());
+      setMapActivities(getMapActivities(searchRadius));
     } catch (error) {
       console.error('Error loading jobs:', error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, searchRadius]);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,13 +69,21 @@ export default function ProducerHomeScreen() {
     setRefreshing(false);
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'job_posted': return 'plus-circle';
-      case 'job_started': return 'play-circle';
-      case 'job_completed': return 'check-circle';
-      case 'review_received': return 'star';
-      default: return 'activity';
+  const handleRadiusChange = async (radius: number) => {
+    setSearchRadius(radius);
+    setMapActivities(getMapActivities(radius));
+    if (user) {
+      try {
+        await updateProfile({ searchRadius: radius });
+      } catch (error) {
+        console.error('Error updating search radius:', error);
+      }
+    }
+  };
+
+  const handleMapActivityPress = (activity: MapActivity) => {
+    if (activity.jobId) {
+      navigation.navigate('JobDetail', { jobId: activity.jobId });
     }
   };
 
@@ -234,7 +247,18 @@ export default function ProducerHomeScreen() {
               Ola, {user?.name?.split(' ')[0]}!
             </ThemedText>
           </View>
+          <RoleSwitcher compact />
         </View>
+      </View>
+
+      <View style={styles.mapSection}>
+        <MapHub
+          activities={mapActivities}
+          searchRadius={searchRadius}
+          onRadiusChange={handleRadiusChange}
+          onActivityPress={handleMapActivityPress}
+          height={220}
+        />
       </View>
 
       {jobs.length > 0 ? (
@@ -320,6 +344,9 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
   },
+  mapSection: {
+    marginBottom: Spacing.lg,
+  },
   myJobsSection: {
     marginBottom: Spacing.lg,
   },
@@ -336,14 +363,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.md,
+    width: 180,
     gap: Spacing.sm,
-    minWidth: 160,
   },
   myJobIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -358,35 +385,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   listContent: {
-    paddingTop: Spacing.md,
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.xl,
+    paddingTop: 0,
   },
   activityCard: {
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.md,
     padding: Spacing.lg,
-    borderRadius: BorderRadius.sm,
-    gap: Spacing.md,
   },
   activityHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   activityIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   activityInfo: {
     flex: 1,
-    gap: Spacing.xs,
   },
   activityTitleRow: {
     flexDirection: 'row',
@@ -396,10 +421,10 @@ const styles = StyleSheet.create({
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
+    gap: 4,
   },
   statusDot: {
     width: 6,
@@ -408,7 +433,7 @@ const styles = StyleSheet.create({
   },
   activityDetails: {
     gap: Spacing.xs,
-    paddingLeft: Spacing.md,
+    marginBottom: Spacing.md,
   },
   activityRow: {
     flexDirection: 'row',
@@ -418,46 +443,43 @@ const styles = StyleSheet.create({
   levelPill: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: BorderRadius.full,
+    borderRadius: 8,
+    marginLeft: 4,
   },
   activityFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
   },
   priceTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 4,
   },
   ratingTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 4,
   },
   emptyContainer: {
-    paddingVertical: Spacing['2xl'],
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing['2xl'],
+    justifyContent: 'center',
+    paddingHorizontal: Spacing['3xl'],
+    paddingVertical: Spacing['5xl'],
   },
   emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   emptyTitle: {
-    marginTop: Spacing.md,
     textAlign: 'center',
+    marginBottom: Spacing.md,
   },
   emptyText: {
-    marginTop: Spacing.md,
     textAlign: 'center',
     lineHeight: 24,
   },

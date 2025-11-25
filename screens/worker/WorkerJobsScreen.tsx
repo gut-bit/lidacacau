@@ -8,20 +8,22 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { MapHub } from '@/components/MapHub';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
-import { Job } from '@/types';
-import { getOpenJobs, getUserById, getBidsByWorker } from '@/utils/storage';
+import { Job, MapActivity } from '@/types';
+import { getOpenJobs, getBidsByWorker } from '@/utils/storage';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
-import { SAMPLE_ACTIVITY, ActivityItem, getActivityItems, getInProgressJobs } from '@/data/sampleData';
+import { ActivityItem, getActivityItems, getInProgressJobs, getMapActivities } from '@/data/sampleData';
 
 export default function WorkerJobsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme, isDark } = useTheme();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -32,6 +34,8 @@ export default function WorkerJobsScreen() {
   const [loading, setLoading] = useState(true);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [inProgressJobs, setInProgressJobs] = useState<ActivityItem[]>([]);
+  const [mapActivities, setMapActivities] = useState<MapActivity[]>([]);
+  const [searchRadius, setSearchRadius] = useState(user?.searchRadius || 50);
 
   const loadJobs = useCallback(async () => {
     if (!user) return;
@@ -43,12 +47,13 @@ export default function WorkerJobsScreen() {
       setJobs(openJobs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setActivityFeed(getActivityItems());
       setInProgressJobs(getInProgressJobs());
+      setMapActivities(getMapActivities(searchRadius));
     } catch (error) {
       console.error('Error loading jobs:', error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, searchRadius]);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,6 +65,24 @@ export default function WorkerJobsScreen() {
     setRefreshing(true);
     await loadJobs();
     setRefreshing(false);
+  };
+
+  const handleRadiusChange = async (radius: number) => {
+    setSearchRadius(radius);
+    setMapActivities(getMapActivities(radius));
+    if (user) {
+      try {
+        await updateProfile({ searchRadius: radius });
+      } catch (error) {
+        console.error('Error updating search radius:', error);
+      }
+    }
+  };
+
+  const handleMapActivityPress = (activity: MapActivity) => {
+    if (activity.jobId) {
+      navigation.navigate('JobDetail', { jobId: activity.jobId });
+    }
   };
 
   const renderInProgressItem = ({ item }: { item: ActivityItem }) => {
@@ -228,22 +251,33 @@ export default function WorkerJobsScreen() {
               Ola, {user?.name?.split(' ')[0]}!
             </ThemedText>
           </View>
+          <RoleSwitcher compact />
+          <View
+            style={[
+              styles.levelBadge,
+              { backgroundColor: LevelColors[`N${user?.level || 1}` as keyof typeof LevelColors], marginLeft: 8 },
+            ]}
+          >
+            <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+              {getLevelLabel(user?.level || 1)}
+            </ThemedText>
+          </View>
         </View>
-        <View
-          style={[
-            styles.levelBadge,
-            { backgroundColor: LevelColors[`N${user?.level || 1}` as keyof typeof LevelColors] },
-          ]}
-        >
-          <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-            {getLevelLabel(user?.level || 1)}
-          </ThemedText>
-        </View>
+      </View>
+
+      <View style={styles.mapSection}>
+        <MapHub
+          activities={mapActivities}
+          searchRadius={searchRadius}
+          onRadiusChange={handleRadiusChange}
+          onActivityPress={handleMapActivityPress}
+          height={200}
+        />
       </View>
 
       {inProgressJobs.length > 0 ? (
         <View style={styles.inProgressSection}>
-          <View style={styles.sectionHeader}>
+          <View style={[styles.sectionHeader, { paddingHorizontal: 0 }]}>
             <Feather name="zap" size={18} color={colors.accent} />
             <ThemedText type="h4" style={{ color: colors.accent }}>
               Trabalhando Agora
@@ -261,7 +295,7 @@ export default function WorkerJobsScreen() {
       ) : null}
 
       <View style={styles.recentSection}>
-        <View style={styles.sectionHeader}>
+        <View style={[styles.sectionHeader, { paddingHorizontal: 0 }]}>
           <Feather name="award" size={18} color={colors.success} />
           <ThemedText type="h4" style={{ color: colors.success }}>
             Conquistas Recentes
@@ -343,11 +377,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+    flex: 1,
   },
   headerLogo: {
     width: 44,
     height: 44,
     borderRadius: 12,
+  },
+  mapSection: {
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   inProgressSection: {
     marginBottom: Spacing.lg,
@@ -375,11 +414,11 @@ const styles = StyleSheet.create({
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    gap: 6,
   },
   liveDot: {
     width: 6,
@@ -404,9 +443,9 @@ const styles = StyleSheet.create({
   },
   recentSection: {
     marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
   },
   recentList: {
-    paddingHorizontal: Spacing.xl,
     gap: Spacing.md,
   },
   activityItem: {
@@ -415,7 +454,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: BorderRadius.sm,
     gap: Spacing.sm,
-    minWidth: 180,
+    minWidth: 200,
   },
   activityIcon: {
     width: 32,
@@ -427,21 +466,14 @@ const styles = StyleSheet.create({
   activityContent: {
     flex: 1,
   },
-  countBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-    marginLeft: 'auto',
-  },
   listContent: {
-    paddingTop: Spacing.md,
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.xl,
+    paddingTop: 0,
+    gap: Spacing.lg,
   },
   jobCard: {
+    marginHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
     padding: Spacing.lg,
-    borderRadius: BorderRadius.sm,
-    gap: Spacing.md,
   },
   jobHeader: {
     flexDirection: 'row',
@@ -451,7 +483,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: BorderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -459,26 +491,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   levelBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   levelBadgeSmall: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: BorderRadius.full,
+    borderRadius: 6,
   },
   priceBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    backgroundColor: '#FFB80015',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: '#FFF8E1',
-    borderRadius: BorderRadius.xs,
+    borderRadius: BorderRadius.sm,
+    alignSelf: 'flex-start',
   },
   jobDetails: {
-    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
   },
   detailRow: {
     flexDirection: 'row',
@@ -487,47 +522,56 @@ const styles = StyleSheet.create({
   },
   jobFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.md,
   },
   bidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    gap: Spacing.xs,
   },
   tapHint: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: '#00000010',
+    gap: Spacing.xs,
+  },
+  countBadge: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    marginLeft: 8,
   },
   emptyContainer: {
-    paddingVertical: Spacing['2xl'],
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing['2xl'],
+    justifyContent: 'center',
+    paddingHorizontal: Spacing['3xl'],
+    paddingVertical: Spacing['5xl'],
   },
   emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   emptyTitle: {
-    marginTop: Spacing.md,
     textAlign: 'center',
+    marginBottom: Spacing.md,
   },
   emptyText: {
-    marginTop: Spacing.md,
     textAlign: 'center',
     lineHeight: 24,
   },
