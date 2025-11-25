@@ -6,6 +6,8 @@ export type WorkOrderStatus = 'assigned' | 'checked_in' | 'checked_out' | 'compl
 
 export type WorkerLevel = 1 | 2 | 3 | 4 | 5;
 
+export type ProducerLevel = 1 | 2 | 3 | 4 | 5;
+
 export interface Property {
   id: string;
   name: string;
@@ -14,18 +16,76 @@ export interface Property {
   longitude: number;
 }
 
+export interface ProfileCompletion {
+  hasAvatar: boolean;
+  hasBio: boolean;
+  hasPhone: boolean;
+  hasLocation: boolean;
+  hasProperties: boolean;
+  hasSkills: boolean;
+  hasEquipment: boolean;
+  hasAvailability: boolean;
+  percentage: number;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  earnedAt?: string;
+  requirement: string;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  target: number;
+  current: number;
+  reward: string;
+  icon: string;
+}
+
+export interface RoleProfile {
+  bio?: string;
+  skills?: string[];
+  equipment?: string[];
+  certifications?: string[];
+  availability?: string;
+  preferredRadius?: number;
+  totalJobs?: number;
+  totalEarnings?: number;
+  totalSpent?: number;
+}
+
 export interface User {
   id: string;
   email: string;
   password: string;
   name: string;
+  phone?: string;
+  location?: string;
   role: UserRole;
+  roles: UserRole[];
+  activeRole: UserRole;
   avatar?: string;
+  coverPhoto?: string;
   level?: WorkerLevel;
+  producerLevel?: ProducerLevel;
   totalReviews?: number;
   averageRating?: number;
+  producerReviews?: number;
+  producerRating?: number;
   properties?: Property[];
   tutorialCompleted?: boolean;
+  workerProfile?: RoleProfile;
+  producerProfile?: RoleProfile;
+  badges?: Badge[];
+  goals?: Goal[];
+  profileCompletion?: ProfileCompletion;
+  searchRadius?: number;
   createdAt: string;
 }
 
@@ -117,3 +177,163 @@ export interface WorkOrderWithDetails extends WorkOrder {
   producerReview?: Review;
   workerReview?: Review;
 }
+
+export interface MapActivity {
+  id: string;
+  type: 'job' | 'worker' | 'producer';
+  status: JobStatus | 'active';
+  latitude: number;
+  longitude: number;
+  title: string;
+  subtitle: string;
+  price?: number;
+  level?: WorkerLevel | ProducerLevel;
+  rating?: number;
+  icon: string;
+  userId?: string;
+  jobId?: string;
+}
+
+export interface MapRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+export const URUARA_CENTER: MapRegion = {
+  latitude: -3.7167,
+  longitude: -53.7333,
+  latitudeDelta: 0.5,
+  longitudeDelta: 0.5,
+};
+
+export const VILA_ALVORADA_KM140 = {
+  latitude: -3.68,
+  longitude: -53.72,
+  name: 'Km 140 Vila Alvorada',
+  city: 'Uruara',
+  state: 'PA',
+};
+
+export const DEFAULT_BADGES: Badge[] = [
+  {
+    id: 'first_job',
+    name: 'Primeiro Trabalho',
+    description: 'Completou seu primeiro trabalho',
+    icon: 'award',
+    color: '#22C55E',
+    requirement: 'Complete 1 trabalho',
+  },
+  {
+    id: 'five_stars',
+    name: 'Cinco Estrelas',
+    description: 'Recebeu avaliacao de 5 estrelas',
+    icon: 'star',
+    color: '#FFB800',
+    requirement: 'Receba 5 estrelas em uma avaliacao',
+  },
+  {
+    id: 'reliable',
+    name: 'Confiavel',
+    description: 'Completou 5 trabalhos sem cancelamento',
+    icon: 'shield',
+    color: '#3B82F6',
+    requirement: 'Complete 5 trabalhos sem cancelar',
+  },
+  {
+    id: 'expert',
+    name: 'Especialista',
+    description: 'Alcancou nivel N4 ou superior',
+    icon: 'zap',
+    color: '#8B5CF6',
+    requirement: 'Alcance nivel N4',
+  },
+  {
+    id: 'master',
+    name: 'Mestre do Cacau',
+    description: 'Alcancou nivel N5',
+    icon: 'sun',
+    color: '#FFB800',
+    requirement: 'Alcance nivel N5',
+  },
+  {
+    id: 'top_producer',
+    name: 'Produtor Top',
+    description: 'Produtor com 10+ trabalhos publicados',
+    icon: 'briefcase',
+    color: '#2D5016',
+    requirement: 'Publique 10 demandas',
+  },
+  {
+    id: 'fair_payer',
+    name: 'Pagador Justo',
+    description: 'Produtor com media de justica 4.5+',
+    icon: 'dollar-sign',
+    color: '#22C55E',
+    requirement: 'Mantenha media de justica acima de 4.5',
+  },
+  {
+    id: 'quick_hire',
+    name: 'Contratacao Rapida',
+    description: 'Contratou trabalhador em menos de 24h',
+    icon: 'clock',
+    color: '#F59E0B',
+    requirement: 'Aceite proposta em menos de 24 horas',
+  },
+  {
+    id: 'profile_complete',
+    name: 'Perfil Completo',
+    description: 'Completou 100% do perfil',
+    icon: 'check-circle',
+    color: '#22C55E',
+    requirement: 'Preencha todos os campos do perfil',
+  },
+  {
+    id: 'community_member',
+    name: 'Membro da Comunidade',
+    description: 'Ativo na regiao de Uruara',
+    icon: 'users',
+    color: '#8B4513',
+    requirement: 'Complete trabalhos na regiao',
+  },
+];
+
+export const DEFAULT_GOALS: Goal[] = [
+  {
+    id: 'complete_profile',
+    title: 'Complete seu Perfil',
+    description: 'Preencha todas as informacoes do seu perfil',
+    target: 100,
+    current: 0,
+    reward: 'Badge Perfil Completo',
+    icon: 'user',
+  },
+  {
+    id: 'first_review',
+    title: 'Primeira Avaliacao',
+    description: 'Receba sua primeira avaliacao',
+    target: 1,
+    current: 0,
+    reward: 'Desbloqueie novos recursos',
+    icon: 'star',
+  },
+  {
+    id: 'reach_n2',
+    title: 'Alcance Nivel N2',
+    description: 'Complete 5 trabalhos com media 3.5+',
+    target: 5,
+    current: 0,
+    reward: 'Acesso a mais tipos de servico',
+    icon: 'trending-up',
+  },
+  {
+    id: 'earn_1000',
+    title: 'Ganhe R$ 1.000',
+    description: 'Acumule R$ 1.000 em ganhos',
+    target: 1000,
+    current: 0,
+    reward: 'Badge Trabalhador Dedicado',
+    icon: 'dollar-sign',
+  },
+];
