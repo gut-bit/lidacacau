@@ -179,18 +179,23 @@ export default function NegotiationTermsScreen() {
           break;
       }
 
+      const existingWorkOrder = await getWorkOrderById(workOrderId);
+      const existingHistory = existingWorkOrder?.negotiationHistory || [];
+
+      const newProposal = {
+        id: Date.now().toString(),
+        proposerId: user?.id || '',
+        proposerRole: isProducer ? 'producer' : 'worker',
+        paymentTerms,
+        totalPrice: calculateTotal(),
+        status: 'proposed' as const,
+        createdAt: new Date().toISOString(),
+      };
+
       await updateWorkOrder(workOrderId, {
         paymentTerms,
         negotiationStatus: 'proposed',
-        negotiationHistory: [{
-          id: Date.now().toString(),
-          proposerId: user?.id || '',
-          proposerRole: isProducer ? 'producer' : 'worker',
-          paymentTerms,
-          totalPrice: calculateTotal(),
-          status: 'proposed',
-          createdAt: new Date().toISOString(),
-        }],
+        negotiationHistory: [...existingHistory, newProposal],
       });
 
       Alert.alert(
