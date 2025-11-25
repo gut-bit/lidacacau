@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { ScreenKeyboardAwareScrollView } from '@/components/ScreenKeyboardAwareScrollView';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/Button';
@@ -57,13 +57,17 @@ export default function LoginScreen() {
     setName('');
   };
 
+  const ScrollComponent = Platform.OS === 'web' ? ScrollView : KeyboardAwareScrollView;
+
   return (
     <ThemedView style={styles.container}>
-      <ScreenKeyboardAwareScrollView
+      <ScrollComponent
+        style={{ flex: 1 }}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingTop: insets.top + Spacing['3xl'], paddingBottom: insets.bottom + Spacing['2xl'] },
         ]}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoContainer}>
           <Image
@@ -232,7 +236,7 @@ export default function LoginScreen() {
             </Pressable>
           </View>
         </View>
-      </ScreenKeyboardAwareScrollView>
+      </ScrollComponent>
     </ThemedView>
   );
 }

@@ -19,9 +19,6 @@ export function ScreenKeyboardAwareScrollView({
   const { theme } = useTheme();
   const { paddingTop, paddingBottom, scrollInsetBottom } = useScreenInsets();
 
-  /**
-   * KeyboardAwareScrollView isn't compatible with web (it relies on native APIs), so the code falls back to ScreenScrollView on web to avoid runtime errors.
-   */
   if (Platform.OS === "web") {
     return (
       <ScreenScrollView
