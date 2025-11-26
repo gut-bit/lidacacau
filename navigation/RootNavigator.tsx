@@ -20,6 +20,11 @@ import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
 import ContractTemplateScreen from '@/screens/shared/ContractTemplateScreen';
 import ServiceHistoryScreen from '@/screens/shared/ServiceHistoryScreen';
 import SocialLinksScreen from '@/screens/shared/SocialLinksScreen';
+import IdentityVerificationScreen from '@/screens/shared/IdentityVerificationScreen';
+import ReferralScreen from '@/screens/shared/ReferralScreen';
+import BenefitsClubScreen from '@/screens/shared/BenefitsClubScreen';
+import FAQSupportScreen from '@/screens/shared/FAQSupportScreen';
+import PortfolioScreen from '@/screens/shared/PortfolioScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
@@ -62,6 +67,11 @@ export type RootStackParamList = {
   ContractTemplate: { serviceTypeId?: string };
   ServiceHistory: undefined;
   SocialLinks: undefined;
+  IdentityVerification: undefined;
+  Referral: undefined;
+  BenefitsClub: undefined;
+  FAQSupport: undefined;
+  Portfolio: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
   CourseDetail: { courseId: string };
@@ -165,6 +175,31 @@ export default function RootNavigator() {
             options={{ title: 'Redes Sociais' }}
           />
           <Stack.Screen
+            name="IdentityVerification"
+            component={IdentityVerificationScreen}
+            options={{ title: 'Verificar Identidade' }}
+          />
+          <Stack.Screen
+            name="Referral"
+            component={ReferralScreen}
+            options={{ title: 'Indique e Ganhe' }}
+          />
+          <Stack.Screen
+            name="BenefitsClub"
+            component={BenefitsClubScreen}
+            options={{ title: 'Clube Empleitapp' }}
+          />
+          <Stack.Screen
+            name="FAQSupport"
+            component={FAQSupportScreen}
+            options={{ title: 'Ajuda e Suporte' }}
+          />
+          <Stack.Screen
+            name="Portfolio"
+            component={PortfolioScreen}
+            options={{ title: 'Meu Portfolio' }}
+          />
+          <Stack.Screen
             name="Education"
             component={EducationScreen}
             options={{ title: 'Capacitacao' }}
@@ -236,6 +271,31 @@ export default function RootNavigator() {
             name="SocialLinks"
             component={SocialLinksScreen}
             options={{ title: 'Redes Sociais' }}
+          />
+          <Stack.Screen
+            name="IdentityVerification"
+            component={IdentityVerificationScreen}
+            options={{ title: 'Verificar Identidade' }}
+          />
+          <Stack.Screen
+            name="Referral"
+            component={ReferralScreen}
+            options={{ title: 'Indique e Ganhe' }}
+          />
+          <Stack.Screen
+            name="BenefitsClub"
+            component={BenefitsClubScreen}
+            options={{ title: 'Clube Empleitapp' }}
+          />
+          <Stack.Screen
+            name="FAQSupport"
+            component={FAQSupportScreen}
+            options={{ title: 'Ajuda e Suporte' }}
+          />
+          <Stack.Screen
+            name="Portfolio"
+            component={PortfolioScreen}
+            options={{ title: 'Meu Portfolio' }}
           />
           <Stack.Screen
             name="Education"

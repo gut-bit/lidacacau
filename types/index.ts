@@ -58,6 +58,33 @@ export interface SocialLinks {
   linkedin?: string;         // Link do perfil
 }
 
+export type VerificationStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
+export interface IdentityVerification {
+  status: VerificationStatus;
+  documentType?: 'rg' | 'cnh' | 'ctps';
+  documentPhotoUri?: string;
+  selfiePhotoUri?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+}
+
+export interface PortfolioItem {
+  id: string;
+  photoUri: string;
+  description?: string;
+  serviceTypeId?: string;
+  createdAt: string;
+}
+
+export interface ReferralInfo {
+  code: string;
+  referredBy?: string;
+  referrals: string[];
+  totalXpEarned: number;
+}
+
 export interface ProfileCompletion {
   hasAvatar: boolean;
   hasBio: boolean;
@@ -130,6 +157,9 @@ export interface User {
   profileCompletion?: ProfileCompletion;
   searchRadius?: number;
   socialLinks?: SocialLinks;
+  verification?: IdentityVerification;
+  portfolio?: PortfolioItem[];
+  referral?: ReferralInfo;
   createdAt: string;
 }
 

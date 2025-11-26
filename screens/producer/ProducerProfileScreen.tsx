@@ -10,6 +10,7 @@ import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { SocialLinksDisplay, CommunityWhatsAppButton } from '@/components/SocialLinks';
+import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -34,8 +35,13 @@ export default function ProducerProfileScreen() {
     );
   };
 
+  const verificationStatus = user?.verification?.status || 'none';
+
   const menuItems = [
     { icon: 'archive', label: 'Historico de Servicos', onPress: () => navigation.navigate('ServiceHistory'), color: colors.primary, highlight: true },
+    { icon: 'shield', label: 'Verificar Identidade', onPress: () => navigation.navigate('IdentityVerification'), color: verificationStatus === 'approved' ? colors.success : colors.accent },
+    { icon: 'gift', label: 'Indique e Ganhe', onPress: () => navigation.navigate('Referral'), color: colors.accent },
+    { icon: 'award', label: 'Clube Empleitapp', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
     { icon: 'file-text', label: 'Nota Fiscal Eletronica', onPress: () => navigation.navigate('NFSe') },
     { icon: 'clipboard', label: 'Modelo de Contrato', onPress: () => navigation.navigate('ContractTemplate', {}), color: colors.secondary },
     { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },
@@ -43,7 +49,7 @@ export default function ProducerProfileScreen() {
     { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },
     { icon: 'bell', label: 'Notificacoes', onPress: () => {} },
-    { icon: 'help-circle', label: 'Ajuda', onPress: () => {} },
+    { icon: 'help-circle', label: 'Ajuda e Suporte', onPress: () => navigation.navigate('FAQSupport') },
   ];
 
   return (
@@ -55,11 +61,18 @@ export default function ProducerProfileScreen() {
         ]}
       >
         <View style={styles.profileHeader}>
-          <Image
-            source={require('@/assets/avatars/producer.png')}
-            style={styles.avatar}
-            contentFit="cover"
-          />
+          <View style={styles.avatarContainer}>
+            <Image
+              source={require('@/assets/avatars/producer.png')}
+              style={styles.avatar}
+              contentFit="cover"
+            />
+            {verificationStatus === 'approved' && (
+              <View style={styles.verifiedBadgePosition}>
+                <VerifiedBadge status={verificationStatus} size="medium" />
+              </View>
+            )}
+          </View>
           <ThemedText type="h2" style={styles.name}>
             {user?.name}
           </ThemedText>
@@ -132,10 +145,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing['2xl'],
   },
+  avatarContainer: {
+    position: 'relative',
+  },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
+  },
+  verifiedBadgePosition: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
   },
   name: {
     marginTop: Spacing.lg,
