@@ -8,6 +8,12 @@
     "scheme": "empleitapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "owner": "empleitapp",
+    "extra": {
+      "eas": {
+        "projectId": "empleitapp"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.empleitapp.app",

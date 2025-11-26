@@ -16,6 +16,10 @@ externalPort = 3000
 localPort = 34155
 externalPort = 3002
 
+[[ports]]
+localPort = 37017
+externalPort = 3001
+
 [workflows]
 runButton = "Project"
 
@@ -88,3 +92,6 @@ value = "1"
 path = "/*"
 name = "expo-sfv-version"
 value = "0"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-de99b782-37a1-4217-a63e-b4d544930d8a"
