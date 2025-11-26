@@ -524,3 +524,35 @@ export interface QuizAttempt {
   answers: number[];
   createdAt: string;
 }
+
+export type PixPaymentStatus = 
+  | 'pending'
+  | 'paid'
+  | 'expired'
+  | 'cancelled'
+  | 'refunded';
+
+export interface PixCharge {
+  id: string;
+  correlationID: string;
+  workOrderId?: string;
+  payerId: string;
+  payerName: string;
+  receiverId: string;
+  receiverName: string;
+  value: number;
+  description: string;
+  brCode: string;
+  qrCodeImage?: string;
+  status: PixPaymentStatus;
+  expiresAt: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
+export interface PaymentSummary {
+  totalReceived: number;
+  totalPaid: number;
+  pendingPayments: number;
+  completedPayments: number;
+}

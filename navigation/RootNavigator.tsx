@@ -25,6 +25,8 @@ import ReferralScreen from '@/screens/shared/ReferralScreen';
 import BenefitsClubScreen from '@/screens/shared/BenefitsClubScreen';
 import FAQSupportScreen from '@/screens/shared/FAQSupportScreen';
 import PortfolioScreen from '@/screens/shared/PortfolioScreen';
+import PaymentScreen from '@/screens/shared/PaymentScreen';
+import PaymentHistoryScreen from '@/screens/shared/PaymentHistoryScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
@@ -72,6 +74,8 @@ export type RootStackParamList = {
   BenefitsClub: undefined;
   FAQSupport: undefined;
   Portfolio: undefined;
+  Payment: { workOrder?: any };
+  PaymentHistory: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
   CourseDetail: { courseId: string };
@@ -200,6 +204,16 @@ export default function RootNavigator() {
             options={{ title: 'Meu Portfolio' }}
           />
           <Stack.Screen
+            name="Payment"
+            component={PaymentScreen}
+            options={{ title: 'Pagamento PIX' }}
+          />
+          <Stack.Screen
+            name="PaymentHistory"
+            component={PaymentHistoryScreen}
+            options={{ title: 'Historico de Pagamentos' }}
+          />
+          <Stack.Screen
             name="Education"
             component={EducationScreen}
             options={{ title: 'Capacitacao' }}
@@ -296,6 +310,16 @@ export default function RootNavigator() {
             name="Portfolio"
             component={PortfolioScreen}
             options={{ title: 'Meu Portfolio' }}
+          />
+          <Stack.Screen
+            name="Payment"
+            component={PaymentScreen}
+            options={{ title: 'Pagamento PIX' }}
+          />
+          <Stack.Screen
+            name="PaymentHistory"
+            component={PaymentHistoryScreen}
+            options={{ title: 'Historico de Pagamentos' }}
           />
           <Stack.Screen
             name="Education"
