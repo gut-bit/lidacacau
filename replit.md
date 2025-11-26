@@ -247,6 +247,24 @@ Sistema de capacitação com XP, quizzes e progressão de níveis:
 - **Navegação**: Menu "Capacitacao" nos perfis de Produtor e Trabalhador
 - **Arquivos**: types/index.ts, data/educationData.ts, screens/education/*.tsx, utils/storage.ts
 
+### Service History & Receipt Export (2025-11-26)
+Sistema completo de historico de servicos com exportacao de comprovantes:
+- **ServiceHistoryScreen**: Tela de historico acessivel pelo menu do Perfil
+  - Card de estatisticas: Total de servicos, Concluidos, Total Pago/Recebido
+  - Filtros: Todos, Concluidos, Em Andamento
+  - Lista de ordens de servico com detalhes completos
+  - Botao "Exportar Comprovante" para servicos concluidos
+- **receiptGenerator.ts**: Geracao de comprovantes em PDF
+  - Design profissional com branding Empleitapp
+  - Dados completos: partes, servico, valores, datas, pagamento
+  - Exportacao via expo-print e compartilhamento via expo-sharing
+  - Nota informativa sobre emissao de NFS-e
+- **syncManager.ts**: Estrutura para sincronizacao online futura
+  - Sistema de fila de sincronizacao (SyncQueue)
+  - Funcoes de exportacao/importacao de dados
+  - Configuracao para cloud sync (preparado para backend futuro)
+- **Acesso**: Menu "Historico de Servicos" com icone de arquivo nos perfis
+
 ### Social Media Integration (2025-11-25)
 Sistema completo de integração de redes sociais opcionais no perfil:
 - **Campos Suportados** (todos opcionais):

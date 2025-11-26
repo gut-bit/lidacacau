@@ -316,6 +316,16 @@ export const getWorkOrdersByWorker = async (workerId: string): Promise<WorkOrder
   }
 };
 
+export const getWorkOrdersByProducer = async (producerId: string): Promise<WorkOrder[]> => {
+  try {
+    const workOrders = await getWorkOrders();
+    return workOrders.filter((wo) => wo.producerId === producerId);
+  } catch (error) {
+    console.error('Error getting work orders by producer:', error);
+    return [];
+  }
+};
+
 export const getActiveWorkOrderByWorker = async (workerId: string): Promise<WorkOrder | null> => {
   try {
     const workOrders = await getWorkOrdersByWorker(workerId);

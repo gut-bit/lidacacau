@@ -18,6 +18,7 @@ import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
 import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
 import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
 import ContractTemplateScreen from '@/screens/shared/ContractTemplateScreen';
+import ServiceHistoryScreen from '@/screens/shared/ServiceHistoryScreen';
 import SocialLinksScreen from '@/screens/shared/SocialLinksScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
@@ -59,6 +60,7 @@ export type RootStackParamList = {
     isProducer: boolean;
   };
   ContractTemplate: { serviceTypeId?: string };
+  ServiceHistory: undefined;
   SocialLinks: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
@@ -153,6 +155,11 @@ export default function RootNavigator() {
             options={{ title: 'Modelo de Contrato' }}
           />
           <Stack.Screen
+            name="ServiceHistory"
+            component={ServiceHistoryScreen}
+            options={{ title: 'Historico de Servicos' }}
+          />
+          <Stack.Screen
             name="SocialLinks"
             component={SocialLinksScreen}
             options={{ title: 'Redes Sociais' }}
@@ -204,6 +211,11 @@ export default function RootNavigator() {
             name="ContractTemplate"
             component={ContractTemplateScreen}
             options={{ title: 'Modelo de Contrato' }}
+          />
+          <Stack.Screen
+            name="ServiceHistory"
+            component={ServiceHistoryScreen}
+            options={{ title: 'Historico de Servicos' }}
           />
           <Stack.Screen
             name="Review"
