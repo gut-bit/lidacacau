@@ -96,22 +96,24 @@ export default function QuizScreen() {
     }
 
     setShowExplanation(true);
-    setAnswers([...answers, selectedAnswer]);
   };
 
   const handleNextQuestion = () => {
+    const updatedAnswers = [...answers, selectedAnswer!];
+    setAnswers(updatedAnswers);
+    
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
     } else {
-      calculateResults();
+      calculateResults(updatedAnswers);
     }
   };
 
-  const calculateResults = async () => {
-    const correct = answers.concat(selectedAnswer!).filter(
-      (answer, index) => answer === quiz.questions[index].correctIndex
+  const calculateResults = async (finalAnswers: number[]) => {
+    const correct = finalAnswers.filter(
+      (answer, index) => answer === quiz.questions[index]?.correctIndex
     ).length;
     
     const percent = Math.round((correct / totalQuestions) * 100);
@@ -147,7 +149,7 @@ export default function QuizScreen() {
           passed,
           xpCalculated: xpAwarded,
           xpAwarded: actualXPAwarded,
-          answers: answers.concat(selectedAnswer!),
+          answers: finalAnswers,
         });
       } catch (error) {
         console.error('Error saving quiz results:', error);
