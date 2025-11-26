@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { PixCharge, PaymentSummary, PixPaymentStatus } from '@/types';
+import { PixCharge, PaymentSummary, PixPaymentStatus, PixChargeType, PLATFORM_FEE_PERCENTAGE } from '@/types';
 import {
   getPixChargesByUser,
   getPaymentSummary,
@@ -153,9 +153,29 @@ export default function PaymentHistoryScreen({ navigation }: PaymentHistoryScree
     </View>
   );
 
+  const getChargeTypeLabel = (chargeType?: PixChargeType): string => {
+    if (chargeType === 'worker_payout') return 'Pagamento ao Trabalhador (90%)';
+    if (chargeType === 'platform_fee') return 'Taxa da Plataforma (10%)';
+    return 'Pagamento';
+  };
+
+  const getChargeTypeIcon = (chargeType?: PixChargeType, receiving?: boolean): string => {
+    if (chargeType === 'platform_fee') return 'percent';
+    return receiving ? 'arrow-down-left' : 'arrow-up-right';
+  };
+
   const renderChargeItem = ({ item }: { item: PixCharge }) => {
     const receiving = isReceiving(item);
     const otherParty = receiving ? item.payerName : item.receiverName;
+    const isPlatformCharge = item.chargeType === 'platform_fee';
+    const isWorkerCharge = item.chargeType === 'worker_payout';
+    
+    const iconColor = isPlatformCharge 
+      ? colors.accent 
+      : (receiving ? colors.success : colors.error);
+    const bgColor = isPlatformCharge 
+      ? colors.accent + '20' 
+      : (receiving ? colors.success + '20' : colors.error + '20');
 
     return (
       <Pressable
@@ -163,27 +183,38 @@ export default function PaymentHistoryScreen({ navigation }: PaymentHistoryScree
         onPress={() => {}}
       >
         <View style={styles.chargeHeader}>
-          <View style={[styles.typeIcon, { backgroundColor: receiving ? colors.success + '20' : colors.error + '20' }]}>
+          <View style={[styles.typeIcon, { backgroundColor: bgColor }]}>
             <Feather
-              name={receiving ? 'arrow-down-left' : 'arrow-up-right'}
+              name={getChargeTypeIcon(item.chargeType, receiving) as any}
               size={20}
-              color={receiving ? colors.success : colors.error}
+              color={iconColor}
             />
           </View>
           <View style={styles.chargeInfo}>
             <ThemedText type="body" numberOfLines={1}>
-              {receiving ? 'Recebimento' : 'Pagamento'}
+              {item.chargeType ? getChargeTypeLabel(item.chargeType) : (receiving ? 'Recebimento' : 'Pagamento')}
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {otherParty}
             </ThemedText>
           </View>
           <View style={styles.chargeAmount}>
-            <ThemedText type="h4" style={{ color: receiving ? colors.success : colors.text }}>
+            <ThemedText type="h4" style={{ color: isPlatformCharge ? colors.accent : (receiving ? colors.success : colors.text) }}>
               {receiving ? '+' : '-'}{formatCurrency(item.value / 100)}
             </ThemedText>
           </View>
         </View>
+
+        {(isWorkerCharge || isPlatformCharge) && (
+          <View style={[styles.breakdownRow, { borderTopColor: colors.border }]}>
+            <Feather name="info" size={14} color={colors.textSecondary} />
+            <ThemedText type="small" style={{ color: colors.textSecondary, marginLeft: Spacing.xs, flex: 1 }}>
+              {isPlatformCharge 
+                ? `Taxa de ${Math.round(PLATFORM_FEE_PERCENTAGE * 100)}% sobre o servico` 
+                : `Voce recebe ${Math.round((1 - PLATFORM_FEE_PERCENTAGE) * 100)}% do valor total`}
+            </ThemedText>
+          </View>
+        )}
 
         <View style={styles.chargeDetails}>
           <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
@@ -341,5 +372,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: Spacing.sm,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 0.5,
   },
 });

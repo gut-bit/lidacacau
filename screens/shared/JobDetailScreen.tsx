@@ -533,10 +533,18 @@ export default function JobDetailScreen() {
         </View>
       )}
 
-      {isProducer && workOrder?.status === 'completed' && worker && producer && (
+      {isProducer && workOrder?.status === 'completed' && worker && producer && workOrder.finalPrice && workOrder.finalPrice > 0 && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
           <Button
             onPress={() => {
+              if (!worker.workerProfile?.pixKey) {
+                Alert.alert(
+                  'PIX nao Configurado',
+                  'O trabalhador ainda nao configurou sua chave PIX para receber pagamentos. Solicite que ele configure em seu perfil.',
+                  [{ text: 'OK' }]
+                );
+                return;
+              }
               const workOrderWithDetails = {
                 ...workOrder,
                 worker: worker,
