@@ -9,9 +9,11 @@ import ProducerHomeScreen from '@/screens/producer/ProducerHomeScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
 import ProducerHistoryScreen from '@/screens/producer/ProducerHistoryScreen';
 import ProducerProfileScreen from '@/screens/producer/ProducerProfileScreen';
+import EducationScreen from '@/screens/education/EducationScreen';
 
 export type ProducerTabParamList = {
   ProducerHome: undefined;
+  ProducerEducation: undefined;
   ProducerCreate: undefined;
   ProducerHistory: undefined;
   ProducerProfile: undefined;
@@ -64,8 +66,16 @@ export default function ProducerTabNavigator() {
         name="ProducerHome"
         component={ProducerHomeScreen}
         options={{
-          title: 'Início',
+          title: 'Inicio',
           tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="ProducerEducation"
+        component={EducationScreen}
+        options={{
+          title: 'Capacitacao',
+          tabBarIcon: ({ color, size }) => <Feather name="book-open" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -80,7 +90,7 @@ export default function ProducerTabNavigator() {
         name="ProducerHistory"
         component={ProducerHistoryScreen}
         options={{
-          title: 'Histórico',
+          title: 'Historico',
           tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
         }}
       />

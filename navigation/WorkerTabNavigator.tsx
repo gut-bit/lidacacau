@@ -9,9 +9,11 @@ import WorkerJobsScreen from '@/screens/worker/WorkerJobsScreen';
 import WorkerActiveScreen from '@/screens/worker/WorkerActiveScreen';
 import WorkerHistoryScreen from '@/screens/worker/WorkerHistoryScreen';
 import WorkerProfileScreen from '@/screens/worker/WorkerProfileScreen';
+import EducationScreen from '@/screens/education/EducationScreen';
 
 export type WorkerTabParamList = {
   WorkerJobs: undefined;
+  WorkerEducation: undefined;
   WorkerActive: undefined;
   WorkerHistory: undefined;
   WorkerProfile: undefined;
@@ -33,6 +35,7 @@ export default function WorkerTabNavigator() {
           backgroundColor: Platform.select({
             ios: 'transparent',
             android: colors.backgroundRoot,
+            web: colors.backgroundRoot,
           }),
           borderTopWidth: 0,
           elevation: 0,
@@ -57,6 +60,14 @@ export default function WorkerTabNavigator() {
         }}
       />
       <Tab.Screen
+        name="WorkerEducation"
+        component={EducationScreen}
+        options={{
+          title: 'Capacitacao',
+          tabBarIcon: ({ color, size }) => <Feather name="book-open" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="WorkerActive"
         component={WorkerActiveScreen}
         options={{
@@ -68,7 +79,7 @@ export default function WorkerTabNavigator() {
         name="WorkerHistory"
         component={WorkerHistoryScreen}
         options={{
-          title: 'Histórico',
+          title: 'Historico',
           tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
         }}
       />

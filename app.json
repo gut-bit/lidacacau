@@ -1,25 +1,25 @@
 {
   "expo": {
-    "name": "Agro work",
-    "slug": "agrowork",
+    "name": "Empleitapp",
+    "slug": "empleitapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "cacauserv",
+    "scheme": "empleitapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cacauserv.app",
+      "bundleIdentifier": "com.empleitapp.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para registrar o check-in e check-out dos serviços.",
-        "NSLocationAlwaysUsageDescription": "Precisamos da sua localização para registrar o check-in e check-out dos serviços.",
-        "NSCameraUsageDescription": "Precisamos da câmera para capturar fotos antes e depois do serviço.",
-        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para anexar evidências do serviço."
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
+        "NSLocationAlwaysUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
+        "NSCameraUsageDescription": "Precisamos da camera para capturar fotos antes e depois do servico.",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para anexar evidencias do servico."
       }
     },
     "android": {
-      "package": "com.cacauserv.app",
+      "package": "com.empleitapp.app",
       "adaptiveIcon": {
         "backgroundColor": "#2D5016",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -57,14 +57,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Precisamos da sua localização para registrar o check-in e check-out dos serviços."
+          "locationAlwaysAndWhenInUsePermission": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Precisamos acessar suas fotos para anexar evidências do serviço.",
-          "cameraPermission": "Precisamos da câmera para capturar fotos antes e depois do serviço."
+          "photosPermission": "Precisamos acessar suas fotos para anexar evidencias do servico.",
+          "cameraPermission": "Precisamos da camera para capturar fotos antes e depois do servico."
         }
       ]
     ],

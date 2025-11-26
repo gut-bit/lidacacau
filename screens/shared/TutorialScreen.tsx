@@ -19,10 +19,10 @@ interface TutorialStep {
 const PRODUCER_STEPS: TutorialStep[] = [
   {
     id: '1',
-    title: 'Bem-vindo ao Agro work',
-    description: 'Este é seu espaço para encontrar trabalhadores qualificados para suas demandas de serviço rurais. Vamos aprender juntos!',
+    title: 'Bem-vindo ao Empleitapp',
+    description: 'Este e seu espaco para encontrar trabalhadores qualificados para suas demandas de servico rurais. Vamos aprender juntos!',
     icon: 'home',
-    tips: ['Você é um Produtor', 'Sua missão: conectar com bons trabalhadores'],
+    tips: ['Voce e um Produtor', 'Sua missao: conectar com bons trabalhadores'],
   },
   {
     id: '2',
@@ -64,10 +64,10 @@ const PRODUCER_STEPS: TutorialStep[] = [
 const WORKER_STEPS: TutorialStep[] = [
   {
     id: '1',
-    title: 'Bem-vindo ao Agro work',
-    description: 'Este é seu espaço para ganhar dinheiro com serviços rurais. Suba de nível e consiga melhores trabalhos!',
+    title: 'Bem-vindo ao Empleitapp',
+    description: 'Este e seu espaco para ganhar dinheiro com servicos rurais. Suba de nivel e consiga melhores trabalhos!',
     icon: 'home',
-    tips: ['Você é um Trabalhador', 'Sua missão: executar bons trabalhos e subir de nível'],
+    tips: ['Voce e um Trabalhador', 'Sua missao: executar bons trabalhos e subir de nivel'],
   },
   {
     id: '2',

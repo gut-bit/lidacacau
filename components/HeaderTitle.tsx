@@ -8,7 +8,7 @@ interface HeaderTitleProps {
   title?: string;
 }
 
-export function HeaderTitle({ title = "Agro work" }: HeaderTitleProps) {
+export function HeaderTitle({ title = "Empleitapp" }: HeaderTitleProps) {
   return (
     <View style={styles.container}>
       <Image

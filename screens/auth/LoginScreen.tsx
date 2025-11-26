@@ -76,10 +76,10 @@ export default function LoginScreen() {
             contentFit="contain"
           />
           <ThemedText type="h1" style={styles.appName}>
-            Agro work
+            Empleitapp
           </ThemedText>
           <ThemedText type="body" style={[styles.tagline, { color: colors.textSecondary }]}>
-            Trabalho rural na palma da mão
+            Empreitadas rurais na palma da mao
           </ThemedText>
         </View>
 
@@ -113,7 +113,7 @@ export default function LoginScreen() {
                     Sou Produtor
                   </ThemedText>
                   <ThemedText
-                    type="caption"
+                    type="small"
                     style={{ color: role === 'producer' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
                   >
                     Tenho propriedade
@@ -141,7 +141,7 @@ export default function LoginScreen() {
                     Sou Trabalhador
                   </ThemedText>
                   <ThemedText
-                    type="caption"
+                    type="small"
                     style={{ color: role === 'worker' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
                   >
                     Busco trabalho

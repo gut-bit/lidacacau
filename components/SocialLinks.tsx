@@ -419,7 +419,7 @@ export function CommunityWhatsAppButton({ groupLink, style }: CommunityWhatsAppB
       } else {
         Alert.alert(
           'Grupo da Comunidade',
-          'Entre em contato com o suporte para receber o link do grupo da comunidade Agro work.',
+          'Entre em contato com o suporte para receber o link do grupo da comunidade Empleitapp.',
           [{ text: 'OK' }]
         );
       }
@@ -441,7 +441,7 @@ export function CommunityWhatsAppButton({ groupLink, style }: CommunityWhatsAppB
     >
       <Feather name="users" size={22} color="#FFFFFF" />
       <View style={styles.communityButtonContent}>
-        <Text style={styles.communityButtonTitle}>Comunidade Agro work</Text>
+        <Text style={styles.communityButtonTitle}>Comunidade Empleitapp</Text>
         <Text style={styles.communityButtonSubtitle}>Entre no grupo do WhatsApp</Text>
       </View>
       <Feather name="chevron-right" size={22} color="#FFFFFF" />

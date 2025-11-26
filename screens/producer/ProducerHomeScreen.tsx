@@ -242,7 +242,7 @@ export default function ProducerHomeScreen() {
             contentFit="contain"
           />
           <View style={{ flex: 1 }}>
-            <ThemedText type="h3">Agro work</ThemedText>
+            <ThemedText type="h3">Empleitapp</ThemedText>
             <ThemedText type="body" style={{ color: colors.textSecondary }}>
               Ola, {user?.name?.split(' ')[0]}!
             </ThemedText>
@@ -295,7 +295,7 @@ export default function ProducerHomeScreen() {
         <Feather name="map" size={60} color={colors.primary} />
       </View>
       <ThemedText type="h3" style={[styles.emptyTitle, { color: colors.text }]}>
-        Bem-vindo ao Agro work
+        Bem-vindo ao Empleitapp
       </ThemedText>
       <ThemedText type="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
         Aqui voce vai ver o que esta acontecendo na regiao. Crie sua primeira demanda para comecar!
