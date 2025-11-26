@@ -61,8 +61,17 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
 -   **OpenPix**: Payment gateway for PIX transactions (free tier). Requires `OPENPIX_APP_ID` secret.
 
 ## Payment System (OpenPix Integration)
--   **Telas**: `/screens/shared/PaymentScreen.tsx` (criacao de cobranças PIX com QR Code), `/screens/shared/PaymentHistoryScreen.tsx` (historico de pagamentos com export PDF).
--   **Utilitarios**: `/utils/payment.ts` (gerenciamento de cobranças, integracao API OpenPix).
--   **Tipos**: `PixCharge`, `PixPaymentStatus`, `PaymentSummary` em `/types/index.ts`.
--   **Navegação**: Rotas `Payment` e `PaymentHistory` disponiveis para Producer e Worker.
--   **Funcionalidades**: Geracao de QR Code PIX, copia de codigo, consulta de status, historico com filtros, resumo financeiro, export PDF.
+-   **Telas**: 
+    - `/screens/shared/PaymentScreen.tsx` - Criacao de cobranças PIX com QR Code e exibicao de breakdown (90% trabalhador, 10% taxa)
+    - `/screens/shared/PaymentHistoryScreen.tsx` - Historico de pagamentos com filtros, resumo financeiro, e identificacao de tipo de cobranca
+    - `/screens/shared/PixSettingsScreen.tsx` - Configuracao de chave PIX do trabalhador para recebimentos
+-   **Utilitarios**: `/utils/payment.ts` (gerenciamento de cobranças, integracao API OpenPix, calculo de split).
+-   **Tipos**: `PixCharge`, `PixChargeType`, `PixPaymentStatus`, `PaymentSummary`, `PaymentBreakdown`, `WorkOrderPayment` em `/types/index.ts`.
+-   **Navegação**: Rotas `Payment`, `PaymentHistory` e `PixSettings` disponiveis para Producer e Worker.
+-   **Funcionalidades**:
+    - Divisao automatica de pagamentos: 90% para trabalhador, 10% taxa da plataforma
+    - Criacao de duas cobranças PIX separadas por transacao (worker_payout e platform_fee)
+    - Validacao de chave PIX do trabalhador antes de gerar cobrancas
+    - Geracao de QR Code PIX, copia de codigo, consulta de status
+    - Historico com filtros por status e identificacao visual do tipo de cobranca
+    - Botao "Pagar com PIX" disponivel apenas apos conclusao do servico e definicao do preco final
