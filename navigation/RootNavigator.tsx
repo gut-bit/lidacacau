@@ -27,6 +27,7 @@ import FAQSupportScreen from '@/screens/shared/FAQSupportScreen';
 import PortfolioScreen from '@/screens/shared/PortfolioScreen';
 import PaymentScreen from '@/screens/shared/PaymentScreen';
 import PaymentHistoryScreen from '@/screens/shared/PaymentHistoryScreen';
+import PixSettingsScreen from '@/screens/shared/PixSettingsScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
@@ -76,6 +77,7 @@ export type RootStackParamList = {
   Portfolio: undefined;
   Payment: { workOrder?: any };
   PaymentHistory: undefined;
+  PixSettings: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
   CourseDetail: { courseId: string };
@@ -214,6 +216,11 @@ export default function RootNavigator() {
             options={{ title: 'Historico de Pagamentos' }}
           />
           <Stack.Screen
+            name="PixSettings"
+            component={PixSettingsScreen}
+            options={{ title: 'Configurar PIX' }}
+          />
+          <Stack.Screen
             name="Education"
             component={EducationScreen}
             options={{ title: 'Capacitacao' }}
@@ -320,6 +327,11 @@ export default function RootNavigator() {
             name="PaymentHistory"
             component={PaymentHistoryScreen}
             options={{ title: 'Historico de Pagamentos' }}
+          />
+          <Stack.Screen
+            name="PixSettings"
+            component={PixSettingsScreen}
+            options={{ title: 'Configurar PIX' }}
           />
           <Stack.Screen
             name="Education"

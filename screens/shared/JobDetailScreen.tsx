@@ -536,14 +536,13 @@ export default function JobDetailScreen() {
       {isProducer && workOrder?.status === 'completed' && worker && producer && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
           <Button
-            variant="accent"
             onPress={() => {
-              const workOrderWithDetails: WorkOrderWithDetails = {
+              const workOrderWithDetails = {
                 ...workOrder,
                 worker: worker,
                 producer: producer,
-                serviceType: serviceType || undefined,
-              };
+                serviceType: serviceType,
+              } as WorkOrderWithDetails;
               navigation.navigate('Payment', { workOrder: workOrderWithDetails });
             }}
             disabled={submitting}

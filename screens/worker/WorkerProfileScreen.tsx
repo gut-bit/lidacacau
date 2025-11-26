@@ -64,8 +64,11 @@ export default function WorkerProfileScreen() {
 
   const verificationStatus = user?.verification?.status || 'none';
 
+  const hasPixKey = !!user?.workerProfile?.pixKey;
+
   const menuItems = [
     { icon: 'archive', label: 'Historico de Servicos', onPress: () => navigation.navigate('ServiceHistory'), color: colors.primary, highlight: true },
+    { icon: 'credit-card', label: 'Configurar PIX', onPress: () => navigation.navigate('PixSettings'), color: hasPixKey ? colors.success : colors.warning, badge: hasPixKey ? 'configured' : 'pending' },
     { icon: 'image', label: 'Meu Portfolio', onPress: () => navigation.navigate('Portfolio'), color: colors.primary },
     { icon: 'shield', label: 'Verificar Identidade', onPress: () => navigation.navigate('IdentityVerification'), color: verificationStatus === 'approved' ? colors.success : colors.accent, badge: verificationStatus },
     { icon: 'gift', label: 'Indique e Ganhe', onPress: () => navigation.navigate('Referral'), color: colors.accent },
