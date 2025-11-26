@@ -62,6 +62,7 @@ export default function WorkerProfileScreen() {
   const nextLevelColor = LevelColors[`N${nextLevel}` as keyof typeof LevelColors];
 
   const menuItems = [
+    { icon: 'clipboard', label: 'Modelo de Contrato', onPress: () => navigation.navigate('ContractTemplate', {}), color: colors.secondary },
     { icon: 'book-open', label: 'Capacitacao', onPress: () => navigation.navigate('Education'), color: colors.primary },
     { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },

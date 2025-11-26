@@ -17,6 +17,7 @@ import NFSeScreen from '@/screens/producer/NFSeScreen';
 import NegotiationMatchScreen from '@/screens/shared/NegotiationMatchScreen';
 import NegotiationTermsScreen from '@/screens/shared/NegotiationTermsScreen';
 import ContractSigningScreen from '@/screens/shared/ContractSigningScreen';
+import ContractTemplateScreen from '@/screens/shared/ContractTemplateScreen';
 import SocialLinksScreen from '@/screens/shared/SocialLinksScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
@@ -57,6 +58,7 @@ export type RootStackParamList = {
     workOrderId: string;
     isProducer: boolean;
   };
+  ContractTemplate: { serviceTypeId?: string };
   SocialLinks: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
@@ -146,6 +148,11 @@ export default function RootNavigator() {
             options={{ title: 'Assinar Contrato de Empreitada' }}
           />
           <Stack.Screen
+            name="ContractTemplate"
+            component={ContractTemplateScreen}
+            options={{ title: 'Modelo de Contrato' }}
+          />
+          <Stack.Screen
             name="SocialLinks"
             component={SocialLinksScreen}
             options={{ title: 'Redes Sociais' }}
@@ -192,6 +199,11 @@ export default function RootNavigator() {
             name="ContractSigning"
             component={ContractSigningScreen}
             options={{ title: 'Assinar Contrato de Empreitada' }}
+          />
+          <Stack.Screen
+            name="ContractTemplate"
+            component={ContractTemplateScreen}
+            options={{ title: 'Modelo de Contrato' }}
           />
           <Stack.Screen
             name="Review"
