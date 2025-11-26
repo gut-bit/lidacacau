@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
-import { Job, Bid, User, WorkOrder } from '@/types';
+import { Job, Bid, User, WorkOrder, WorkOrderWithDetails } from '@/types';
 import {
   getJobById,
   getBidsByJob,
@@ -529,6 +529,27 @@ export default function JobDetailScreen() {
           >
             <Feather name="file-text" size={18} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
             Assinar Contrato de Empreitada
+          </Button>
+        </View>
+      )}
+
+      {isProducer && workOrder?.status === 'completed' && worker && producer && (
+        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
+          <Button
+            variant="accent"
+            onPress={() => {
+              const workOrderWithDetails: WorkOrderWithDetails = {
+                ...workOrder,
+                worker: worker,
+                producer: producer,
+                serviceType: serviceType || undefined,
+              };
+              navigation.navigate('Payment', { workOrder: workOrderWithDetails });
+            }}
+            disabled={submitting}
+          >
+            <Feather name="credit-card" size={18} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
+            Pagar com PIX
           </Button>
         </View>
       )}
