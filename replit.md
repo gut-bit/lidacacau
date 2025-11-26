@@ -220,6 +220,25 @@ Novo sistema de onboarding interativo como em jogos, que guia novos usuários at
 - Validação de descrição não-vazia
 - Fotos armazenadas com a demanda
 
+### Educational System - Capacitação (2025-11-26)
+Sistema de capacitação com XP, quizzes e progressão de níveis:
+- **Arquitetura de Tipos**: Skill, Course, CourseModule, Quiz, QuizQuestion, SkillProgress, QuizAttempt
+- **Primeiro Curso**: "Poda de Limpeza do Cacaueiro N1" com 4 módulos e quiz de 10 questões
+- **Progressão de Níveis**:
+  - teaser: Iniciante (0 XP)
+  - N1_assistido: N1 Assistido (50+ XP)
+  - N2_autonomo: N2 Autônomo (150+ XP)
+  - N3_mentoravel: N3 Mentor (300+ XP)
+- **Telas**:
+  - `EducationScreen`: Hub principal com estatísticas (XP total, cursos, skills) e lista de habilidades
+  - `SkillDetailScreen`: Detalhes da habilidade, níveis de progressão e cursos disponíveis
+  - `CourseDetailScreen`: Conteúdo do curso com módulos expansíveis e acesso ao quiz
+  - `QuizScreen`: Quiz interativo com 10 questões, feedback visual/haptic, e recompensa de XP
+- **Sistema de XP**: 10 XP por questão correta no quiz
+- **Persistência**: AsyncStorage com funções getSkillProgress, updateSkillProgress, addXPToSkill, saveQuizAttempt
+- **Navegação**: Menu "Capacitacao" nos perfis de Produtor e Trabalhador
+- **Arquivos**: types/index.ts, data/educationData.ts, screens/education/*.tsx, utils/storage.ts
+
 ### Social Media Integration (2025-11-25)
 Sistema completo de integração de redes sociais opcionais no perfil:
 - **Campos Suportados** (todos opcionais):
