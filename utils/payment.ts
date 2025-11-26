@@ -1,5 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PixCharge, PixPaymentStatus, PaymentSummary } from '@/types';
+import { 
+  PixCharge, 
+  PixPaymentStatus, 
+  PaymentSummary, 
+  PaymentBreakdown,
+  WorkOrderPayment,
+  PixChargeType,
+  PLATFORM_FEE_PERCENTAGE,
+  WorkOrder,
+  User
+} from '@/types';
 import { generateId } from './storage';
 
 const STORAGE_KEYS = {
@@ -312,4 +322,135 @@ export const getOpenPixChargeStatus = async (
     console.error('OpenPix API Error:', error);
     return { status: null, error: error.message || 'Erro de conexao' };
   }
+};
+
+export const calculatePaymentBreakdown = (
+  totalValue: number,
+  advancePaid: number = 0
+): PaymentBreakdown => {
+  const platformFee = Math.round(totalValue * PLATFORM_FEE_PERCENTAGE);
+  const workerPayout = totalValue - platformFee;
+  const remainingToPay = totalValue - advancePaid;
+
+  return {
+    totalValue,
+    platformFee,
+    workerPayout,
+    advancePaid: advancePaid > 0 ? advancePaid : undefined,
+    remainingToPay: remainingToPay > 0 ? remainingToPay : 0,
+  };
+};
+
+export const createSplitPaymentCharges = async (params: {
+  workOrderId: string;
+  payerId: string;
+  payerName: string;
+  worker: User;
+  totalValue: number;
+  serviceName: string;
+  platformPixKey?: string;
+}): Promise<{ 
+  workerCharge: PixCharge; 
+  platformCharge: PixCharge; 
+  breakdown: PaymentBreakdown;
+  error: string | null 
+}> => {
+  const { workOrderId, payerId, payerName, worker, totalValue, serviceName, platformPixKey } = params;
+  
+  const workerPixKey = worker.workerProfile?.pixKey;
+  if (!workerPixKey) {
+    throw new Error('Trabalhador nao possui chave PIX cadastrada');
+  }
+
+  const breakdown = calculatePaymentBreakdown(totalValue);
+  const charges = await getPixCharges();
+
+  const workerCorrelationID = `EMP_W_${workOrderId}_${Date.now()}`;
+  const platformCorrelationID = `EMP_P_${workOrderId}_${Date.now()}`;
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  const workerBrCode = generatePixBrCode({
+    correlationID: workerCorrelationID,
+    value: breakdown.workerPayout / 100,
+    receiverName: worker.name,
+    description: `${serviceName} - Pagamento`,
+  });
+
+  const workerCharge: PixCharge = {
+    id: generateId(),
+    correlationID: workerCorrelationID,
+    workOrderId,
+    payerId,
+    payerName,
+    receiverId: worker.id,
+    receiverName: worker.name,
+    receiverPixKey: workerPixKey,
+    value: breakdown.workerPayout,
+    description: `${serviceName} - Pagamento ao trabalhador (90%)`,
+    brCode: workerBrCode,
+    status: 'pending',
+    chargeType: 'worker_payout',
+    expiresAt,
+    createdAt: new Date().toISOString(),
+  };
+
+  const platformBrCode = generatePixBrCode({
+    correlationID: platformCorrelationID,
+    value: breakdown.platformFee / 100,
+    receiverName: 'Empleitapp',
+    description: `${serviceName} - Taxa plataforma`,
+  });
+
+  const platformCharge: PixCharge = {
+    id: generateId(),
+    correlationID: platformCorrelationID,
+    workOrderId,
+    payerId,
+    payerName,
+    receiverId: 'platform',
+    receiverName: 'Empleitapp',
+    receiverPixKey: platformPixKey,
+    value: breakdown.platformFee,
+    description: `${serviceName} - Taxa da plataforma (10%)`,
+    brCode: platformBrCode,
+    status: 'pending',
+    chargeType: 'platform_fee',
+    expiresAt,
+    createdAt: new Date().toISOString(),
+  };
+
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.PIX_CHARGES, 
+    JSON.stringify([...charges, workerCharge, platformCharge])
+  );
+
+  return { workerCharge, platformCharge, breakdown, error: null };
+};
+
+export const initializeWorkOrderPayment = (
+  workOrder: WorkOrder,
+  advancePaid: number = 0
+): WorkOrderPayment => {
+  const breakdown = calculatePaymentBreakdown(workOrder.finalPrice, advancePaid);
+  
+  return {
+    status: 'pending',
+    breakdown,
+  };
+};
+
+export const getChargeTypeLabel = (chargeType: PixChargeType): string => {
+  const labels: Record<PixChargeType, string> = {
+    worker_payout: 'Pagamento ao Trabalhador',
+    platform_fee: 'Taxa da Plataforma',
+    manual: 'Pagamento Manual',
+  };
+  return labels[chargeType];
+};
+
+export const formatCurrency = (valueInCents: number): string => {
+  return (valueInCents / 100).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
 };

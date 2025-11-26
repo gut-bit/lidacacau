@@ -4,6 +4,26 @@ export type JobStatus = 'open' | 'assigned' | 'closed';
 
 export type WorkOrderStatus = 'assigned' | 'checked_in' | 'checked_out' | 'completed';
 
+export type WorkOrderPaymentStatus = 'pending' | 'processing' | 'paid' | 'failed';
+
+export interface PaymentBreakdown {
+  totalValue: number;           // Valor total do servico
+  platformFee: number;          // Taxa da plataforma (10%)
+  workerPayout: number;         // Valor para o trabalhador (90%)
+  advancePaid?: number;         // Adiantamento ja pago (se houver)
+  remainingToPay: number;       // Valor restante a pagar
+}
+
+export interface WorkOrderPayment {
+  status: WorkOrderPaymentStatus;
+  breakdown: PaymentBreakdown;
+  workerPixChargeId?: string;   // ID da cobranca PIX para o trabalhador
+  platformPixChargeId?: string; // ID da cobranca PIX para a plataforma
+  workerPaidAt?: string;
+  platformPaidAt?: string;
+  processedAt?: string;
+}
+
 export type PaymentTermType = 
   | 'per_unit'       // Por unidade (planta, saca, hectare)
   | 'per_hour'       // Por hora trabalhada
@@ -128,6 +148,8 @@ export interface RoleProfile {
   totalJobs?: number;
   totalEarnings?: number;
   totalSpent?: number;
+  pixKey?: string;              // Chave PIX para recebimento (CPF, email, telefone, aleatoria)
+  pixKeyType?: 'cpf' | 'email' | 'phone' | 'random';
 }
 
 export interface User {
@@ -228,6 +250,7 @@ export interface WorkOrder {
   negotiationHistory?: NegotiationProposal[];
   negotiationStatus?: NegotiationStatus;
   signedContract?: SignedContract;
+  payment?: WorkOrderPayment;
   checkInTime?: string;
   checkInLatitude?: number;
   checkInLongitude?: number;
@@ -532,6 +555,8 @@ export type PixPaymentStatus =
   | 'cancelled'
   | 'refunded';
 
+export type PixChargeType = 'worker_payout' | 'platform_fee' | 'manual';
+
 export interface PixCharge {
   id: string;
   correlationID: string;
@@ -540,15 +565,19 @@ export interface PixCharge {
   payerName: string;
   receiverId: string;
   receiverName: string;
+  receiverPixKey?: string;
   value: number;
   description: string;
   brCode: string;
   qrCodeImage?: string;
   status: PixPaymentStatus;
+  chargeType: PixChargeType;
   expiresAt: string;
   paidAt?: string;
   createdAt: string;
 }
+
+export const PLATFORM_FEE_PERCENTAGE = 0.10;
 
 export interface PaymentSummary {
   totalReceived: number;
