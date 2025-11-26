@@ -1,18 +1,26 @@
-# Agro work - Marketplace de Serviços Rurais para Cacau
+# Empleitapp - Marketplace de Empreitadas Rurais para Cacau
 
 ## Overview
-Agro work é um aplicativo mobile (Expo React Native) de marketplace que conecta produtores de cacau com trabalhadores rurais em Uruará/PA, Brasil. O app permite publicação de demandas de serviço, sistema de propostas, rastreamento GPS de trabalho, upload de fotos e avaliações bilaterais.
+Empleitapp e um aplicativo mobile (Expo React Native) de marketplace que conecta produtores de cacau com trabalhadores rurais em Uruara/PA, Brasil. O app permite publicacao de demandas de servico, sistema de propostas, rastreamento GPS de trabalho, upload de fotos e avaliacoes bilaterais.
 
 ## Project Status: MVP Completo
-- Autenticação com 3 perfis: Produtor, Trabalhador e Admin
-- Sistema de criação de demandas e propostas
+- Autenticacao com 3 perfis: Produtor, Trabalhador e Admin
+- Sistema de criacao de demandas e propostas
 - Rastreamento GPS com check-in/check-out
-- Sistema de avaliação bilateral (5 critérios)
-- Gamificação de trabalhadores (níveis N1-N5)
-- Interface 100% em Português (PT-BR)
+- Sistema de avaliacao bilateral (5 criterios)
+- Gamificacao de trabalhadores (niveis N1-N5)
+- Interface 100% em Portugues (PT-BR)
+- **Education como tab principal** - Sistema de capacitacao com XP, quizzes e progressao
 
 ## Recent Changes
-- 2025-11-25 (Latest): Dual-role system, MapHub, and enhanced profiles
+- 2025-11-26 (Latest): Rebranding para Empleitapp e Education como tab principal
+  - **App renomeado**: De "Agro work" para "Empleitapp"
+  - **Tagline atualizada**: "Empreitadas rurais na palma da mao"
+  - **Education promovido**: Tab de Capacitacao agora e uma das 5 tabs principais (Produtor e Trabalhador)
+  - **Branding atualizado**: LoginScreen, HeaderTitle, TutorialScreen, HomeScreens, SocialLinks
+  - **Bundle identifier**: com.empleitapp.app (iOS/Android)
+  - **Linking scheme**: empleitapp://
+- 2025-11-25: Dual-role system, MapHub, and enhanced profiles
   - **Dual-Role Architecture**: Users can be both Produtor and Trabalhador
   - **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA"
     - Radius selector (10km, 25km, 50km, 75km, 100km)
@@ -187,15 +195,15 @@ Novo sistema de onboarding interativo como em jogos, que guia novos usuários at
 - **Componentes**: TutorialScreen com FlatList para navegação suave entre etapas
 
 **Tutorial para Produtores (6 etapas)**:
-1. Bem-vindo ao Agro work (visão geral)
+1. Bem-vindo ao Empleitapp (visao geral)
 2. Crie Sua Primeira Demanda (criar jobs)
-3. Gerenciar Propriedades (GPS + localização)
-4. Receba Propostas (análise de trabalhadores)
+3. Gerenciar Propriedades (GPS + localizacao)
+4. Receba Propostas (analise de trabalhadores)
 5. Acompanhe o Trabalho (GPS tracking)
-6. Avalie o Trabalhador (sistema de avaliação)
+6. Avalie o Trabalhador (sistema de avaliacao)
 
 **Tutorial para Trabalhadores (6 etapas)**:
-1. Bem-vindo ao Agro work (ganhar dinheiro)
+1. Bem-vindo ao Empleitapp (ganhar dinheiro)
 2. Explore Trabalhos Disponíveis (buscar jobs)
 3. Envie Suas Propostas (bidding)
 4. Acompanhe Seus Níveis (gamificação N1-N5)
@@ -251,7 +259,7 @@ Sistema completo de integração de redes sociais opcionais no perfil:
 - **Componentes**:
   - `SocialLinksDisplay`: Exibe ícones coloridos das redes sociais com cores de marca
   - `SocialLinksEditor`: Formulário para editar links no perfil
-  - `CommunityWhatsAppButton`: Botão para grupo da comunidade Agro work
+  - `CommunityWhatsAppButton`: Botao para grupo da comunidade Empleitapp
 - **Integração**:
   - Tela `SocialLinksScreen` para edição completa de links
   - Menu "Redes Sociais" nos perfis de Produtor e Trabalhador
