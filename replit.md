@@ -58,3 +58,11 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
 -   **expo-sharing**: For sharing generated receipts.
 -   **react-native-maps**: (Used on mobile, web fallback placeholder implemented).
 -   **ISSIntegra (Uruará City Hall Portal)**: For Electronic Service Invoice (NFS-e) issuance.
+-   **OpenPix**: Payment gateway for PIX transactions (free tier). Requires `OPENPIX_APP_ID` secret.
+
+## Payment System (OpenPix Integration)
+-   **Telas**: `/screens/shared/PaymentScreen.tsx` (criacao de cobranças PIX com QR Code), `/screens/shared/PaymentHistoryScreen.tsx` (historico de pagamentos com export PDF).
+-   **Utilitarios**: `/utils/payment.ts` (gerenciamento de cobranças, integracao API OpenPix).
+-   **Tipos**: `PixCharge`, `PixPaymentStatus`, `PaymentSummary` em `/types/index.ts`.
+-   **Navegação**: Rotas `Payment` e `PaymentHistory` disponiveis para Producer e Worker.
+-   **Funcionalidades**: Geracao de QR Code PIX, copia de codigo, consulta de status, historico com filtros, resumo financeiro, export PDF.
