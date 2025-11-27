@@ -32,6 +32,7 @@ import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
 import QuizScreen from '@/screens/education/QuizScreen';
+import OtherUserProfileScreen from '@/screens/shared/OtherUserProfileScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User } from '@/types';
 
@@ -82,6 +83,7 @@ export type RootStackParamList = {
   SkillDetail: { skillId: string };
   CourseDetail: { courseId: string };
   Quiz: { quizId: string; skillId: string };
+  OtherUserProfile: { userId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
