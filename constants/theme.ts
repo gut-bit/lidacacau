@@ -145,3 +145,18 @@ export const Fonts = Platform.select({
   },
 });
 
+export const Shadows = {
+  card: {
+    elevation: 2,
+  },
+  cardHigh: {
+    elevation: 4,
+  },
+  fab: {
+    elevation: 6,
+  },
+  modal: {
+    elevation: 8,
+  },
+};
+

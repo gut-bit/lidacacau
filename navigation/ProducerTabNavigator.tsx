@@ -21,8 +21,7 @@ export type ProducerTabParamList = {
 
 const Tab = createBottomTabNavigator<ProducerTabParamList>();
 
-function CreateButtonIcon({ color, focused }: { color: string; focused: boolean }) {
-  const { isDark } = useTheme();
+function CreateButtonIconComponent({ focused, isDark }: { focused: boolean; isDark: boolean }) {
   const colors = isDark ? Colors.dark : Colors.light;
   
   return (
@@ -83,7 +82,7 @@ export default function ProducerTabNavigator() {
         component={CreateJobScreen}
         options={{
           title: '',
-          tabBarIcon: ({ color, focused }) => <CreateButtonIcon color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <CreateButtonIconComponent focused={focused} isDark={isDark} />,
         }}
       />
       <Tab.Screen
