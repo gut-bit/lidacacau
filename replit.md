@@ -1,7 +1,7 @@
-# Empleitapp - Marketplace de Empreitadas Rurais para Cacau
+# Empleitapp - Marketplace de Servicos Rurais
 
 ## Overview
-Empleitapp is a mobile marketplace application (Expo React Native) designed to connect cocoa farmers with rural workers in Uruará/PA, Brazil. The app facilitates the posting of service demands, a proposal system, GPS-based work tracking, photo uploads, and bilateral evaluations. Its purpose is to streamline rural work contracting, enhance efficiency, and foster a skilled workforce within the cocoa industry.
+Empleitapp is a mobile marketplace application (Expo React Native) designed to connect property owners with rural workers in Uruará/PA, Brazil. The app facilitates the posting of service demands, a proposal system, GPS-based work tracking, photo uploads, and bilateral evaluations. Beyond agricultural services, the platform now supports general construction and maintenance services (masonry, electrical, plumbing, metalwork, painting, carpentry).
 
 ## User Preferences
 - Idioma: Português (PT-BR)
@@ -42,13 +42,25 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
 ### Directory Structure
 -   `/App.tsx`: Entry point with ErrorBoundary.
 -   `/screens/`: Organized by authentication, producer, worker, admin, and shared functionalities.
--   `/navigation/`: Manages primary, producer, worker, and admin navigation flows.
+    - `/screens/shared/UnifiedHomeScreen.tsx`: Main home screen with user profile header, stats, and animated swipeable job cards.
+    - `/screens/shared/UnifiedProfileScreen.tsx`: Complete user profile with settings and actions.
+    - `/screens/shared/ExploreScreen.tsx`: Service category browser and quick actions.
+-   `/navigation/`: Manages navigation flows.
+    - `UnifiedTabNavigator.tsx`: Main tab navigator combining producer/worker views with role switching.
+    - `RootNavigator.tsx`: Root navigation with auth handling.
 -   `/contexts/`: Contains `AuthContext.tsx`.
 -   `/types/`: TypeScript definitions for core entities (User, Job, Bid, WorkOrder, Review, IdentityVerification, PortfolioItem, ReferralInfo, Skill, Course, Quiz, etc.).
 -   `/utils/`: Utility functions for storage, formatting, contract generation, receipt generation, synchronization, and logging.
--   `/data/`: Service types and educational content data.
+-   `/data/`: Service types (agricultural + construction) and educational content data.
 -   `/constants/`: Theme definitions.
 -   `/hooks/`: Custom React hooks for state management and data fetching.
+
+### Recent UX Redesign (Nov 2025)
+-   **Unified Navigation**: Single UnifiedTabNavigator replaces separate Producer/Worker navigators.
+-   **Role Switching**: Users switch between Producer/Worker via tabs on home screen, no longer separate app experiences.
+-   **Animated Cards**: Job cards with swipe-to-dismiss animation using react-native-reanimated.
+-   **Expanded Services**: Added construction services: Pedreiro, Eletricista, Encanador, Serralheiro, Pintor, Carpinteiro, Jardineiro, Soldador.
+-   **5-Tab Structure**: Home, Explore, Create (+), Learn, Profile.
 
 ### Custom Hooks
 -   `useScreenInsets`: Centralized hook for screen padding calculations (handles tab bar, header, and web platform differences).
