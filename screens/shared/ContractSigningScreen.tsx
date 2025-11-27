@@ -19,10 +19,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { AnimatedButton } from '@/components/AnimatedButton';
+import { ContractCompletedModal } from '@/components/ContractCompletedModal';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, ServiceType, User, PaymentTerms, WorkOrder, SignedContract } from '@/types';
-import { getJobById, getUserById, getWorkOrderById, updateWorkOrder } from '@/utils/storage';
+import { getJobById, getUserById, getWorkOrderById, updateWorkOrder, saveContractToHistory } from '@/utils/storage';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { createSignedContract, ContractData } from '@/utils/contractGenerator';
 
@@ -52,6 +54,7 @@ export default function ContractSigningScreen() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [hasAccepted, setHasAccepted] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
 
   useEffect(() => {
     loadContractData();
@@ -113,8 +116,8 @@ export default function ContractSigningScreen() {
   const handleAcceptContract = async () => {
     if (!hasAccepted) {
       Alert.alert(
-        'Confirmação',
-        'Você precisa confirmar que leu e aceita os termos do contrato antes de assiná-lo.'
+        'Confirmacao',
+        'Voce precisa confirmar que leu e aceita os termos do contrato antes de assina-lo.'
       );
       return;
     }
@@ -123,42 +126,77 @@ export default function ContractSigningScreen() {
     setSigning(true);
 
     try {
-      if (!contract || !workOrder) {
+      if (!contract || !workOrder || !job || !producer || !worker) {
         throw new Error('Dados do contrato incompletos');
       }
 
-      // Update contract with signature time
       const updatedContract: SignedContract = {
         ...contract,
         [isProducer ? 'producerSignedAt' : 'workerSignedAt']: new Date().toISOString(),
       };
 
-      // Update work order with signed contract
       await updateWorkOrder(workOrderId, {
         signedContract: updatedContract,
         negotiationStatus: 'accepted',
       });
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const bothSignedNow = updatedContract.producerSignedAt && updatedContract.workerSignedAt;
+      
+      if (bothSignedNow) {
+        await saveContractToHistory(
+          workOrderId,
+          job.id,
+          updatedContract,
+          producer.id,
+          'producer',
+          worker.id,
+          worker.name,
+          serviceType?.name || 'Servico'
+        );
+        
+        await saveContractToHistory(
+          workOrderId,
+          job.id,
+          updatedContract,
+          worker.id,
+          'worker',
+          producer.id,
+          producer.name,
+          serviceType?.name || 'Servico'
+        );
+      }
 
-      Alert.alert(
-        'Contrato Assinado',
-        `Seu aceite foi registrado com sucesso em ${new Date().toLocaleDateString(
-          'pt-BR'
-        )}. O trabalho pode começar quando ambas as partes assinarem.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      setContract(updatedContract);
+
+      if (bothSignedNow) {
+        setShowContractModal(true);
+      } else {
+        Alert.alert(
+          'Contrato Assinado',
+          `Seu aceite foi registrado com sucesso em ${new Date().toLocaleDateString(
+            'pt-BR'
+          )}. O trabalho pode comecar quando ambas as partes assinarem.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erro', error.message || 'Não foi possível assinar o contrato');
+      Alert.alert('Erro', error.message || 'Nao foi possivel assinar o contrato');
     } finally {
       setSigning(false);
     }
+  };
+  
+  const handleCloseModal = () => {
+    setShowContractModal(false);
+    navigation.goBack();
   };
 
   if (loading) {
@@ -360,22 +398,15 @@ export default function ContractSigningScreen() {
         {/* Sign Button */}
         {!userSigned && (
           <View style={[styles.buttonBar, { backgroundColor: colors.backgroundDefault, paddingBottom: insets.bottom + Spacing.md }]}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.signButton,
-                {
-                  backgroundColor: hasAccepted ? colors.primary : colors.textSecondary,
-                  opacity: pressed || signing ? 0.8 : 1,
-                },
-              ]}
+            <AnimatedButton
               onPress={handleAcceptContract}
+              title="Aceitar e Assinar"
+              icon="edit-3"
+              loading={signing}
               disabled={signing || !hasAccepted}
-            >
-              <Feather name="check" size={20} color="#FFFFFF" />
-              <ThemedText type="body" style={styles.buttonText}>
-                {signing ? 'Assinando...' : 'Aceitar e Assinar'}
-              </ThemedText>
-            </Pressable>
+              variant={hasAccepted ? 'primary' : 'secondary'}
+              showSuccessAnimation
+            />
           </View>
         )}
 
@@ -413,19 +444,28 @@ export default function ContractSigningScreen() {
               <Feather name="check-circle" size={20} color={colors.success} />
               <View style={{ flex: 1, marginLeft: Spacing.md }}>
                 <ThemedText type="body" style={[{ color: colors.success, fontWeight: '600' }]}>
-                  Pronto para Começar
+                  Pronto para Comecar
                 </ThemedText>
                 <ThemedText
                   type="small"
                   style={[{ color: colors.success, marginTop: Spacing.xs }]}
                 >
-                  Ambas as partes assinaram. O trabalho pode começar.
+                  Ambas as partes assinaram. O trabalho pode comecar.
                 </ThemedText>
               </View>
             </View>
           </View>
         )}
       </KeyboardAvoidingView>
+      
+      <ContractCompletedModal
+        visible={showContractModal}
+        onClose={handleCloseModal}
+        producerName={producer?.name || ''}
+        workerName={worker?.name || ''}
+        serviceType={serviceType?.name || 'Servico'}
+        totalValue={contract?.totalValue || 0}
+      />
     </ThemedView>
   );
 }

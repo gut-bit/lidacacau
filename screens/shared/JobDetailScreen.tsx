@@ -4,10 +4,12 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { ScreenKeyboardAwareScrollView } from '@/components/ScreenKeyboardAwareScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/Button';
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { SocialLinksDisplay } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
@@ -128,9 +130,21 @@ export default function JobDetailScreen() {
         price: parseFloat(bidPrice),
         message: bidMessage.trim() || undefined,
       });
-      Alert.alert('Sucesso', myBid ? 'Proposta atualizada!' : 'Proposta enviada!');
-      await loadJobDetails();
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      Alert.alert(
+        'Sucesso',
+        myBid ? 'Proposta atualizada com sucesso!' : 'Proposta enviada com sucesso!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Erro', error.message || 'Não foi possível enviar a proposta');
     } finally {
       setSubmitting(false);
@@ -494,42 +508,59 @@ export default function JobDetailScreen() {
 
       {isProducer && job.status === 'open' && selectedBidId && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button onPress={handleAcceptBid} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#FFFFFF" /> : 'Aceitar Proposta'}
-          </Button>
+          <AnimatedButton
+            onPress={handleAcceptBid}
+            title="Aceitar Proposta"
+            icon="check"
+            loading={submitting}
+            disabled={submitting}
+            variant="success"
+            showSuccessAnimation
+          />
         </View>
       )}
 
       {isProducer && workOrder?.status === 'checked_out' && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button onPress={handleConfirmCompletion} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#FFFFFF" /> : 'Confirmar Conclusão'}
-          </Button>
+          <AnimatedButton
+            onPress={handleConfirmCompletion}
+            title="Confirmar Conclusao"
+            icon="check-circle"
+            loading={submitting}
+            disabled={submitting}
+            variant="success"
+            showSuccessAnimation
+          />
         </View>
       )}
 
       {isWorker && job.status === 'open' && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button onPress={handleSubmitBid} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#FFFFFF" /> : myBid ? 'Atualizar Proposta' : 'Enviar Proposta'}
-          </Button>
+          <AnimatedButton
+            onPress={handleSubmitBid}
+            title={myBid ? 'Atualizar Proposta' : 'Enviar Proposta'}
+            icon="send"
+            loading={submitting}
+            disabled={submitting}
+            showSuccessAnimation
+          />
         </View>
       )}
 
       {workOrder && workOrder.status === 'assigned' && (
         <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button
+          <AnimatedButton
             onPress={() =>
               navigation.navigate('ContractSigning', {
                 workOrderId: workOrder.id,
                 isProducer: isProducer,
               })
             }
+            title="Assinar Contrato de Empreitada"
+            icon="file-text"
             disabled={submitting}
-          >
-            <Feather name="file-text" size={18} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
-            Assinar Contrato de Empreitada
-          </Button>
+            showSuccessAnimation
+          />
         </View>
       )}
 

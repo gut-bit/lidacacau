@@ -101,3 +101,16 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
     - Geracao de QR Code PIX, copia de codigo, consulta de status
     - Historico com filtros por status e identificacao visual do tipo de cobranca
     - Botao "Pagar com PIX" disponivel apenas apos conclusao do servico e definicao do preco final
+
+## Contract System (Nov 2025)
+-   **Componentes**:
+    - `/components/AnimatedButton.tsx` - Botao animado com spring/scale usando react-native-reanimated e feedback haptico
+    - `/components/ContractCompletedModal.tsx` - Modal de celebracao quando ambas as partes assinam o contrato
+-   **Tipos**: `ContractHistoryItem` em `/types/index.ts` para armazenar historico de contratos
+-   **Storage**: Funcoes `getContractHistory`, `saveContractToHistory`, `updateContractHistoryStatus` em `/utils/storage.ts`
+-   **Fluxo de Proposta/Contrato**:
+    - Botao "Enviar Proposta" animado com feedback haptico em JobDetailScreen
+    - Navegacao automatica de volta apos envio bem-sucedido da proposta
+    - Checkbox de aceite digital obrigatorio antes de assinar contrato
+    - Modal popup animado quando ambas as partes assinam o contrato
+    - Contratos salvos automaticamente no historico do usuario apos assinatura completa

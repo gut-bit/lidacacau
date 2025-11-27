@@ -585,3 +585,18 @@ export interface PaymentSummary {
   pendingPayments: number;
   completedPayments: number;
 }
+
+export interface ContractHistoryItem {
+  id: string;
+  workOrderId: string;
+  jobId: string;
+  contract: SignedContract;
+  userId: string;
+  userRole: 'producer' | 'worker';
+  otherPartyId: string;
+  otherPartyName: string;
+  serviceType: string;
+  totalValue: number;
+  status: 'pending' | 'signed' | 'completed' | 'cancelled';
+  savedAt: string;
+}

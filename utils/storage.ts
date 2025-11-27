@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt } from '@/types';
+import { User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
 const STORAGE_KEYS = {
@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   REVIEWS: '@cacauserv:reviews',
   SKILL_PROGRESS: '@cacauserv:skill_progress',
   QUIZ_ATTEMPTS: '@cacauserv:quiz_attempts',
+  CONTRACT_HISTORY: '@cacauserv:contract_history',
   INITIALIZED: '@cacauserv:initialized',
 };
 
@@ -636,5 +637,91 @@ export const saveQuizAttempt = async (attempt: Omit<QuizAttempt, 'id' | 'created
   } catch (error) {
     console.error('Error saving quiz attempt:', error);
     throw error;
+  }
+};
+
+export const getContractHistory = async (userId: string): Promise<ContractHistoryItem[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CONTRACT_HISTORY);
+    const allContracts: ContractHistoryItem[] = data ? JSON.parse(data) : [];
+    return allContracts
+      .filter((c) => c.userId === userId)
+      .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+  } catch (error) {
+    console.error('Error getting contract history:', error);
+    return [];
+  }
+};
+
+export const saveContractToHistory = async (
+  workOrderId: string,
+  jobId: string,
+  contract: SignedContract,
+  userId: string,
+  userRole: 'producer' | 'worker',
+  otherPartyId: string,
+  otherPartyName: string,
+  serviceType: string
+): Promise<ContractHistoryItem> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CONTRACT_HISTORY);
+    const allContracts: ContractHistoryItem[] = data ? JSON.parse(data) : [];
+    
+    const existingIndex = allContracts.findIndex(
+      (c) => c.workOrderId === workOrderId && c.userId === userId
+    );
+    
+    const bothSigned = contract.producerSignedAt && contract.workerSignedAt;
+    const status = bothSigned ? 'signed' : 'pending';
+    
+    const contractItem: ContractHistoryItem = {
+      id: existingIndex >= 0 ? allContracts[existingIndex].id : generateId(),
+      workOrderId,
+      jobId,
+      contract,
+      userId,
+      userRole,
+      otherPartyId,
+      otherPartyName,
+      serviceType,
+      totalValue: contract.totalValue,
+      status,
+      savedAt: new Date().toISOString(),
+    };
+    
+    if (existingIndex >= 0) {
+      allContracts[existingIndex] = contractItem;
+    } else {
+      allContracts.push(contractItem);
+    }
+    
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTRACT_HISTORY, JSON.stringify(allContracts));
+    return contractItem;
+  } catch (error) {
+    console.error('Error saving contract to history:', error);
+    throw error;
+  }
+};
+
+export const updateContractHistoryStatus = async (
+  workOrderId: string,
+  userId: string,
+  status: 'pending' | 'signed' | 'completed' | 'cancelled'
+): Promise<void> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CONTRACT_HISTORY);
+    const allContracts: ContractHistoryItem[] = data ? JSON.parse(data) : [];
+    
+    const index = allContracts.findIndex(
+      (c) => c.workOrderId === workOrderId && c.userId === userId
+    );
+    
+    if (index >= 0) {
+      allContracts[index].status = status;
+      allContracts[index].savedAt = new Date().toISOString();
+      await AsyncStorage.setItem(STORAGE_KEYS.CONTRACT_HISTORY, JSON.stringify(allContracts));
+    }
+  } catch (error) {
+    console.error('Error updating contract history status:', error);
   }
 };
