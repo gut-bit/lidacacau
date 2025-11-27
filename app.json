@@ -9,6 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "sdkVersion": "54.0.0",
+    "updates": {
+      "enabled": false
+    },
     "extra": {
       "eas": {
         "projectId": "ad9d78c5-7369-40d1-9d34-81ed751c874a"
