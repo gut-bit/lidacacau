@@ -19,7 +19,8 @@ interface AnimatedButtonProps {
   loading?: boolean;
   disabled?: boolean;
   icon?: keyof typeof Feather.glyphMap;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'accent';
+  size?: 'normal' | 'large';
   style?: ViewStyle;
   textStyle?: TextStyle;
   showSuccessAnimation?: boolean;
@@ -34,6 +35,7 @@ export function AnimatedButton({
   disabled = false,
   icon,
   variant = 'primary',
+  size = 'normal',
   style,
   textStyle,
   showSuccessAnimation = false,
@@ -50,13 +52,26 @@ export function AnimatedButton({
       case 'success': return colors.success;
       case 'danger': return colors.error;
       case 'secondary': return colors.backgroundSecondary;
+      case 'accent': return colors.accent;
       default: return colors.primary;
     }
   };
 
   const getTextColor = () => {
     if (variant === 'secondary') return colors.text;
+    if (variant === 'accent') return '#1a1a1a';
     return '#FFFFFF';
+  };
+
+  const getSizeStyles = () => {
+    if (size === 'large') {
+      return {
+        paddingVertical: Spacing.lg,
+        paddingHorizontal: Spacing['2xl'],
+        minHeight: 60,
+      };
+    }
+    return {};
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -99,6 +114,7 @@ export function AnimatedButton({
       style={[
         styles.button,
         { backgroundColor: getBackgroundColor() },
+        getSizeStyles(),
         animatedStyle,
         style,
       ]}
@@ -108,19 +124,19 @@ export function AnimatedButton({
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} size="small" />
+        <ActivityIndicator color={getTextColor()} size={size === 'large' ? 'large' : 'small'} />
       ) : (
         <>
           {icon && (
             <Feather
               name={icon}
-              size={18}
+              size={size === 'large' ? 22 : 18}
               color={getTextColor()}
               style={styles.icon}
             />
           )}
           <ThemedText
-            type="body"
+            type={size === 'large' ? 'h4' : 'body'}
             style={[styles.text, { color: getTextColor() }, textStyle]}
           >
             {title}

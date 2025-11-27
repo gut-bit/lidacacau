@@ -511,10 +511,11 @@ export default function JobDetailScreen() {
           <AnimatedButton
             onPress={handleAcceptBid}
             title="Aceitar Proposta"
-            icon="check"
+            icon="check-circle"
             loading={submitting}
             disabled={submitting}
-            variant="success"
+            variant="accent"
+            size="large"
             showSuccessAnimation
           />
         </View>
