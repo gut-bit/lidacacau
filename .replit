@@ -3,6 +3,7 @@ modules = ["nodejs-22"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["jdk17"]
 
 [[ports]]
 localPort = 8081
@@ -21,12 +22,12 @@ localPort = 34155
 externalPort = 3002
 
 [[ports]]
-localPort = 42791
-externalPort = 3003
+localPort = 41861
+externalPort = 5000
 
 [[ports]]
-localPort = 46515
-externalPort = 4200
+localPort = 42791
+externalPort = 3003
 
 [workflows]
 runButton = "Project"
