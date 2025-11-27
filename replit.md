@@ -45,9 +45,23 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
 -   `/navigation/`: Manages primary, producer, worker, and admin navigation flows.
 -   `/contexts/`: Contains `AuthContext.tsx`.
 -   `/types/`: TypeScript definitions for core entities (User, Job, Bid, WorkOrder, Review, IdentityVerification, PortfolioItem, ReferralInfo, Skill, Course, Quiz, etc.).
--   `/utils/`: Utility functions for storage, formatting, contract generation, receipt generation, and synchronization.
+-   `/utils/`: Utility functions for storage, formatting, contract generation, receipt generation, synchronization, and logging.
 -   `/data/`: Service types and educational content data.
 -   `/constants/`: Theme definitions.
+-   `/hooks/`: Custom React hooks for state management and data fetching.
+
+### Custom Hooks
+-   `useScreenInsets`: Centralized hook for screen padding calculations (handles tab bar, header, and web platform differences).
+-   `useSimpleScreenInsets`: Simplified version for basic screen inset calculations.
+-   `useFetch`: Generic data fetching hook with loading states, error handling, and auto-refresh on focus.
+-   `useLoadingState`: Helper hook for managing loading/refreshing states.
+
+### Utility Modules
+-   `utils/logger.ts`: Centralized logging utility with log levels (debug, info, warn, error) and log history management. Only logs in development mode.
+
+### Code Optimization Notes
+-   Screen components (ScreenScrollView, ScreenKeyboardAwareScrollView, ScreenFlatList) use shared hooks to eliminate code duplication.
+-   Platform-specific components (MapHub.native.tsx, MapHub.web.tsx) handle native vs web bundling differences.
 
 ## External Dependencies
 -   **Expo React Native**: Core mobile application framework.

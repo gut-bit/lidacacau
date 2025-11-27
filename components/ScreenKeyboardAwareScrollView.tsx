@@ -3,9 +3,9 @@ import {
   KeyboardAwareScrollView,
   KeyboardAwareScrollViewProps,
 } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/hooks/useTheme";
+import { useSimpleScreenInsets } from "@/hooks/useScreenInsets";
 import { Spacing } from "@/constants/theme";
 
 export function ScreenKeyboardAwareScrollView({
@@ -16,28 +16,25 @@ export function ScreenKeyboardAwareScrollView({
   ...scrollViewProps
 }: KeyboardAwareScrollViewProps) {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { paddingTop, paddingBottom, scrollInsetBottom, isWeb } = useSimpleScreenInsets();
 
-  const paddingTop = insets.top + Spacing.xl;
-  const paddingBottom = insets.bottom + Spacing.xl + (Platform.OS === 'web' ? 80 : 0);
-  const scrollInsetBottom = insets.bottom + 16;
+  const containerStyles = [
+    styles.container,
+    { backgroundColor: theme.backgroundRoot },
+    style,
+  ];
 
-  if (Platform.OS === "web") {
+  const contentStyles = [
+    { paddingTop, paddingBottom },
+    styles.contentContainer,
+    contentContainerStyle,
+  ];
+
+  if (isWeb) {
     return (
       <ScrollView
-        style={[
-          styles.container,
-          { backgroundColor: theme.backgroundRoot },
-          style,
-        ]}
-        contentContainerStyle={[
-          {
-            paddingTop,
-            paddingBottom,
-          },
-          styles.contentContainer,
-          contentContainerStyle,
-        ]}
+        style={containerStyles}
+        contentContainerStyle={contentStyles}
         keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         {...scrollViewProps}
       >
@@ -48,19 +45,8 @@ export function ScreenKeyboardAwareScrollView({
 
   return (
     <KeyboardAwareScrollView
-      style={[
-        styles.container,
-        { backgroundColor: theme.backgroundRoot },
-        style,
-      ]}
-      contentContainerStyle={[
-        {
-          paddingTop,
-          paddingBottom,
-        },
-        styles.contentContainer,
-        contentContainerStyle,
-      ]}
+      style={containerStyles}
+      contentContainerStyle={contentStyles}
       scrollIndicatorInsets={{ bottom: scrollInsetBottom }}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       {...scrollViewProps}
