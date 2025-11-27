@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, View, Pressable, ScrollView, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -207,7 +207,13 @@ export default function ExploreScreen() {
                   title={category.title}
                   count={category.count}
                   color={category.color}
-                  onPress={() => {}}
+                  onPress={() => {
+                    Alert.alert(
+                      category.title,
+                      `${category.count} vagas disponiveis nesta categoria. Use o mapa ou a tela inicial para ver os trabalhos disponiveis.`,
+                      [{ text: 'OK' }]
+                    );
+                  }}
                 />
               ))}
             </ScrollView>

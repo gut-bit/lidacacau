@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Pressable, RefreshControl } from 'react-native';
+import { StyleSheet, View, Pressable, RefreshControl, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -180,7 +180,13 @@ export default function PaymentHistoryScreen({ navigation }: PaymentHistoryScree
     return (
       <Pressable
         style={[styles.chargeCard, { backgroundColor: colors.backgroundSecondary }]}
-        onPress={() => {}}
+        onPress={() => {
+          Alert.alert(
+            receiving ? 'Recebimento' : 'Pagamento',
+            `${item.description}\n\nValor: ${formatCurrency(item.value / 100)}\nStatus: ${getStatusLabel(item.status)}\nData: ${new Date(item.createdAt).toLocaleDateString('pt-BR')}`,
+            [{ text: 'OK' }]
+          );
+        }}
       >
         <View style={styles.chargeHeader}>
           <View style={[styles.typeIcon, { backgroundColor: bgColor }]}>

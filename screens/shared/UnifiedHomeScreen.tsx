@@ -370,7 +370,7 @@ export default function UnifiedHomeScreen() {
       </View>
       <Pressable 
         style={[styles.notificationButton, { backgroundColor: colors.card }]}
-        onPress={() => {}}
+        onPress={() => navigation.navigate('Notifications')}
       >
         <Feather name="bell" size={22} color={colors.text} />
         <View style={[styles.notificationDot, { backgroundColor: colors.error }]} />

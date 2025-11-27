@@ -27,6 +27,7 @@ import PortfolioScreen from '@/screens/shared/PortfolioScreen';
 import PaymentScreen from '@/screens/shared/PaymentScreen';
 import PaymentHistoryScreen from '@/screens/shared/PaymentHistoryScreen';
 import PixSettingsScreen from '@/screens/shared/PixSettingsScreen';
+import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
@@ -76,6 +77,7 @@ export type RootStackParamList = {
   Payment: { workOrder?: any };
   PaymentHistory: undefined;
   PixSettings: undefined;
+  Notifications: undefined;
   Education: undefined;
   SkillDetail: { skillId: string };
   CourseDetail: { courseId: string };
@@ -222,6 +224,11 @@ export default function RootNavigator() {
             name="PixSettings"
             component={PixSettingsScreen}
             options={{ title: 'Configurar PIX' }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{ title: 'Notificacoes' }}
           />
           <Stack.Screen
             name="Education"
