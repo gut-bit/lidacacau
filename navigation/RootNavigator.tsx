@@ -4,8 +4,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import LoginScreen from '@/screens/auth/LoginScreen';
-import ProducerTabNavigator from '@/navigation/ProducerTabNavigator';
-import WorkerTabNavigator from '@/navigation/WorkerTabNavigator';
+import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
 import AdminStackNavigator from '@/navigation/AdminStackNavigator';
 import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
@@ -38,8 +37,7 @@ import { User } from '@/types';
 export type RootStackParamList = {
   Login: undefined;
   Tutorial: undefined;
-  ProducerTabs: undefined;
-  WorkerTabs: undefined;
+  MainTabs: undefined;
   AdminStack: undefined;
   JobDetail: { jobId: string };
   CreateJob: undefined;
@@ -118,22 +116,22 @@ export default function RootNavigator() {
           component={AdminStackNavigator}
           options={{ headerShown: false }}
         />
-      ) : user?.role === 'producer' ? (
+      ) : (
         <>
           <Stack.Screen
-            name="ProducerTabs"
-            component={ProducerTabNavigator}
+            name="MainTabs"
+            component={UnifiedTabNavigator}
             options={{ headerShown: false }}
           />
           <Stack.Screen
             name="JobDetail"
             component={JobDetailScreen}
-            options={{ title: 'Detalhes da Demanda' }}
+            options={{ title: 'Detalhes do Trabalho' }}
           />
           <Stack.Screen
             name="CreateJob"
             component={CreateJobScreen}
-            options={{ title: 'Nova Demanda', presentation: 'modal' }}
+            options={{ title: 'Nova Empreita', presentation: 'modal' }}
           />
           <Stack.Screen
             name="ProducerProperties"
@@ -146,117 +144,24 @@ export default function RootNavigator() {
             options={{ title: 'Nota Fiscal' }}
           />
           <Stack.Screen
-            name="Review"
-            component={ReviewScreen}
-            options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="NegotiationMatch"
-            component={NegotiationMatchScreen}
-            options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }}
-          />
-          <Stack.Screen
-            name="NegotiationTerms"
-            component={NegotiationTermsScreen}
-            options={{ title: 'Negociar Pagamento' }}
-          />
-          <Stack.Screen
-            name="ContractSigning"
-            component={ContractSigningScreen}
-            options={{ title: 'Assinar Contrato de Empreitada' }}
-          />
-          <Stack.Screen
-            name="ContractTemplate"
-            component={ContractTemplateScreen}
-            options={{ title: 'Modelo de Contrato' }}
-          />
-          <Stack.Screen
-            name="ServiceHistory"
-            component={ServiceHistoryScreen}
-            options={{ title: 'Historico de Servicos' }}
-          />
-          <Stack.Screen
-            name="SocialLinks"
-            component={SocialLinksScreen}
-            options={{ title: 'Redes Sociais' }}
-          />
-          <Stack.Screen
-            name="IdentityVerification"
-            component={IdentityVerificationScreen}
-            options={{ title: 'Verificar Identidade' }}
-          />
-          <Stack.Screen
-            name="Referral"
-            component={ReferralScreen}
-            options={{ title: 'Indique e Ganhe' }}
-          />
-          <Stack.Screen
-            name="BenefitsClub"
-            component={BenefitsClubScreen}
-            options={{ title: 'Clube Empleitapp' }}
-          />
-          <Stack.Screen
-            name="FAQSupport"
-            component={FAQSupportScreen}
-            options={{ title: 'Ajuda e Suporte' }}
-          />
-          <Stack.Screen
-            name="Portfolio"
-            component={PortfolioScreen}
-            options={{ title: 'Meu Portfolio' }}
-          />
-          <Stack.Screen
-            name="Payment"
-            component={PaymentScreen}
-            options={{ title: 'Pagamento PIX' }}
-          />
-          <Stack.Screen
-            name="PaymentHistory"
-            component={PaymentHistoryScreen}
-            options={{ title: 'Historico de Pagamentos' }}
-          />
-          <Stack.Screen
-            name="PixSettings"
-            component={PixSettingsScreen}
-            options={{ title: 'Configurar PIX' }}
-          />
-          <Stack.Screen
-            name="Education"
-            component={EducationScreen}
-            options={{ title: 'Capacitacao' }}
-          />
-          <Stack.Screen
-            name="SkillDetail"
-            component={SkillDetailScreen}
-            options={{ title: 'Detalhes da Habilidade' }}
-          />
-          <Stack.Screen
-            name="CourseDetail"
-            component={CourseDetailScreen}
-            options={{ title: 'Curso' }}
-          />
-          <Stack.Screen
-            name="Quiz"
-            component={QuizScreen}
-            options={{ title: 'Quiz' }}
-          />
-        </>
-      ) : (
-        <>
-          <Stack.Screen
-            name="WorkerTabs"
-            component={WorkerTabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="JobDetail"
-            component={JobDetailScreen}
-            options={{ title: 'Detalhes do Trabalho' }}
-          />
-          <Stack.Screen
             name="ActiveWorkOrder"
             component={ActiveWorkOrderScreen}
-            options={{ title: 'Serviço em Andamento' }}
+            options={{ title: 'Servico em Andamento' }}
+          />
+          <Stack.Screen
+            name="Review"
+            component={ReviewScreen}
+            options={{ title: 'Avaliar Servico', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="NegotiationMatch"
+            component={NegotiationMatchScreen}
+            options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="NegotiationTerms"
+            component={NegotiationTermsScreen}
+            options={{ title: 'Negociar Pagamento' }}
           />
           <Stack.Screen
             name="ContractSigning"
@@ -272,21 +177,6 @@ export default function RootNavigator() {
             name="ServiceHistory"
             component={ServiceHistoryScreen}
             options={{ title: 'Historico de Servicos' }}
-          />
-          <Stack.Screen
-            name="Review"
-            component={ReviewScreen}
-            options={{ title: 'Avaliar Serviço', presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="NegotiationMatch"
-            component={NegotiationMatchScreen}
-            options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade' }}
-          />
-          <Stack.Screen
-            name="NegotiationTerms"
-            component={NegotiationTermsScreen}
-            options={{ title: 'Negociar Pagamento' }}
           />
           <Stack.Screen
             name="SocialLinks"

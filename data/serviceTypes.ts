@@ -1,5 +1,12 @@
 import { ServiceType } from '@/types';
 
+export const SERVICE_CATEGORIES = {
+  rural: 'Servicos Rurais',
+  construction: 'Construcao',
+  maintenance: 'Manutencao',
+  transport: 'Transporte',
+};
+
 export const SERVICE_TYPES: ServiceType[] = [
   {
     id: 'poda',
@@ -27,7 +34,7 @@ export const SERVICE_TYPES: ServiceType[] = [
   },
   {
     id: 'rocagem',
-    name: 'Roçagem',
+    name: 'Rocagem',
     unit: 'ha',
     basePrice: 180.0,
     minLevel: 1,
@@ -35,7 +42,7 @@ export const SERVICE_TYPES: ServiceType[] = [
   },
   {
     id: 'aplicacao',
-    name: 'Aplicação/Manejo',
+    name: 'Aplicacao/Manejo',
     unit: 'ha',
     basePrice: 220.0,
     minLevel: 2,
@@ -51,11 +58,91 @@ export const SERVICE_TYPES: ServiceType[] = [
   },
   {
     id: 'motorista',
-    name: 'Motorista/Logística',
+    name: 'Motorista/Logistica',
     unit: 'km',
     basePrice: 2.5,
     minLevel: 2,
     icon: 'navigation',
+  },
+  {
+    id: 'pedreiro',
+    name: 'Pedreiro',
+    unit: 'diaria',
+    basePrice: 180.0,
+    minLevel: 1,
+    icon: 'home',
+  },
+  {
+    id: 'eletricista',
+    name: 'Eletricista',
+    unit: 'servico',
+    basePrice: 200.0,
+    minLevel: 2,
+    icon: 'zap',
+  },
+  {
+    id: 'encanador',
+    name: 'Encanador',
+    unit: 'servico',
+    basePrice: 180.0,
+    minLevel: 2,
+    icon: 'droplet',
+  },
+  {
+    id: 'serralheiro',
+    name: 'Serralheiro',
+    unit: 'servico',
+    basePrice: 220.0,
+    minLevel: 2,
+    icon: 'tool',
+  },
+  {
+    id: 'pintor',
+    name: 'Pintor',
+    unit: 'm2',
+    basePrice: 25.0,
+    minLevel: 1,
+    icon: 'edit-3',
+  },
+  {
+    id: 'carpinteiro',
+    name: 'Carpinteiro',
+    unit: 'diaria',
+    basePrice: 200.0,
+    minLevel: 2,
+    icon: 'box',
+  },
+  {
+    id: 'jardineiro',
+    name: 'Jardineiro',
+    unit: 'diaria',
+    basePrice: 120.0,
+    minLevel: 1,
+    icon: 'sun',
+  },
+  {
+    id: 'limpeza',
+    name: 'Limpeza de Terreno',
+    unit: 'ha',
+    basePrice: 250.0,
+    minLevel: 1,
+    icon: 'trash-2',
+  },
+  {
+    id: 'cercas',
+    name: 'Instalacao de Cercas',
+    unit: 'metro',
+    basePrice: 35.0,
+    minLevel: 2,
+    icon: 'grid',
+  },
+  {
+    id: 'soldador',
+    name: 'Soldador',
+    unit: 'servico',
+    basePrice: 250.0,
+    minLevel: 3,
+    icon: 'zap-off',
   },
 ];
 
