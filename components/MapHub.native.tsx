@@ -2,23 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from './ThemedText';
 import { MapActivity, MapRegion, VILA_ALVORADA_KM140 } from '@/types';
 import { Spacing } from '@/constants/theme';
-
-let MapView: any = null;
-let Marker: any = null;
-let Circle: any = null;
-let PROVIDER_DEFAULT: any = null;
-
-if (Platform.OS !== 'web') {
-  const Maps = require('react-native-maps');
-  MapView = Maps.default;
-  Marker = Maps.Marker;
-  Circle = Maps.Circle;
-  PROVIDER_DEFAULT = Maps.PROVIDER_DEFAULT;
-}
 
 interface MapHubProps {
   activities?: MapActivity[];
@@ -108,7 +96,7 @@ export function MapHub({
 
   const handleRadiusSelect = (radius: number) => {
     onRadiusChange(radius);
-    if (mapRef.current && Platform.OS !== 'web') {
+    if (mapRef.current) {
       const delta = calculateDelta(radius);
       mapRef.current.animateToRegion({
         ...centerLocation,
@@ -117,31 +105,6 @@ export function MapHub({
       }, 500);
     }
   };
-
-  const renderWebFallback = () => (
-    <View style={[styles.webFallback, { backgroundColor: colors.primary + '10' }]}>
-      <View style={[styles.webFallbackIcon, { backgroundColor: colors.primary + '20' }]}>
-        <Feather name="map" size={48} color={colors.primary} />
-      </View>
-      <ThemedText type="h4" style={{ color: colors.text, marginTop: Spacing.md }}>
-        Mapa da Regiao
-      </ThemedText>
-      <ThemedText type="body" style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>
-        {VILA_ALVORADA_KM140.name}
-      </ThemedText>
-      <ThemedText type="small" style={{ color: colors.textSecondary, textAlign: 'center' }}>
-        Raio: {searchRadius}km
-      </ThemedText>
-      {activities.length > 0 ? (
-        <View style={[styles.webActivityBadge, { backgroundColor: colors.accent }]}>
-          <Feather name="activity" size={14} color="#FFFFFF" />
-          <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600', marginLeft: 4 }}>
-            {activities.length} {activities.length === 1 ? 'atividade' : 'atividades'} na area
-          </ThemedText>
-        </View>
-      ) : null}
-    </View>
-  );
 
   const renderNativeMap = () => (
     <MapView
@@ -198,7 +161,7 @@ export function MapHub({
 
   return (
     <View style={[styles.container, { height }]}>
-      {Platform.OS === 'web' ? renderWebFallback() : renderNativeMap()}
+      {renderNativeMap()}
 
       <View style={[styles.radiusSelector, { backgroundColor: colors.card + 'E6' }]}>
         <View style={styles.radiusHeader}>
@@ -327,28 +290,5 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
-  },
-  webFallback: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: Spacing.lg,
-  },
-  webFallbackIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  webActivityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: Spacing.md,
   },
 });
