@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "empleitapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "sdkVersion": "54.0.0",
     "updates": {
       "enabled": false

@@ -43,6 +43,7 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
     hasSkills: !!(user.workerProfile?.skills && user.workerProfile.skills.length > 0),
     hasEquipment: !!(user.workerProfile?.equipment && user.workerProfile.equipment.length > 0),
     hasAvailability: !!user.workerProfile?.availability,
+    hasSocialLinks: !!(user.socialLinks && (user.socialLinks.whatsapp || user.socialLinks.instagram || user.socialLinks.facebook)),
   };
 
   const totalChecks = Object.values(checks).length;
