@@ -155,6 +155,14 @@ export default function NegotiationMatchScreen() {
     });
   };
 
+  const handleSignContract = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.replace('ContractSigning' as any, {
+      workOrderId,
+      isProducer,
+    });
+  };
+
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
@@ -267,9 +275,9 @@ export default function NegotiationMatchScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.negotiationPrompt, detailsStyle]}>
-          <Feather name="message-circle" size={20} color={colors.accent} />
+          <Feather name="file-text" size={20} color={colors.accent} />
           <ThemedText type="body" style={[styles.promptText, { color: colors.text }]}>
-            Defina os termos de pagamento
+            Defina os termos e assine o contrato
           </ThemedText>
         </Animated.View>
 
@@ -283,7 +291,20 @@ export default function NegotiationMatchScreen() {
           >
             <Feather name="sliders" size={20} color="#FFFFFF" />
             <ThemedText type="body" style={styles.buttonText}>
-              Negociar Pagamento
+              Negociar Termos
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryButton,
+              { backgroundColor: colors.success, opacity: pressed ? 0.9 : 1, marginTop: Spacing.md },
+            ]}
+            onPress={handleSignContract}
+          >
+            <Feather name="edit-3" size={20} color="#FFFFFF" />
+            <ThemedText type="body" style={styles.buttonText}>
+              Assinar Contrato Agora
             </ThemedText>
           </Pressable>
 
@@ -295,7 +316,7 @@ export default function NegotiationMatchScreen() {
             onPress={handleSkip}
           >
             <ThemedText type="body" style={{ color: colors.textSecondary }}>
-              Pular por Agora
+              Depois
             </ThemedText>
           </Pressable>
         </Animated.View>

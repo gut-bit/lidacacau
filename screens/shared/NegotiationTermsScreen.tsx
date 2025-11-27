@@ -185,7 +185,7 @@ export default function NegotiationTermsScreen() {
       const newProposal = {
         id: Date.now().toString(),
         proposerId: user?.id || '',
-        proposerRole: isProducer ? 'producer' : 'worker',
+        proposerRole: (isProducer ? 'producer' : 'worker') as 'producer' | 'worker',
         paymentTerms,
         totalPrice: calculateTotal(),
         status: 'proposed' as const,
@@ -194,17 +194,25 @@ export default function NegotiationTermsScreen() {
 
       await updateWorkOrder(workOrderId, {
         paymentTerms,
-        negotiationStatus: 'proposed',
+        finalPrice: calculateTotal(),
+        negotiationStatus: 'accepted',
         negotiationHistory: [...existingHistory, newProposal],
       });
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
       Alert.alert(
-        'Proposta Enviada',
-        `Sua proposta de pagamento foi enviada para ${isProducer ? worker.name : producer.name}. Voc\u00ea ser\u00e1 notificado quando houver uma resposta.`,
+        'Termos Definidos',
+        'Os termos de pagamento foram definidos. Agora e hora de assinar o contrato de empreitada.',
         [
           {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
+            text: 'Assinar Contrato',
+            onPress: () => {
+              navigation.replace('ContractSigning', {
+                workOrderId,
+                isProducer,
+              });
+            },
           },
         ]
       );
