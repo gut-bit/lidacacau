@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Pressable, RefreshControl, FlatList } from 'react-native';
+import { StyleSheet, View, Pressable, RefreshControl, FlatList, Alert, Platform, Linking } from 'react-native';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import * as Sharing from 'expo-sharing';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -13,9 +14,15 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { User, Review } from '@/types';
 import { getUserById, getReviewsByUser } from '@/utils/storage';
-import { getLevelLabel, formatCurrency } from '@/utils/format';
+import { getLevelLabel } from '@/utils/format';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
-type Props = NativeStackScreenProps<any, 'OtherUserProfile'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'OtherUserProfile'>;
+
+interface ReviewWithReviewer extends Review {
+  reviewerName: string;
+  averageRating: number;
+}
 
 export default function OtherUserProfileScreen() {
   const route = useRoute<Props['route']>();
@@ -24,8 +31,12 @@ export default function OtherUserProfileScreen() {
   const colors = isDark ? Colors.dark : Colors.light;
 
   const [user, setUser] = useState<User | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ReviewWithReviewer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const calculateReviewAverage = (review: Review): number => {
+    return (review.quality + review.safety + review.punctuality + review.communication + review.fairness) / 5;
+  };
 
   const loadUserData = useCallback(async () => {
     try {
@@ -34,7 +45,18 @@ export default function OtherUserProfileScreen() {
       
       if (userData) {
         const userReviews = await getReviewsByUser(userId);
-        setReviews(userReviews);
+        const reviewsWithDetails: ReviewWithReviewer[] = [];
+        
+        for (const review of userReviews) {
+          const reviewer = await getUserById(review.reviewerId);
+          reviewsWithDetails.push({
+            ...review,
+            reviewerName: reviewer?.name || 'Usuario',
+            averageRating: calculateReviewAverage(review),
+          });
+        }
+        
+        setReviews(reviewsWithDetails);
       }
     } catch (error) {
       console.error('Error loading user:', error);
@@ -52,9 +74,9 @@ export default function OtherUserProfileScreen() {
   if (!user) {
     return (
       <ScreenScrollView>
-        <View style={styles.container}>
+        <View style={styles.errorContainer}>
           <Feather name="alert-circle" size={48} color={colors.error} />
-          <ThemedText type="h3">Usuário não encontrado</ThemedText>
+          <ThemedText type="h3">Usuario nao encontrado</ThemedText>
         </View>
       </ScreenScrollView>
     );
@@ -65,18 +87,16 @@ export default function OtherUserProfileScreen() {
 
   const handleShareProfile = async () => {
     try {
-      const message = `Confira o perfil de ${user.name} no Empleitapp! ${isWorker ? 'Nível: ' + getLevelLabel(user.level || 1) : ''}`;
-      await Sharing.shareAsync('', {
-        mimeType: 'text/plain',
-        message,
-        dialogTitle: 'Compartilhar Perfil',
-      });
+      const message = `Confira o perfil de ${user.name} no Empleitapp! ${isWorker ? 'Nivel: ' + getLevelLabel(user.level || 1) : ''}`;
+      await Clipboard.setStringAsync(message);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Copiado!', 'Link do perfil copiado para a area de transferencia.');
     } catch (error) {
       console.error('Error sharing:', error);
     }
   };
 
-  const renderReviewItem = ({ item }: { item: Review }) => (
+  const renderReviewItem = ({ item }: { item: ReviewWithReviewer }) => (
     <View style={[styles.reviewCard, { backgroundColor: colors.card }, Shadows.card]}>
       <View style={styles.reviewHeader}>
         <View>
@@ -87,21 +107,20 @@ export default function OtherUserProfileScreen() {
                 key={i}
                 name="star"
                 size={14}
-                color={i < Math.round(item.rating) ? '#FFB800' : colors.textSecondary}
-                fill={i < Math.round(item.rating) ? '#FFB800' : 'transparent'}
+                color={i < Math.round(item.averageRating) ? '#FFB800' : colors.textSecondary}
               />
             ))}
           </View>
         </View>
         <ThemedText type="h3" style={{ color: '#FFB800' }}>
-          {item.rating.toFixed(1)}
+          {item.averageRating.toFixed(1)}
         </ThemedText>
       </View>
-      {item.comment && (
+      {item.comment ? (
         <ThemedText type="body" style={{ color: colors.textSecondary, marginTop: Spacing.sm }}>
-          {item.comment}
+          "{item.comment}"
         </ThemedText>
-      )}
+      ) : null}
     </View>
   );
 
@@ -110,19 +129,22 @@ export default function OtherUserProfileScreen() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={loadUserData} />}
     >
       <View style={styles.container}>
-        {/* Avatar and Basic Info */}
         <View style={[styles.headerCard, { backgroundColor: colors.card }, Shadows.card]}>
-          {user.avatar && (
+          {user.avatar ? (
             <Image
               source={{ uri: user.avatar }}
               style={styles.avatar}
               contentFit="cover"
             />
+          ) : (
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '30' }]}>
+              <Feather name="user" size={48} color={colors.primary} />
+            </View>
           )}
           
           <View style={styles.nameContainer}>
             <ThemedText type="h2">{user.name}</ThemedText>
-            {isWorker && (
+            {isWorker ? (
               <View
                 style={[
                   styles.levelBadge,
@@ -133,26 +155,26 @@ export default function OtherUserProfileScreen() {
                   {getLevelLabel(user.level || 1)}
                 </ThemedText>
               </View>
-            )}
+            ) : null}
           </View>
 
-          {user.location && (
+          {user.verification?.status === 'approved' ? (
+            <View style={[styles.verifiedBadge, { backgroundColor: colors.success + '20' }]}>
+              <Feather name="check-circle" size={16} color={colors.success} />
+              <ThemedText type="small" style={{ color: colors.success, fontWeight: '600' }}>
+                Verificado
+              </ThemedText>
+            </View>
+          ) : null}
+
+          {user.location ? (
             <View style={styles.detailRow}>
               <Feather name="map-pin" size={16} color={colors.textSecondary} />
               <ThemedText type="body" style={{ color: colors.textSecondary }}>
                 {user.location}
               </ThemedText>
             </View>
-          )}
-
-          {user.phone && (
-            <View style={styles.detailRow}>
-              <Feather name="phone" size={16} color={colors.textSecondary} />
-              <ThemedText type="body" style={{ color: colors.textSecondary }}>
-                {user.phone}
-              </ThemedText>
-            </View>
-          )}
+          ) : null}
 
           <Pressable
             style={[styles.shareButton, { backgroundColor: colors.primary }]}
@@ -165,59 +187,59 @@ export default function OtherUserProfileScreen() {
           </Pressable>
         </View>
 
-        {/* Social Links */}
-        {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
+        {user.socialLinks && Object.keys(user.socialLinks).length > 0 ? (
           <View style={styles.section}>
             <ThemedText type="h4" style={styles.sectionTitle}>Contato</ThemedText>
             <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
               <SocialLinksDisplay socialLinks={user.socialLinks} size="medium" />
             </View>
           </View>
-        )}
+        ) : null}
 
-        {/* Bio */}
-        {(user.workerProfile?.bio || user.producerProfile?.bio) && (
+        {(user.workerProfile?.bio || user.producerProfile?.bio) ? (
           <View style={styles.section}>
             <ThemedText type="h4" style={styles.sectionTitle}>Sobre</ThemedText>
-            <ThemedText type="body" style={{ color: colors.textSecondary }}>
-              {user.workerProfile?.bio || user.producerProfile?.bio}
-            </ThemedText>
+            <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
+              <ThemedText type="body" style={{ color: colors.text }}>
+                {user.workerProfile?.bio || user.producerProfile?.bio}
+              </ThemedText>
+            </View>
           </View>
-        )}
+        ) : null}
 
-        {/* Worker Stats */}
-        {isWorker && (
+        {isWorker ? (
           <View style={styles.section}>
-            <ThemedText type="h4" style={styles.sectionTitle}>Estatísticas</ThemedText>
+            <ThemedText type="h4" style={styles.sectionTitle}>Estatisticas</ThemedText>
             <View style={[styles.statsContainer, { backgroundColor: colors.card }, Shadows.card]}>
               <View style={styles.statItem}>
                 <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                  Avaliação
+                  Avaliacao Media
                 </ThemedText>
                 <View style={styles.ratingContainer}>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Feather
                       key={i}
                       name="star"
-                      size={16}
+                      size={18}
                       color={i < Math.round(avgRating) ? '#FFB800' : colors.textSecondary}
-                      fill={i < Math.round(avgRating) ? '#FFB800' : 'transparent'}
                     />
                   ))}
                 </View>
-                <ThemedText type="h3" style={{ color: '#FFB800' }}>
-                  {avgRating.toFixed(1)} ({user.totalReviews || 0})
+                <ThemedText type="h2" style={{ color: '#FFB800' }}>
+                  {avgRating.toFixed(1)}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: colors.textSecondary }}>
+                  ({user.totalReviews || 0} avaliacoes)
                 </ThemedText>
               </View>
             </View>
           </View>
-        )}
+        ) : null}
 
-        {/* Reviews */}
-        {reviews.length > 0 && (
+        {reviews.length > 0 ? (
           <View style={styles.section}>
             <ThemedText type="h4" style={styles.sectionTitle}>
-              Avaliações ({reviews.length})
+              Avaliacoes ({reviews.length})
             </ThemedText>
             <FlatList
               data={reviews}
@@ -227,7 +249,7 @@ export default function OtherUserProfileScreen() {
               ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
             />
           </View>
-        )}
+        ) : null}
       </View>
     </ScreenScrollView>
   );
@@ -237,6 +259,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: Spacing.lg,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+    gap: Spacing.lg,
   },
   headerCard: {
     paddingHorizontal: Spacing.lg,
@@ -251,9 +280,17 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: Spacing.lg,
   },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: Spacing.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   nameContainer: {
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     flexDirection: 'row',
     gap: Spacing.md,
   },
@@ -261,6 +298,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.md,
   },
   detailRow: {
     flexDirection: 'row',

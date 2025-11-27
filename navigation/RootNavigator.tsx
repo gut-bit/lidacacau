@@ -252,6 +252,11 @@ export default function RootNavigator() {
             component={QuizScreen}
             options={{ title: 'Quiz' }}
           />
+          <Stack.Screen
+            name="OtherUserProfile"
+            component={OtherUserProfileScreen}
+            options={{ title: 'Perfil do Usuario' }}
+          />
         </>
       )}
     </Stack.Navigator>

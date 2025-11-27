@@ -335,8 +335,11 @@ export default function JobDetailScreen() {
                     onPress={() => setSelectedBidId(bid.id)}
                   >
                     <View style={styles.bidHeader}>
-                      <View style={styles.bidWorkerInfo}>
-                        <ThemedText type="h4">{bid.worker.name}</ThemedText>
+                      <Pressable 
+                        style={styles.bidWorkerInfo}
+                        onPress={() => navigation.navigate('OtherUserProfile', { userId: bid.worker.id })}
+                      >
+                        <ThemedText type="h4" style={{ color: colors.link }}>{bid.worker.name}</ThemedText>
                         <View
                           style={[
                             styles.levelBadge,
@@ -347,7 +350,8 @@ export default function JobDetailScreen() {
                             {getLevelLabel(bid.worker.level || 1)}
                           </ThemedText>
                         </View>
-                      </View>
+                        <Feather name="external-link" size={14} color={colors.link} />
+                      </Pressable>
                       <ThemedText type="h3" style={{ color: colors.accent }}>
                         {formatCurrency(bid.price)}
                       </ThemedText>
@@ -382,9 +386,12 @@ export default function JobDetailScreen() {
               Ordem de Serviço
             </ThemedText>
             <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
-              <View style={styles.detailRow}>
+              <Pressable 
+                style={styles.detailRow}
+                onPress={() => navigation.navigate('OtherUserProfile', { userId: worker.id })}
+              >
                 <Feather name="user" size={16} color={colors.textSecondary} />
-                <ThemedText type="body">{worker.name}</ThemedText>
+                <ThemedText type="body" style={{ color: colors.link }}>{worker.name}</ThemedText>
                 <View
                   style={[
                     styles.levelBadge,
@@ -395,7 +402,8 @@ export default function JobDetailScreen() {
                     {getLevelLabel(worker.level || 1)}
                   </ThemedText>
                 </View>
-              </View>
+                <Feather name="external-link" size={14} color={colors.link} />
+              </Pressable>
               <View style={styles.detailRow}>
                 <Feather name="dollar-sign" size={16} color={colors.accent} />
                 <ThemedText type="h4" style={{ color: colors.accent }}>
@@ -426,10 +434,14 @@ export default function JobDetailScreen() {
               Contato do Produtor
             </ThemedText>
             <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
-              <View style={styles.detailRow}>
+              <Pressable 
+                style={styles.detailRow}
+                onPress={() => navigation.navigate('OtherUserProfile', { userId: producer.id })}
+              >
                 <Feather name="user" size={16} color={colors.textSecondary} />
-                <ThemedText type="body">{producer.name}</ThemedText>
-              </View>
+                <ThemedText type="body" style={{ color: colors.link }}>{producer.name}</ThemedText>
+                <Feather name="external-link" size={14} color={colors.link} />
+              </Pressable>
               {producer.phone && (
                 <View style={styles.detailRow}>
                   <Feather name="phone" size={16} color={colors.textSecondary} />

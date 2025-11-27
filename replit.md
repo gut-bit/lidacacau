@@ -104,7 +104,7 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
 
 ## Contract System (Nov 2025)
 -   **Componentes**:
-    - `/components/AnimatedButton.tsx` - Botao animado com spring/scale usando react-native-reanimated e feedback haptico
+    - `/components/AnimatedButton.tsx` - Botao animado com spring/scale usando react-native-reanimated e feedback haptico. Suporta variantes: primary, secondary, success, danger, accent (amarelado #FFB800). Suporta tamanhos: normal (50px), large (60px).
     - `/components/ContractCompletedModal.tsx` - Modal de celebracao quando ambas as partes assinam o contrato
 -   **Tipos**: `ContractHistoryItem` em `/types/index.ts` para armazenar historico de contratos
 -   **Storage**: Funcoes `getContractHistory`, `saveContractToHistory`, `updateContractHistoryStatus` em `/utils/storage.ts`
@@ -114,3 +114,11 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
     - Checkbox de aceite digital obrigatorio antes de assinar contrato
     - Modal popup animado quando ambas as partes assinam o contrato
     - Contratos salvos automaticamente no historico do usuario apos assinatura completa
+
+## User Profile System (Nov 2025)
+-   **Persistência de Autenticação**: Contas são gravadas automaticamente via AsyncStorage (`getCurrentUser`, `setCurrentUser` em `/utils/storage.ts`). Usuários permanecem logados entre sessões.
+-   **Visualização de Perfil de Outros Usuários**:
+    - `/screens/shared/OtherUserProfileScreen.tsx` - Tela dedicada para ver perfil de outros usuários com avatar, nível, avaliações, redes sociais e botão de compartilhar
+    - Navegação disponível clicando em nomes de trabalhadores/produtores no JobDetailScreen
+    - Nomes clicáveis aparecem em cor de link com ícone de "external-link"
+-   **Rotas adicionadas**: `OtherUserProfile: { userId: string }` em RootStackParamList
