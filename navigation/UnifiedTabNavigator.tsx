@@ -9,15 +9,15 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Shadows } from '@/constants/theme';
 import UnifiedHomeScreen from '@/screens/shared/UnifiedHomeScreen';
 import ExploreScreen from '@/screens/shared/ExploreScreen';
-import EducationScreen from '@/screens/education/EducationScreen';
+import ChatListScreen from '@/screens/shared/ChatListScreen';
 import UnifiedProfileScreen from '@/screens/shared/UnifiedProfileScreen';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export type UnifiedTabParamList = {
   Home: undefined;
-  Explore: undefined;
+  Messages: undefined;
   Create: undefined;
-  Learn: undefined;
+  Explore: undefined;
   Profile: undefined;
 };
 
@@ -83,11 +83,11 @@ export default function UnifiedTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Explore"
-        component={ExploreScreen}
+        name="Messages"
+        component={ChatListScreen}
         options={{
-          title: 'Explorar',
-          tabBarIcon: ({ color, size }) => <Feather name="compass" size={size} color={color} />,
+          title: 'Conversas',
+          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -105,11 +105,11 @@ export default function UnifiedTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Learn"
-        component={EducationScreen}
+        name="Explore"
+        component={ExploreScreen}
         options={{
-          title: 'Aprender',
-          tabBarIcon: ({ color, size }) => <Feather name="book-open" size={size} color={color} />,
+          title: 'Explorar',
+          tabBarIcon: ({ color, size }) => <Feather name="compass" size={size} color={color} />,
         }}
       />
       <Tab.Screen

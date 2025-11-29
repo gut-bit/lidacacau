@@ -90,7 +90,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `/screens/shared/TutorialScreen.tsx`: Interactive 6-card tutorial carousel
   - `/screens/shared/QuickActionsScreen.tsx`: Unified action modal (create, search, chat)
 - `/navigation/`: Navigation flows
-  - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Explore, +, Learn, Profile)
+  - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Conversas, +, Explorar, Perfil)
   - `RootNavigator.tsx`: Root navigation with auth handling
 - `/contexts/`: Contains `AuthContext.tsx`
 - `/types/`: TypeScript definitions including FriendConnection, ChatRoom, DirectMessage, UserPresence
