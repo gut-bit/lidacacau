@@ -31,7 +31,10 @@ export default function ShopListScreen() {
   const loadStores = async () => {
     try {
       const data = await getStores();
-      setStores(data.filter(s => s.status === 'active'));
+      console.log('[ShopListScreen] Loaded stores:', data);
+      const activeStores = data.filter(s => s.status === 'active');
+      console.log('[ShopListScreen] Filtered active stores:', activeStores.length);
+      setStores(activeStores);
     } catch (error) {
       console.error('Error loading stores:', error);
     } finally {

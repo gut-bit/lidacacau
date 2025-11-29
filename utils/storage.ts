@@ -1814,6 +1814,7 @@ export const initializeDevData = async (): Promise<void> => {
       updatedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify([cacauprodutosStore]));
+    console.log('[LidaCacau DEV] Saved CacauProdutos store:', cacauprodutosStore.name);
 
     const testProducts: Product[] = [
       {
@@ -1930,9 +1931,10 @@ export const initializeDevData = async (): Promise<void> => {
       },
     ];
     await AsyncStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(testProducts));
+    console.log('[LidaCacau DEV] Saved', testProducts.length, 'products to CacauProdutos');
 
     await AsyncStorage.setItem(DEV_DATA_KEY, 'true');
-    console.log('[LidaCacau DEV] Demo data seeded: Maria (producer) + Joao (worker) + CacauProdutos store');
+    console.log('[LidaCacau DEV] Demo data seeded: Maria (producer) + Joao (worker) + CacauProdutos store with', testProducts.length, 'products');
   } catch (error) {
     console.error('Error seeding dev data:', error);
   }
@@ -2754,7 +2756,9 @@ export const getPropertyStats = async (ownerId?: string): Promise<{
 export const getStores = async (): Promise<Store[]> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.STORES);
-    return data ? JSON.parse(data) : [];
+    const stores = data ? JSON.parse(data) : [];
+    console.log('[LIDASHOP] getStores() returned:', stores.length, 'stores');
+    return stores;
   } catch (error) {
     console.error('Error getting stores:', error);
     return [];
