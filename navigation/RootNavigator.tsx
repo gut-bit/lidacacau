@@ -4,7 +4,7 @@ import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import LoginScreen from '@/screens/auth/LoginScreen';
-import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
+import SectionTabNavigator from '@/navigation/SectionTabNavigator';
 import AdminStackNavigator from '@/navigation/AdminStackNavigator';
 import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
@@ -155,7 +155,7 @@ export default function RootNavigator() {
         <>
           <Stack.Screen
             name="MainTabs"
-            component={UnifiedTabNavigator}
+            component={SectionTabNavigator}
             options={{ headerShown: false }}
           />
           <Stack.Screen
