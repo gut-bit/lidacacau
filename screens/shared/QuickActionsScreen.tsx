@@ -79,6 +79,14 @@ export default function QuickActionsScreen() {
       color: colors.secondary,
       onPress: () => handleAction('create_squad', () => navigation.replace('CreateSquad')),
     },
+    {
+      id: 'register_property',
+      icon: 'map-pin',
+      title: 'Cadastrar Propriedade',
+      subtitle: 'Adicione sua fazenda ou sitio',
+      color: colors.success,
+      onPress: () => handleAction('register_property', () => navigation.replace('PropertyForm', {})),
+    },
   ];
 
   const ActionCard = ({ item }: { item: ActionItem }) => (
