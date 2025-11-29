@@ -47,6 +47,7 @@ import PropertyDocumentsScreen from '@/screens/shared/PropertyDocumentsScreen';
 import PropertyDetailScreen from '@/screens/shared/PropertyDetailScreen';
 import PropertyFormScreen from '@/screens/shared/PropertyFormScreen';
 import StoreDetailScreen from '@/screens/shared/StoreDetailScreen';
+import CacauPricesScreen from '@/screens/shared/CacauPricesScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -115,6 +116,7 @@ export type RootStackParamList = {
   PropertyDetail: { propertyId: string };
   PropertyForm: { propertyId?: string };
   StoreDetail: { storeId: string };
+  CacauPrices: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -373,6 +375,11 @@ export default function RootNavigator() {
             name="StoreDetail"
             component={StoreDetailScreen}
             options={{ title: 'Detalhes da Loja' }}
+          />
+          <Stack.Screen
+            name="CacauPrices"
+            component={CacauPricesScreen}
+            options={{ title: 'Precos do Cacau' }}
           />
         </>
       )}

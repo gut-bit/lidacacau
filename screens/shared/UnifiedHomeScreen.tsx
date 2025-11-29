@@ -37,6 +37,7 @@ import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
+import { PriceTicker } from '@/components/PriceTicker';
 
 interface UserLocation {
   latitude: number;
@@ -1164,6 +1165,10 @@ export default function UnifiedHomeScreen() {
         {renderProfileHeader()}
         {renderLocationBanner()}
         {renderQuickStats()}
+        
+        {/* Cocoa Price Ticker */}
+        <PriceTicker compact showLocalQuotes={false} />
+        
         {renderGenteDaLida()}
         {renderFeedFilters()}
         {renderMyJobsSection()}

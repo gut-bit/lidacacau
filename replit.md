@@ -132,6 +132,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - FRIENDS, CHAT_ROOMS, MESSAGES_{roomId}, PRESENCE
 - ANALYTICS, CONTRACT_HISTORY, PORTFOLIO, NOTIFICATIONS
 - PROPERTIES (PropertyDetail storage for rural property management)
+- COCOA_PRICES (Real-time price data with stale-while-revalidate cache)
 
 ### Custom Hooks
 - `useScreenInsets`: Screen padding calculations (tab bar, header, web differences)
@@ -203,6 +204,15 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
     - Property verification badge system (pending/verified/rejected)
     - Legacy property data migration for backward compatibility
     - Area calculation in hectares using GeoJSON-compatible coordinates
+21. **Real-Time Cocoa Price Tracking System**: Global and local cocoa price integration
+    - CocoaPriceService: Stale-while-revalidate cache pattern with 30-min TTL
+    - Mock data structure ready for ICCO/ICE Futures API integration
+    - PriceTicker component: Compact widget on home screen with price change indicators
+    - CacauPricesScreen: Full dashboard with historical chart, local quotes from moageiras
+    - Theme-aware colors (colors.success/error from current theme)
+    - LocalQuote system for regional price differentials (ágios/desagios)
+    - Storage key: @lidacacau_cocoa_prices
+    - Navigation route: CacauPrices
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com
