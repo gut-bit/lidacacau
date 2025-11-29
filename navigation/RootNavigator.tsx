@@ -220,7 +220,7 @@ export default function RootNavigator() {
           <Stack.Screen
             name="BenefitsClub"
             component={BenefitsClubScreen}
-            options={{ title: 'Clube Empleitapp' }}
+            options={{ title: 'Clube LidaCacau' }}
           />
           <Stack.Screen
             name="FAQSupport"

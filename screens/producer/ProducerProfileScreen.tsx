@@ -41,7 +41,7 @@ export default function ProducerProfileScreen() {
     { icon: 'archive', label: 'Historico de Servicos', onPress: () => navigation.navigate('ServiceHistory'), color: colors.primary, highlight: true },
     { icon: 'shield', label: 'Verificar Identidade', onPress: () => navigation.navigate('IdentityVerification'), color: verificationStatus === 'approved' ? colors.success : colors.accent },
     { icon: 'gift', label: 'Indique e Ganhe', onPress: () => navigation.navigate('Referral'), color: colors.accent },
-    { icon: 'award', label: 'Clube Empleitapp', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
+    { icon: 'award', label: 'Clube LidaCacau', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
     { icon: 'file-text', label: 'Nota Fiscal Eletronica', onPress: () => navigation.navigate('NFSe') },
     { icon: 'clipboard', label: 'Modelo de Contrato', onPress: () => navigation.navigate('ContractTemplate', {}), color: colors.secondary },
     { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },

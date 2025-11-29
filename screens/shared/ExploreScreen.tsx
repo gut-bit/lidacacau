@@ -136,7 +136,7 @@ export default function ExploreScreen() {
     },
     {
       icon: 'award',
-      title: 'Clube Empleitapp',
+      title: 'Clube LidaCacau',
       subtitle: 'Descontos exclusivos com parceiros',
       color: '#F59E0B',
       onPress: () => navigation.navigate('BenefitsClub'),

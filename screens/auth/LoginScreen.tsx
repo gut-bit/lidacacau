@@ -76,10 +76,10 @@ export default function LoginScreen() {
             contentFit="contain"
           />
           <ThemedText type="h1" style={styles.appName}>
-            Empleitapp
+            LidaCacau
           </ThemedText>
           <ThemedText type="body" style={[styles.tagline, { color: colors.textSecondary }]}>
-            Empreitadas rurais na palma da mao
+            Confianca de quem e da Lida
           </ThemedText>
         </View>
 

@@ -64,7 +64,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         </ThemedText>
 
         <ThemedText type="body" style={styles.message}>
-          O Empleitapp encontrou um problema. Por favor, reinicie o aplicativo para continuar.
+          O LidaCacau encontrou um problema. Por favor, reinicie o aplicativo para continuar.
         </ThemedText>
 
         <Pressable

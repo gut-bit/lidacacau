@@ -87,7 +87,7 @@ export default function OtherUserProfileScreen() {
 
   const handleShareProfile = async () => {
     try {
-      const message = `Confira o perfil de ${user.name} no Empleitapp! ${isWorker ? 'Nivel: ' + getLevelLabel(user.level || 1) : ''}`;
+      const message = `Confira o perfil de ${user.name} no LidaCacau! ${isWorker ? 'Nivel: ' + getLevelLabel(user.level || 1) : ''}`;
       await Clipboard.setStringAsync(message);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Copiado!', 'Link do perfil copiado para a area de transferencia.');

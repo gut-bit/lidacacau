@@ -196,7 +196,7 @@ export default function NegotiationMatchScreen() {
       return;
     }
     
-    const message = encodeURIComponent(`Ola ${user.name.split(' ')[0]}! Vi que fechamos acordo no Empleitapp para ${serviceName}. Vamos conversar?`);
+    const message = encodeURIComponent(`Ola ${user.name.split(' ')[0]}! Vi que fechamos acordo no LidaCacau para ${serviceName}. Vamos conversar?`);
     const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${message}`;
     
     try {

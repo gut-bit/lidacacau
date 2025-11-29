@@ -13,7 +13,7 @@ import {
 import { generateId } from './storage';
 
 const STORAGE_KEYS = {
-  PIX_CHARGES: '@empleitapp:pix_charges',
+  PIX_CHARGES: '@lidacacau:pix_charges',
 };
 
 const OPENPIX_API_URL = 'https://api.openpix.com.br/api/v1';
@@ -397,7 +397,7 @@ export const createSplitPaymentCharges = async (params: {
   const platformBrCode = generatePixBrCode({
     correlationID: platformCorrelationID,
     value: breakdown.platformFee / 100,
-    receiverName: 'Empleitapp',
+    receiverName: 'LidaCacau',
     description: `${serviceName} - Taxa plataforma`,
   });
 
@@ -408,7 +408,7 @@ export const createSplitPaymentCharges = async (params: {
     payerId,
     payerName,
     receiverId: 'platform',
-    receiverName: 'Empleitapp',
+    receiverName: 'LidaCacau',
     receiverPixKey: platformPixKey,
     value: breakdown.platformFee,
     description: `${serviceName} - Taxa da plataforma (10%)`,

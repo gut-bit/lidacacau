@@ -72,7 +72,7 @@ export default function WorkerProfileScreen() {
     { icon: 'image', label: 'Meu Portfolio', onPress: () => navigation.navigate('Portfolio'), color: colors.primary },
     { icon: 'shield', label: 'Verificar Identidade', onPress: () => navigation.navigate('IdentityVerification'), color: verificationStatus === 'approved' ? colors.success : colors.accent, badge: verificationStatus },
     { icon: 'gift', label: 'Indique e Ganhe', onPress: () => navigation.navigate('Referral'), color: colors.accent },
-    { icon: 'award', label: 'Clube Empleitapp', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
+    { icon: 'award', label: 'Clube LidaCacau', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
     { icon: 'clipboard', label: 'Modelo de Contrato', onPress: () => navigation.navigate('ContractTemplate', {}), color: colors.secondary },
     { icon: 'book-open', label: 'Capacitacao', onPress: () => navigation.navigate('Education') },
     { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },

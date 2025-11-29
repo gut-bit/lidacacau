@@ -246,7 +246,7 @@ export default function WorkerJobsScreen() {
             contentFit="contain"
           />
           <View style={{ flex: 1 }}>
-            <ThemedText type="h3">Empleitapp</ThemedText>
+            <ThemedText type="h3">LidaCacau</ThemedText>
             <ThemedText type="body" style={{ color: colors.textSecondary }}>
               Ola, {user?.name?.split(' ')[0]}!
             </ThemedText>

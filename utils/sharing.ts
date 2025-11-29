@@ -30,9 +30,9 @@ export const generateJobShareText = (job: Job, producerName?: string): ShareCont
     ``,
     producerName ? `Publicado por: ${producerName}` : '',
     ``,
-    `Interessado? Baixe o Empleitapp e envie sua proposta!`,
+    `Interessado? Baixe o LidaCacau e envie sua proposta!`,
     ``,
-    `#Empleitapp #TrabalhoRural #${serviceName.replace(/\s+/g, '')}`,
+    `#LidaCacau #TrabalhoRural #${serviceName.replace(/\s+/g, '')}`,
   ].filter(Boolean);
   
   return {
@@ -73,9 +73,9 @@ export const generateOfferShareText = (offer: ServiceOffer, workerName?: string)
     ``,
     workerName ? `Trabalhador: ${workerName}` : '',
     ``,
-    `Precisa de ajuda? Baixe o Empleitapp e entre em contato!`,
+    `Precisa de ajuda? Baixe o LidaCacau e entre em contato!`,
     ``,
-    `#Empleitapp #TrabalhoRural #${serviceNames.replace(/\s+/g, '').replace(/,/g, ' #')}`,
+    `#LidaCacau #TrabalhoRural #${serviceNames.replace(/\s+/g, '').replace(/,/g, ' #')}`,
   ].filter(Boolean);
   
   return {
@@ -137,7 +137,7 @@ export const shareCard = async (
 
 export const copyCardLink = async (type: CardShareType, id: string): Promise<boolean> => {
   try {
-    const baseUrl = 'https://empleitapp.com.br';
+    const baseUrl = 'https://lidacacau.app';
     const path = type === 'demand' ? 'demanda' : 'oferta';
     const url = `${baseUrl}/${path}/${id}`;
     
@@ -150,7 +150,7 @@ export const copyCardLink = async (type: CardShareType, id: string): Promise<boo
 };
 
 export const generateCardLink = (type: CardShareType, id: string): string => {
-  const baseUrl = 'https://empleitapp.com.br';
+  const baseUrl = 'https://lidacacau.app';
   const path = type === 'demand' ? 'demanda' : 'oferta';
   return `${baseUrl}/${path}/${id}`;
 };

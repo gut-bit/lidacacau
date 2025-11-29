@@ -63,7 +63,7 @@ const mockNotifications: Notification[] = [
   {
     id: '5',
     type: 'system',
-    title: 'Bem-vindo ao Empleitapp!',
+    title: 'Bem-vindo ao LidaCacau!',
     message: 'Complete seu perfil para comecar a usar todas as funcionalidades.',
     read: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),

@@ -1043,7 +1043,7 @@ export default function UnifiedHomeScreen() {
               style={styles.logo}
               contentFit="contain"
             />
-            <ThemedText type="h2">Empleitapp</ThemedText>
+            <ThemedText type="h2">LidaCacau</ThemedText>
           </View>
           {renderRoleSwitcher()}
         </View>

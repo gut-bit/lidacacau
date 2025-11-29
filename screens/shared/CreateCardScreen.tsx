@@ -337,10 +337,10 @@ export default function CreateCardScreen() {
   };
 
   const handleShare = async () => {
-    const shareUrl = `empleitapp://card/${cardType}/${user?.id}`;
+    const shareUrl = `lidacacau://card/${cardType}/${user?.id}`;
     const message = cardType === 'demand' 
-      ? `Estou procurando ${selectedService?.name || 'servico'} no Empleitapp!` 
-      : `Ofereco servicos de ${selectedServices.map(id => SERVICE_TYPES.find(s => s.id === id)?.name).join(', ')} no Empleitapp!`;
+      ? `Estou procurando ${selectedService?.name || 'servico'} no LidaCacau!` 
+      : `Ofereco servicos de ${selectedServices.map(id => SERVICE_TYPES.find(s => s.id === id)?.name).join(', ')} no LidaCacau!`;
     
     const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message + '\n\n' + shareUrl)}`;
     

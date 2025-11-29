@@ -123,7 +123,7 @@ g) Adiantamento personalizado
 
 9.1. Este contrato e regido pela Lei brasileira
 9.2. Disputas serao resolvidas no foro de Uruara/PA
-9.3. Ambas as partes assinam digitalmente via Empleitapp
+9.3. Ambas as partes assinam digitalmente via LidaCacau
 
 -------------------------------------
 ASSINATURAS DIGITAIS
@@ -136,8 +136,8 @@ Trabalhador: _____________________
 Data: ___/___/______
 
 =====================================
-Contrato gerado pelo Empleitapp
-Empreitadas rurais na palma da mao
+Contrato gerado pelo LidaCacau
+Confianca de quem e da Lida
 =====================================`;
 }
 

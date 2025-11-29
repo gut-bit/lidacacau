@@ -63,8 +63,8 @@ export default function ReferralScreen() {
   const handleShareCode = async () => {
     try {
       await Share.share({
-        message: `Junte-se ao Empleitapp! Use meu codigo de indicacao: ${referralCode}\n\nBaixe o app e ganhe bonus: https://empleitapp.app`,
-        title: 'Convite Empleitapp',
+        message: `Junte-se ao LidaCacau! Use meu codigo de indicacao: ${referralCode}\n\nBaixe o app e ganhe bonus: https://lidacacau.app`,
+        title: 'Convite LidaCacau',
       });
     } catch (error) {
       console.error('Error sharing:', error);
@@ -144,7 +144,7 @@ export default function ReferralScreen() {
             Indique e Ganhe
           </ThemedText>
           <ThemedText type="body" style={{ textAlign: 'center', color: colors.textSecondary, marginTop: Spacing.sm }}>
-            Convide amigos para o Empleitapp e ganhe {REFERRAL_XP_REWARD} XP por cada indicacao!
+            Convide amigos para o LidaCacau e ganhe {REFERRAL_XP_REWARD} XP por cada indicacao!
           </ThemedText>
         </View>
 

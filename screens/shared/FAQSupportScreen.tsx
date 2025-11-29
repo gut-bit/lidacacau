@@ -22,13 +22,13 @@ const faqItems: FAQItem[] = [
   {
     id: '1',
     category: 'geral',
-    question: 'O que e o Empleitapp?',
-    answer: 'O Empleitapp e um marketplace que conecta produtores de cacau com trabalhadores rurais qualificados em Uruara/PA. Aqui voce pode publicar demandas de servico, receber propostas, negociar termos e acompanhar o trabalho em tempo real.',
+    question: 'O que e o LidaCacau?',
+    answer: 'O LidaCacau e um marketplace que conecta produtores de cacau com trabalhadores rurais qualificados em Uruara/PA. Aqui voce pode publicar demandas de servico, receber propostas, negociar termos e acompanhar o trabalho em tempo real.',
   },
   {
     id: '2',
     category: 'geral',
-    question: 'O Empleitapp e gratuito?',
+    question: 'O LidaCacau e gratuito?',
     answer: 'Sim! O cadastro e uso do app sao totalmente gratuitos. Nao cobramos taxas sobre os servicos contratados. O valor negociado entre produtor e trabalhador e o valor final.',
   },
   {
@@ -89,7 +89,7 @@ const categoryLabels: Record<string, string> = {
   seguranca: 'Seguranca',
 };
 
-const WHATSAPP_SUPPORT = 'https://wa.me/5593999999999?text=Ola!%20Preciso%20de%20ajuda%20com%20o%20Empleitapp.';
+const WHATSAPP_SUPPORT = 'https://wa.me/5593999999999?text=Ola!%20Preciso%20de%20ajuda%20com%20o%20LidaCacau.';
 
 export default function FAQSupportScreen() {
   const { theme, isDark } = useTheme();
@@ -257,7 +257,7 @@ export default function FAQSupportScreen() {
               Nao encontrou sua resposta?
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.xs }}>
-              Entre em contato pelo WhatsApp ou envie email para suporte@empleitapp.app
+              Entre em contato pelo WhatsApp ou envie email para suporte@lidacacau.app
             </ThemedText>
           </View>
         </View>

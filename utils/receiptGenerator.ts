@@ -206,8 +206,8 @@ export function generateServiceReceipt(data: ReceiptData): string {
 <body>
   <div class="receipt">
     <div class="header">
-      <div class="logo">Empleitapp</div>
-      <div class="tagline">Empreitadas rurais na palma da mao</div>
+      <div class="logo">LidaCacau</div>
+      <div class="tagline">Confianca de quem e da Lida</div>
       <div class="receipt-info">
         <div class="receipt-number">${receiptNumber}</div>
         <div class="receipt-date">Emitido em ${today}</div>
@@ -291,7 +291,7 @@ export function generateServiceReceipt(data: ReceiptData): string {
         QR Code
       </div>
       <div class="footer-text">
-        Este comprovante foi gerado pelo aplicativo Empleitapp.<br>
+        Este comprovante foi gerado pelo aplicativo LidaCacau.<br>
         Documento nao fiscal - Para fins de controle interno.<br>
         Para emissao de Nota Fiscal, acesse o portal da prefeitura.
       </div>

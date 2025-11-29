@@ -31,9 +31,9 @@ export interface SyncQueueItem {
 }
 
 const SYNC_KEYS = {
-  SYNC_STATUS: '@empleitapp:sync_status',
-  SYNC_QUEUE: '@empleitapp:sync_queue',
-  LAST_SYNC: '@empleitapp:last_sync',
+  SYNC_STATUS: '@lidacacau:sync_status',
+  SYNC_QUEUE: '@lidacacau:sync_queue',
+  LAST_SYNC: '@lidacacau:last_sync',
 };
 
 export async function getSyncStatus(): Promise<SyncStatus> {
@@ -174,7 +174,7 @@ export interface CloudSyncConfig {
 
 export async function initializeCloudSync(config: CloudSyncConfig): Promise<boolean> {
   try {
-    await AsyncStorage.setItem('@empleitapp:cloud_config', JSON.stringify(config));
+    await AsyncStorage.setItem('@lidacacau:cloud_config', JSON.stringify(config));
     return true;
   } catch (error) {
     console.error('Error initializing cloud sync:', error);
@@ -184,7 +184,7 @@ export async function initializeCloudSync(config: CloudSyncConfig): Promise<bool
 
 export async function getCloudSyncConfig(): Promise<CloudSyncConfig | null> {
   try {
-    const config = await AsyncStorage.getItem('@empleitapp:cloud_config');
+    const config = await AsyncStorage.getItem('@lidacacau:cloud_config');
     return config ? JSON.parse(config) : null;
   } catch (error) {
     console.error('Error getting cloud sync config:', error);

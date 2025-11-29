@@ -122,7 +122,7 @@ export default function PaymentScreen({ route, navigation }: PaymentScreenProps)
   const handleShareCode = async (charge: PixCharge) => {
     try {
       await Share.share({
-        message: `Pagamento PIX - Empleitapp\n\nValor: ${formatCurrency(charge.value)}\nDestinatario: ${charge.receiverName}\nDescricao: ${charge.description}\n\nCodigo PIX:\n${charge.brCode}`,
+        message: `Pagamento PIX - LidaCacau\n\nValor: ${formatCurrency(charge.value)}\nDestinatario: ${charge.receiverName}\nDescricao: ${charge.description}\n\nCodigo PIX:\n${charge.brCode}`,
       });
     } catch (error) {
       console.error('Error sharing:', error);
@@ -219,7 +219,7 @@ export default function PaymentScreen({ route, navigation }: PaymentScreenProps)
           <View style={styles.breakdownLabel}>
             <Feather name="briefcase" size={16} color={colors.accent} />
             <ThemedText type="body" style={{ marginLeft: Spacing.sm, color: colors.accent }}>
-              Taxa Empleitapp (10%)
+              Taxa LidaCacau (10%)
             </ThemedText>
           </View>
           <ThemedText type="h4" style={{ color: colors.accent }}>

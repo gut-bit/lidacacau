@@ -155,10 +155,10 @@ export default function BenefitsClubScreen() {
             <Feather name="award" size={32} color="#FFFFFF" />
           </View>
           <ThemedText type="h3" style={{ textAlign: 'center', marginTop: Spacing.md }}>
-            Clube Empleitapp
+            Clube LidaCacau
           </ThemedText>
           <ThemedText type="body" style={{ textAlign: 'center', color: colors.textSecondary, marginTop: Spacing.sm }}>
-            Descontos exclusivos para membros da comunidade Empleitapp em Uruara
+            Descontos exclusivos para membros da comunidade LidaCacau em Uruara
           </ThemedText>
         </View>
 
@@ -303,7 +303,7 @@ export default function BenefitsClubScreen() {
               Quer ser parceiro?
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.xs }}>
-              Estabelecimentos de Uruara podem se cadastrar como parceiros do Clube Empleitapp.
+              Estabelecimentos de Uruara podem se cadastrar como parceiros do Clube LidaCacau.
               Entre em contato pelo WhatsApp da comunidade.
             </ThemedText>
           </View>
