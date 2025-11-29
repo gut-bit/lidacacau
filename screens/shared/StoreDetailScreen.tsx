@@ -157,12 +157,23 @@ export default function StoreDetailScreen() {
                     </ThemedText>
                   )}
                   <View style={styles.priceRow}>
-                    <ThemedText type="h5" style={{ color: PRIMARY_COLOR }}>
-                      R$ {product.price.toFixed(2)}
-                    </ThemedText>
-                    {product.discount && (
-                      <ThemedText type="small" style={{ color: colors.textSecondary, marginLeft: Spacing.sm }}>
-                        -{product.discount}%
+                    {product.discount ? (
+                      <>
+                        <ThemedText type="small" style={{ color: colors.textSecondary, textDecorationLine: 'line-through', marginRight: Spacing.sm }}>
+                          R$ {product.price.toFixed(2)}
+                        </ThemedText>
+                        <View style={[styles.discountBadge, { backgroundColor: '#FF4444' }]}>
+                          <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+                            -{product.discount}%
+                          </ThemedText>
+                        </View>
+                        <ThemedText type="h5" style={{ color: PRIMARY_COLOR, marginLeft: Spacing.sm }}>
+                          R$ {(product.price * (1 - product.discount / 100)).toFixed(2)}
+                        </ThemedText>
+                      </>
+                    ) : (
+                      <ThemedText type="h5" style={{ color: PRIMARY_COLOR }}>
+                        R$ {product.price.toFixed(2)}
                       </ThemedText>
                     )}
                   </View>
@@ -184,6 +195,11 @@ export default function StoreDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  discountBadge: {
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
   container: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
