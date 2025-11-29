@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -27,20 +27,23 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const colors = isDark ? Colors.dark : Colors.light;
+  const autoLoginAttempted = useRef(false);
 
   // Auto-login in dev mode
   React.useEffect(() => {
-    if (__DEV__) {
+    if (__DEV__ && !autoLoginAttempted.current) {
+      autoLoginAttempted.current = true;
       const autoLogin = async () => {
         try {
           await login('maria@demo.lidacacau.com', 'demo123');
+          console.log('[DEV] Auto-login successful');
         } catch (error) {
-          console.log('Auto-login demo user failed (expected if demo data not initialized)');
+          console.log('[DEV] Auto-login failed:', (error as any)?.message);
         }
       };
       autoLogin();
     }
-  }, []);
+  }, [login]);
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
