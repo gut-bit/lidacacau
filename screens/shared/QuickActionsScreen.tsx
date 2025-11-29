@@ -65,14 +65,6 @@ export default function QuickActionsScreen() {
       color: colors.handshake,
       onPress: () => handleAction('search_people', () => navigation.replace('UserSearch')),
     },
-    {
-      id: 'new_chat',
-      icon: 'message-circle',
-      title: 'Nova Conversa',
-      subtitle: 'Inicie um chat com seus amigos',
-      color: colors.accent,
-      onPress: () => handleAction('new_chat', () => navigation.replace('ChatList')),
-    },
   ];
 
   const ActionCard = ({ item }: { item: ActionItem }) => (

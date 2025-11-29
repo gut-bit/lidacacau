@@ -1023,11 +1023,6 @@ export default function UnifiedHomeScreen() {
     );
   };
 
-  const handleCreateCard = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate('CreateCard', { type: isProducer ? 'demand' : 'offer' });
-  };
-
   return (
     <ThemedView style={styles.container}>
       <ScreenScrollView
@@ -1056,19 +1051,6 @@ export default function UnifiedHomeScreen() {
         {renderAvailableJobs()}
         {renderAvailableOffers()}
       </ScreenScrollView>
-      
-      <Pressable
-        style={[
-          styles.fab,
-          { 
-            backgroundColor: isProducer ? CARD_COLORS.demand.primary : CARD_COLORS.offer.primary,
-            bottom: tabBarHeight + Spacing.xl,
-          },
-        ]}
-        onPress={handleCreateCard}
-      >
-        <Feather name="plus" size={28} color="#FFFFFF" />
-      </Pressable>
     </ThemedView>
   );
 }
@@ -1422,20 +1404,6 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: 'rgba(0,0,0,0.1)',
     marginHorizontal: Spacing.sm,
-  },
-  fab: {
-    position: 'absolute',
-    right: Spacing.xl,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
   },
   offersContainer: {
     paddingHorizontal: Spacing.xl,
