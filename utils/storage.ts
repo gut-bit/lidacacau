@@ -34,6 +34,10 @@ const STORAGE_KEYS = {
   SQUAD_INVITES: '@lidacacau_squad_invites',
   SQUAD_PROPOSALS: '@lidacacau_squad_proposals',
   PROPERTIES: '@lidacacau_properties',
+  STORES: '@lidacacau_stores',
+  PRODUCTS: '@lidacacau_products',
+  CART: '@lidacacau_cart',
+  ORDERS: '@lidacacau_orders',
 };
 
 export const generateId = (): string => {

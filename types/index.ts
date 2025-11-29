@@ -1305,3 +1305,68 @@ export const LIDA_PHRASES = {
     'Trabalho bom aparece!',
   ],
 } as const;
+
+// LIDASHOP - Sistema de E-commerce para insumos agropecuarios
+export type StoreStatus = 'active' | 'inactive' | 'suspended';
+export type ProductCategory = 'herbicida' | 'fungicida' | 'inseticida' | 'adubo' | 'ferramenta' | 'outro';
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type DeliveryType = 'delivery' | 'pickup' | 'combined';
+
+export interface Store {
+  id: string;
+  ownerId: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  coverImage?: string;
+  city: string;
+  state: string;
+  whatsapp?: string;
+  email?: string;
+  phone?: string;
+  status: StoreStatus;
+  rating: number;
+  totalReviews: number;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Product {
+  id: string;
+  storeId: string;
+  name: string;
+  description?: string;
+  category: ProductCategory;
+  price: number;
+  discount?: number;
+  quantity: number;
+  images: string[];
+  specifications?: Record<string, string>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  product: Product;
+  storeId: string;
+  quantity: number;
+  addedAt: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  storeId: string;
+  items: CartItem[];
+  totalValue: number;
+  deliveryType: DeliveryType;
+  deliveryAddress?: string;
+  status: OrderStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}

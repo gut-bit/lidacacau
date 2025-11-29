@@ -11,6 +11,7 @@ import UnifiedHomeScreen from '@/screens/shared/UnifiedHomeScreen';
 import ExploreScreen from '@/screens/shared/ExploreScreen';
 import ChatListScreen from '@/screens/shared/ChatListScreen';
 import UnifiedProfileScreen from '@/screens/shared/UnifiedProfileScreen';
+import ShopListScreen from '@/screens/shared/ShopListScreen';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export type UnifiedTabParamList = {
@@ -18,6 +19,7 @@ export type UnifiedTabParamList = {
   Messages: undefined;
   Create: undefined;
   Explore: undefined;
+  Shop: undefined;
   Profile: undefined;
 };
 
@@ -110,6 +112,14 @@ export default function UnifiedTabNavigator() {
         options={{
           title: 'Explorar',
           tabBarIcon: ({ color, size }) => <Feather name="compass" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Shop"
+        component={ShopListScreen}
+        options={{
+          title: 'LidaShop',
+          tabBarIcon: ({ color, size }) => <Feather name="shopping-bag" size={size} color={color} />,
         }}
       />
       <Tab.Screen

@@ -46,6 +46,7 @@ import TalhaoManagementScreen from '@/screens/shared/TalhaoManagementScreen';
 import PropertyDocumentsScreen from '@/screens/shared/PropertyDocumentsScreen';
 import PropertyDetailScreen from '@/screens/shared/PropertyDetailScreen';
 import PropertyFormScreen from '@/screens/shared/PropertyFormScreen';
+import StoreDetailScreen from '@/screens/shared/StoreDetailScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -113,6 +114,7 @@ export type RootStackParamList = {
   PropertyDocuments: { propertyId: string };
   PropertyDetail: { propertyId: string };
   PropertyForm: { propertyId?: string };
+  StoreDetail: { storeId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
