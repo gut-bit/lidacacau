@@ -65,12 +65,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initialize = async () => {
       try {
         await initializeStorage();
-        let currentUser = await getCurrentUser();
-        
-        if (currentUser) {
-          const updatedUser = ensureUserHasNewFields(currentUser);
-          setUser(updatedUser);
-        }
+        // Force logout on web to show login screen
+        await setCurrentUser(null);
+        setUser(null);
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
