@@ -1,11 +1,16 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { StyleSheet, View, Pressable, RefreshControl, Dimensions, Platform, ScrollView } from 'react-native';
+import { StyleSheet, View, Pressable, RefreshControl, Dimensions, Platform, ScrollView, ImageBackground } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
+
+// Decorative cacao-themed assets
+const cacaoCanopyHeader = require('@/assets/decorative/cacao_tree_canopy_header_decoration.png');
+const grassFooter = require('@/assets/decorative/grass_and_dead_leaves_footer.png');
+const cornerBranch = require('@/assets/decorative/corner_cacao_branch_decoration.png');
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Linking from 'expo-linking';
@@ -1113,10 +1118,32 @@ export default function UnifiedHomeScreen() {
     );
   };
 
+  const { width: screenWidth } = Dimensions.get('window');
+
   return (
     <ThemedView style={styles.container}>
+      {/* Decorative cacao canopy header - positioned behind content */}
+      <Image
+        source={cacaoCanopyHeader}
+        style={[styles.canopyDecoration, { width: screenWidth }]}
+        contentFit="cover"
+        contentPosition="bottom"
+      />
+      
+      {/* Corner branch decorations */}
+      <Image
+        source={cornerBranch}
+        style={styles.cornerBranchLeft}
+        contentFit="contain"
+      />
+      <Image
+        source={cornerBranch}
+        style={[styles.cornerBranchRight, { transform: [{ scaleX: -1 }] }]}
+        contentFit="contain"
+      />
+
       <ScreenScrollView
-        contentContainerStyle={{ paddingBottom: tabBarHeight + Spacing['2xl'] + 80 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + Spacing['2xl'] + 120 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
@@ -1142,6 +1169,15 @@ export default function UnifiedHomeScreen() {
         {renderAvailableJobs()}
         {renderAvailableOffers()}
       </ScreenScrollView>
+
+      {/* Decorative grass and dead leaves footer - positioned at bottom */}
+      <Image
+        source={grassFooter}
+        style={[styles.grassFooter, { width: screenWidth }]}
+        contentFit="cover"
+        contentPosition="top"
+        pointerEvents="none"
+      />
     </ThemedView>
   );
 }
@@ -1149,6 +1185,43 @@ export default function UnifiedHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  // Decorative cacao elements
+  canopyDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 140,
+    zIndex: 0,
+    opacity: 0.85,
+  },
+  cornerBranchLeft: {
+    position: 'absolute',
+    top: 180,
+    left: -20,
+    width: 100,
+    height: 100,
+    zIndex: 0,
+    opacity: 0.6,
+    transform: [{ rotate: '15deg' }],
+  },
+  cornerBranchRight: {
+    position: 'absolute',
+    top: 180,
+    right: -20,
+    width: 100,
+    height: 100,
+    zIndex: 0,
+    opacity: 0.6,
+    transform: [{ rotate: '-15deg' }],
+  },
+  grassFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    height: 100,
+    zIndex: 0,
+    opacity: 0.9,
   },
   header: {
     paddingHorizontal: Spacing.xl,
