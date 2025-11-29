@@ -82,14 +82,21 @@ export default function UnifiedProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: logout },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Tem certeza que deseja sair?');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      Alert.alert(
+        'Sair da conta',
+        'Tem certeza que deseja sair?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Sair', style: 'destructive', onPress: logout },
+        ]
+      );
+    }
   };
 
   const profileCompletion = user?.profileCompletion?.percentage || 0;
