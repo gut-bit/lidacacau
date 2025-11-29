@@ -102,6 +102,9 @@ export function PriceTicker({
               <ThemedText style={[styles.compactPrice, { color: colors.text }]}>
                 {formatPriceUSD(global.priceUSD)}/t
               </ThemedText>
+              <ThemedText style={[styles.compactDisclaimer, { color: colors.warning || '#F5A623' }]}>
+                Precos ilustrativos
+              </ThemedText>
             </View>
           </View>
           <View style={styles.compactRight}>
@@ -186,6 +189,13 @@ export function PriceTicker({
           <ThemedText style={[styles.updateTime, { color: colors.textSecondary }]}>
             {isStale ? 'Dados antigos - ' : ''}
             Atualizado {getRelativeUpdateTime(global.lastUpdated)}
+          </ThemedText>
+        </View>
+
+        <View style={[styles.disclaimerRow, { borderTopColor: colors.border }]}>
+          <Feather name="alert-circle" size={12} color={colors.warning || '#F5A623'} />
+          <ThemedText style={[styles.disclaimerText, { color: colors.warning || '#F5A623' }]}>
+            Obs: Tecnologia em construcao, precos ilustrativos.
           </ThemedText>
         </View>
 
@@ -295,6 +305,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  compactDisclaimer: {
+    fontSize: 9,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
   compactRight: {
     alignItems: 'flex-end',
   },
@@ -379,6 +394,18 @@ const styles = StyleSheet.create({
   },
   updateTime: {
     fontSize: 11,
+  },
+  disclaimerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+  },
+  disclaimerText: {
+    fontSize: 10,
+    fontStyle: 'italic',
   },
   localQuotesSection: {
     marginTop: Spacing.lg,

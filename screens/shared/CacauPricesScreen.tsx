@@ -342,6 +342,13 @@ export default function CacauPricesScreen() {
             Atualizado {getRelativeUpdateTime(global.lastUpdated)}
           </ThemedText>
         </View>
+
+        <View style={styles.disclaimerContainer}>
+          <Feather name="alert-circle" size={14} color="rgba(255,200,0,0.9)" />
+          <ThemedText style={styles.disclaimerText}>
+            Obs: Tecnologia em construcao, precos ilustrativos.
+          </ThemedText>
+        </View>
       </View>
 
       {renderChart()}
@@ -478,6 +485,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,255,255,0.5)',
     marginTop: Spacing.xs,
+  },
+  disclaimerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+  },
+  disclaimerText: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    color: 'rgba(255,200,0,0.9)',
   },
   chartContainer: {
     marginHorizontal: Spacing.lg,
