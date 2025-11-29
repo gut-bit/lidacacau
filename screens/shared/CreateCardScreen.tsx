@@ -522,7 +522,7 @@ export default function CreateCardScreen() {
             )}
           </Pressable>
           {latitude && longitude && (
-            <ThemedText type="caption" style={{ color: colors.success, marginTop: Spacing.xs }}>
+            <ThemedText type="small" style={{ color: colors.success, marginTop: Spacing.xs }}>
               GPS capturado com sucesso
             </ThemedText>
           )}
@@ -576,7 +576,7 @@ export default function CreateCardScreen() {
                   onPress={() => setPriceType(type.key as any)}
                 >
                   <ThemedText
-                    type="caption"
+                    type="small"
                     style={{ color: priceType === type.key ? '#FFFFFF' : cardColors.primary }}
                   >
                     {type.label}
@@ -640,13 +640,13 @@ export default function CreateCardScreen() {
           
           <View style={styles.extrasGrid}>
             {EXTRA_OPTIONS.map((option) => {
-              const isActive = extras[option.key as keyof CardExtras];
+              const isActive = Boolean(extras[option.key as keyof CardExtras]);
               return (
                 <Pressable
                   key={option.key}
                   style={[
                     styles.extraChip,
-                    isActive && { backgroundColor: cardColors.primary },
+                    isActive ? { backgroundColor: cardColors.primary } : undefined,
                     { borderColor: cardColors.primary },
                   ]}
                   onPress={() => toggleExtra(option.key)}
@@ -657,7 +657,7 @@ export default function CreateCardScreen() {
                     color={isActive ? '#FFFFFF' : cardColors.primary}
                   />
                   <ThemedText
-                    type="caption"
+                    type="small"
                     style={{ color: isActive ? '#FFFFFF' : cardColors.primary }}
                   >
                     {option.label}
@@ -671,7 +671,7 @@ export default function CreateCardScreen() {
             <View style={styles.customConditions}>
               {customConditions.map((condition, index) => (
                 <View key={index} style={[styles.conditionTag, { backgroundColor: colors.accent + '20' }]}>
-                  <ThemedText type="caption" style={{ color: colors.accent, flex: 1 }}>
+                  <ThemedText type="small" style={{ color: colors.accent, flex: 1 }}>
                     {condition}
                   </ThemedText>
                   <Pressable onPress={() => removeCustomCondition(index)}>
@@ -724,7 +724,7 @@ export default function CreateCardScreen() {
                 <ThemedText type="body" style={{ color: colors.text }}>
                   {isPublic ? 'Publico' : 'Privado'}
                 </ThemedText>
-                <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+                <ThemedText type="small" style={{ color: colors.textSecondary }}>
                   {isPublic 
                     ? 'Visivel para todos no feed' 
                     : 'So voce ve, pode compartilhar manualmente'}
@@ -795,17 +795,11 @@ export default function CreateCardScreen() {
           size="large"
           onPress={handleSubmit}
           disabled={isSubmitting}
+          loading={isSubmitting}
+          icon="check-circle"
+          title={cardType === 'demand' ? 'Publicar Demanda' : 'Publicar Oferta'}
           style={styles.submitButton}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <Feather name="check-circle" size={20} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
-              {cardType === 'demand' ? 'Publicar Demanda' : 'Publicar Oferta'}
-            </>
-          )}
-        </AnimatedButton>
+        />
       </ScreenKeyboardAwareScrollView>
 
       <Modal visible={showPresetModal} transparent animationType="fade">
