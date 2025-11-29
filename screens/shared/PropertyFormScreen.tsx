@@ -28,6 +28,16 @@ import { RootStackParamList } from '@/navigation/RootNavigator';
 
 const PRIMARY_COLOR = '#F15A29';
 
+// Farm GPS Coordinates - Uruará, PA
+const FARM_TEST_LOCATION = {
+  latitude: -2.855,
+  longitude: -59.650,
+  address: 'BR230 km 140 norte - vila alvorada',
+  city: 'Uruará',
+  state: 'PA',
+  cep: '68140-000',
+};
+
 interface FormErrors {
   name?: string;
   address?: string;
@@ -89,6 +99,17 @@ export default function PropertyFormScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTestGPS = () => {
+    setLatitude(FARM_TEST_LOCATION.latitude);
+    setLongitude(FARM_TEST_LOCATION.longitude);
+    setAddress(FARM_TEST_LOCATION.address);
+    setCity(FARM_TEST_LOCATION.city);
+    setState(FARM_TEST_LOCATION.state);
+    setCep(FARM_TEST_LOCATION.cep);
+    setErrors((prev) => ({ ...prev, location: undefined }));
+    Alert.alert('GPS Teste', 'Coordenadas de Uruará carregadas para teste!');
   };
 
   const validateForm = (): boolean => {
@@ -441,6 +462,21 @@ export default function PropertyFormScreen() {
             {gpsLoading ? 'Obtendo localizacao...' : 'Usar minha localizacao'}
           </ThemedText>
         </Pressable>
+
+        {__DEV__ && (
+          <Pressable
+            style={[
+              styles.gpsButton,
+              { backgroundColor: colors.accent + '99', marginTop: Spacing.sm }
+            ]}
+            onPress={handleTestGPS}
+          >
+            <Feather name="anchor" size={20} color="#FFFFFF" />
+            <ThemedText type="body" style={styles.gpsButtonText}>
+              TESTE: Carregar Fazenda (Uruará)
+            </ThemedText>
+          </Pressable>
+        )}
 
         {latitude !== null && longitude !== null ? (
           <View style={[styles.coordinatesCard, { backgroundColor: colors.success + '15', borderColor: colors.success + '30' }]}>
