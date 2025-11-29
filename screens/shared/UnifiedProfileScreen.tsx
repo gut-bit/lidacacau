@@ -210,6 +210,26 @@ export default function UnifiedProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <ThemedText type="h4" style={styles.sectionTitle}>Comunidade</ThemedText>
+          <View style={styles.actionList}>
+            <ProfileAction
+              icon="users"
+              title="Amigos do Campo"
+              subtitle="Conecte-se com a comunidade"
+              color={colors.handshake}
+              onPress={() => navigation.navigate('Friends')}
+            />
+            <ProfileAction
+              icon="message-circle"
+              title="Mensagens"
+              subtitle="Conversas com amigos"
+              color={colors.link}
+              onPress={() => navigation.navigate('ChatList')}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <ThemedText type="h4" style={styles.sectionTitle}>Conta</ThemedText>
           <View style={styles.actionList}>
             <ProfileAction
@@ -333,7 +353,7 @@ export default function UnifiedProfileScreen() {
         </Pressable>
 
         <ThemedText type="small" style={[styles.version, { color: colors.textSecondary }]}>
-          Empleitapp v1.0.0
+          LidaCacau v1.0.0
         </ThemedText>
       </ScreenScrollView>
     </ThemedView>

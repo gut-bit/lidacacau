@@ -1,26 +1,32 @@
+// LidaCacau - Marketplace Rural (MVP sem dados fake)
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
-  ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus
+  ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
+  FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
 const STORAGE_KEYS = {
-  CURRENT_USER: '@cacauserv:current_user',
-  USERS: '@cacauserv:users',
-  JOBS: '@cacauserv:jobs',
-  BIDS: '@cacauserv:bids',
-  WORK_ORDERS: '@cacauserv:work_orders',
-  REVIEWS: '@cacauserv:reviews',
-  SKILL_PROGRESS: '@cacauserv:skill_progress',
-  QUIZ_ATTEMPTS: '@cacauserv:quiz_attempts',
-  CONTRACT_HISTORY: '@cacauserv:contract_history',
-  SERVICE_OFFERS: '@cacauserv:service_offers',
-  OFFER_INTERESTS: '@cacauserv:offer_interests',
-  CARD_PRESETS: '@cacauserv:card_presets',
-  USER_PREFERENCES: '@cacauserv:user_preferences',
-  CARD_MATCHES: '@cacauserv:card_matches',
-  INITIALIZED: '@cacauserv:initialized',
+  CURRENT_USER: '@lidacacau_current_user',
+  USERS: '@lidacacau_users',
+  JOBS: '@lidacacau_jobs',
+  BIDS: '@lidacacau_bids',
+  WORK_ORDERS: '@lidacacau_workorders',
+  REVIEWS: '@lidacacau_reviews',
+  SKILL_PROGRESS: '@lidacacau_skill_progress',
+  QUIZ_ATTEMPTS: '@lidacacau_quiz_attempts',
+  CONTRACT_HISTORY: '@lidacacau_contract_history',
+  SERVICE_OFFERS: '@lidacacau_offers',
+  OFFER_INTERESTS: '@lidacacau_offer_interests',
+  CARD_PRESETS: '@lidacacau_presets',
+  USER_PREFERENCES: '@lidacacau_user_preferences',
+  CARD_MATCHES: '@lidacacau_card_matches',
+  INITIALIZED: '@lidacacau_initialized',
+  FRIENDS: '@lidacacau_friends',
+  CHAT_ROOMS: '@lidacacau_chatrooms',
+  PRESENCE: '@lidacacau_presence',
+  ANALYTICS: '@lidacacau_analytics',
 };
 
 export const generateId = (): string => {
@@ -511,9 +517,70 @@ export const acceptBid = async (bidId: string): Promise<WorkOrder> => {
 
 export const clearAllData = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+    const keysToRemove = [
+      '@lidacacau_users',
+      '@lidacacau_jobs',
+      '@lidacacau_bids',
+      '@lidacacau_workorders',
+      '@lidacacau_reviews',
+      '@lidacacau_offers',
+      '@lidacacau_presets',
+      '@lidacacau_friends',
+      '@lidacacau_chatrooms',
+      '@lidacacau_presence',
+      '@lidacacau_analytics',
+      '@lidacacau_current_user',
+      '@lidacacau_skill_progress',
+      '@lidacacau_quiz_attempts',
+      '@lidacacau_contract_history',
+      '@lidacacau_offer_interests',
+      '@lidacacau_user_preferences',
+      '@lidacacau_card_matches',
+      '@lidacacau_initialized',
+    ];
+    await AsyncStorage.multiRemove(keysToRemove);
   } catch (error) {
-    console.error('Error clearing data:', error);
+    console.error('Error clearing all data:', error);
+  }
+};
+
+export const clearFakeData = async (): Promise<void> => {
+  try {
+    const dataKeysToRemove = [
+      '@lidacacau_users',
+      '@lidacacau_jobs',
+      '@lidacacau_bids',
+      '@lidacacau_workorders',
+      '@lidacacau_reviews',
+      '@lidacacau_offers',
+      '@lidacacau_friends',
+      '@lidacacau_chatrooms',
+      '@lidacacau_presence',
+      '@lidacacau_analytics',
+      '@lidacacau_skill_progress',
+      '@lidacacau_quiz_attempts',
+      '@lidacacau_contract_history',
+      '@lidacacau_offer_interests',
+      '@lidacacau_card_matches',
+    ];
+    await AsyncStorage.multiRemove(dataKeysToRemove);
+    await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  } catch (error) {
+    console.error('Error clearing fake data:', error);
+  }
+};
+
+export const initializeCleanStorage = async (): Promise<void> => {
+  try {
+    await clearAllData();
+    await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify([]));
+    await AsyncStorage.setItem(STORAGE_KEYS.BIDS, JSON.stringify([]));
+    await AsyncStorage.setItem(STORAGE_KEYS.WORK_ORDERS, JSON.stringify([]));
+    await AsyncStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
+    await AsyncStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
+  } catch (error) {
+    console.error('Error initializing clean storage:', error);
   }
 };
 
@@ -1155,4 +1222,388 @@ export const filterByDistance = <T extends { latitude?: number; longitude?: numb
     const distance = calculateDistance(centerLat, centerLon, item.latitude, item.longitude);
     return distance <= radiusKm;
   });
+};
+
+// ============================================
+// SISTEMA DE AMIGOS DO CAMPO (DAR A MAO)
+// ============================================
+
+const getFriendConnections = async (): Promise<FriendConnection[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.FRIENDS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting friend connections:', error);
+    return [];
+  }
+};
+
+export const sendFriendRequest = async (
+  requesterId: string,
+  receiverId: string,
+  message?: string
+): Promise<FriendConnection> => {
+  try {
+    const connections = await getFriendConnections();
+    const existingConnection = connections.find(
+      (c) =>
+        (c.requesterId === requesterId && c.receiverId === receiverId) ||
+        (c.requesterId === receiverId && c.receiverId === requesterId)
+    );
+    if (existingConnection) {
+      if (existingConnection.status === 'accepted') {
+        throw new Error('Voces ja sao amigos');
+      }
+      if (existingConnection.status === 'pending') {
+        throw new Error('Ja existe um pedido de amizade pendente');
+      }
+    }
+    const newConnection: FriendConnection = {
+      id: generateId(),
+      requesterId,
+      receiverId,
+      status: 'pending',
+      message,
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify([...connections, newConnection]));
+    return newConnection;
+  } catch (error) {
+    console.error('Error sending friend request:', error);
+    throw error;
+  }
+};
+
+export const acceptFriendRequest = async (connectionId: string): Promise<FriendConnection | null> => {
+  try {
+    const connections = await getFriendConnections();
+    const index = connections.findIndex((c) => c.id === connectionId);
+    if (index === -1) return null;
+    if (connections[index].status !== 'pending') {
+      throw new Error('Este pedido ja foi processado');
+    }
+    connections[index] = {
+      ...connections[index],
+      status: 'accepted',
+      acceptedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify(connections));
+    return connections[index];
+  } catch (error) {
+    console.error('Error accepting friend request:', error);
+    throw error;
+  }
+};
+
+export const rejectFriendRequest = async (connectionId: string): Promise<FriendConnection | null> => {
+  try {
+    const connections = await getFriendConnections();
+    const index = connections.findIndex((c) => c.id === connectionId);
+    if (index === -1) return null;
+    if (connections[index].status !== 'pending') {
+      throw new Error('Este pedido ja foi processado');
+    }
+    connections[index] = {
+      ...connections[index],
+      status: 'rejected',
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify(connections));
+    return connections[index];
+  } catch (error) {
+    console.error('Error rejecting friend request:', error);
+    throw error;
+  }
+};
+
+export const getFriendRequests = async (userId: string): Promise<FriendConnection[]> => {
+  try {
+    const connections = await getFriendConnections();
+    return connections.filter((c) => c.receiverId === userId && c.status === 'pending');
+  } catch (error) {
+    console.error('Error getting friend requests:', error);
+    return [];
+  }
+};
+
+export const getSentFriendRequests = async (userId: string): Promise<FriendConnection[]> => {
+  try {
+    const connections = await getFriendConnections();
+    return connections.filter((c) => c.requesterId === userId && c.status === 'pending');
+  } catch (error) {
+    console.error('Error getting sent friend requests:', error);
+    return [];
+  }
+};
+
+export const getFriends = async (userId: string): Promise<FriendConnection[]> => {
+  try {
+    const connections = await getFriendConnections();
+    return connections.filter(
+      (c) =>
+        c.status === 'accepted' &&
+        (c.requesterId === userId || c.receiverId === userId)
+    );
+  } catch (error) {
+    console.error('Error getting friends:', error);
+    return [];
+  }
+};
+
+export const removeFriend = async (connectionId: string): Promise<boolean> => {
+  try {
+    const connections = await getFriendConnections();
+    const index = connections.findIndex((c) => c.id === connectionId);
+    if (index === -1) return false;
+    connections.splice(index, 1);
+    await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify(connections));
+    return true;
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    return false;
+  }
+};
+
+// ============================================
+// SISTEMA DE CHAT ENTRE USUARIOS
+// ============================================
+
+const getMessagesKey = (roomId: string): string => `@lidacacau_messages_${roomId}`;
+
+const getAllChatRooms = async (): Promise<ChatRoom[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CHAT_ROOMS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting chat rooms:', error);
+    return [];
+  }
+};
+
+export const getOrCreateChatRoom = async (userId1: string, userId2: string): Promise<ChatRoom> => {
+  try {
+    const rooms = await getAllChatRooms();
+    const existingRoom = rooms.find(
+      (r) =>
+        r.participantIds.includes(userId1) && r.participantIds.includes(userId2)
+    );
+    if (existingRoom) {
+      return existingRoom;
+    }
+    const newRoom: ChatRoom = {
+      id: generateId(),
+      participantIds: [userId1, userId2],
+      unreadCount: { [userId1]: 0, [userId2]: 0 },
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify([...rooms, newRoom]));
+    return newRoom;
+  } catch (error) {
+    console.error('Error getting or creating chat room:', error);
+    throw error;
+  }
+};
+
+export const getChatRooms = async (userId: string): Promise<ChatRoom[]> => {
+  try {
+    const rooms = await getAllChatRooms();
+    return rooms
+      .filter((r) => r.participantIds.includes(userId))
+      .sort((a, b) => {
+        const aTime = a.lastMessageAt || a.createdAt;
+        const bTime = b.lastMessageAt || b.createdAt;
+        return new Date(bTime).getTime() - new Date(aTime).getTime();
+      });
+  } catch (error) {
+    console.error('Error getting chat rooms:', error);
+    return [];
+  }
+};
+
+export const sendDirectMessage = async (
+  roomId: string,
+  senderId: string,
+  content: string,
+  type: 'text' | 'image' | 'audio' = 'text'
+): Promise<DirectMessage> => {
+  try {
+    const messagesKey = getMessagesKey(roomId);
+    const data = await AsyncStorage.getItem(messagesKey);
+    const messages: DirectMessage[] = data ? JSON.parse(data) : [];
+    const newMessage: DirectMessage = {
+      id: generateId(),
+      roomId,
+      senderId,
+      content,
+      type,
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(messagesKey, JSON.stringify([...messages, newMessage]));
+    const rooms = await getAllChatRooms();
+    const roomIndex = rooms.findIndex((r) => r.id === roomId);
+    if (roomIndex !== -1) {
+      const room = rooms[roomIndex];
+      const otherUserId = room.participantIds.find((id) => id !== senderId);
+      if (otherUserId) {
+        room.unreadCount[otherUserId] = (room.unreadCount[otherUserId] || 0) + 1;
+      }
+      room.lastMessage = content;
+      room.lastMessageAt = newMessage.createdAt;
+      room.lastMessageSenderId = senderId;
+      await AsyncStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(rooms));
+    }
+    return newMessage;
+  } catch (error) {
+    console.error('Error sending direct message:', error);
+    throw error;
+  }
+};
+
+export const getMessages = async (roomId: string, limit?: number): Promise<DirectMessage[]> => {
+  try {
+    const messagesKey = getMessagesKey(roomId);
+    const data = await AsyncStorage.getItem(messagesKey);
+    const messages: DirectMessage[] = data ? JSON.parse(data) : [];
+    const sortedMessages = messages.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    if (limit && limit > 0) {
+      return sortedMessages.slice(-limit);
+    }
+    return sortedMessages;
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    return [];
+  }
+};
+
+export const markMessagesAsRead = async (roomId: string, userId: string): Promise<void> => {
+  try {
+    const messagesKey = getMessagesKey(roomId);
+    const data = await AsyncStorage.getItem(messagesKey);
+    const messages: DirectMessage[] = data ? JSON.parse(data) : [];
+    let updated = false;
+    for (const message of messages) {
+      if (message.senderId !== userId && !message.read) {
+        message.read = true;
+        updated = true;
+      }
+    }
+    if (updated) {
+      await AsyncStorage.setItem(messagesKey, JSON.stringify(messages));
+    }
+    const rooms = await getAllChatRooms();
+    const roomIndex = rooms.findIndex((r) => r.id === roomId);
+    if (roomIndex !== -1) {
+      rooms[roomIndex].unreadCount[userId] = 0;
+      await AsyncStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(rooms));
+    }
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+  }
+};
+
+// ============================================
+// SISTEMA DE PRESENCA E ATIVIDADE
+// ============================================
+
+const getAllPresence = async (): Promise<UserPresence[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.PRESENCE);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting all presence:', error);
+    return [];
+  }
+};
+
+export const updateUserPresence = async (userId: string, screen?: string): Promise<UserPresence> => {
+  try {
+    const allPresence = await getAllPresence();
+    const index = allPresence.findIndex((p) => p.userId === userId);
+    const now = new Date().toISOString();
+    const presenceData: UserPresence = {
+      userId,
+      lastActive: now,
+      isOnline: true,
+      currentScreen: screen,
+    };
+    if (index === -1) {
+      allPresence.push(presenceData);
+    } else {
+      allPresence[index] = presenceData;
+    }
+    await AsyncStorage.setItem(STORAGE_KEYS.PRESENCE, JSON.stringify(allPresence));
+    return presenceData;
+  } catch (error) {
+    console.error('Error updating user presence:', error);
+    throw error;
+  }
+};
+
+export const getUserPresence = async (userId: string): Promise<UserPresence | null> => {
+  try {
+    const allPresence = await getAllPresence();
+    const presence = allPresence.find((p) => p.userId === userId);
+    if (!presence) return null;
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    return {
+      ...presence,
+      isOnline: presence.lastActive > fiveMinutesAgo,
+    };
+  } catch (error) {
+    console.error('Error getting user presence:', error);
+    return null;
+  }
+};
+
+export const getActiveUsersStats = async (): Promise<ActiveUsersStats> => {
+  try {
+    const allPresence = await getAllPresence();
+    const users = await getUsers();
+    const now = Date.now();
+    const fiveMinutesAgo = new Date(now - 5 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    let activeNow = 0;
+    let activeToday = 0;
+    let activeThisWeek = 0;
+    const producersTotal = users.filter((u) => u.roles.includes('producer')).length;
+    const workersTotal = users.filter((u) => u.roles.includes('worker')).length;
+    let producersActive = 0;
+    let workersActive = 0;
+    for (const presence of allPresence) {
+      const user = users.find((u) => u.id === presence.userId);
+      if (!user) continue;
+      if (presence.lastActive > fiveMinutesAgo) {
+        activeNow++;
+        if (user.roles.includes('producer')) producersActive++;
+        if (user.roles.includes('worker')) workersActive++;
+      }
+      if (presence.lastActive > oneDayAgo) activeToday++;
+      if (presence.lastActive > oneWeekAgo) activeThisWeek++;
+    }
+    return {
+      totalUsers: users.length,
+      activeNow,
+      activeToday,
+      activeThisWeek,
+      byRole: {
+        producers: { total: producersTotal, active: producersActive },
+        workers: { total: workersTotal, active: workersActive },
+      },
+    };
+  } catch (error) {
+    console.error('Error getting active users stats:', error);
+    return {
+      totalUsers: 0,
+      activeNow: 0,
+      activeToday: 0,
+      activeThisWeek: 0,
+      byRole: {
+        producers: { total: 0, active: 0 },
+        workers: { total: 0, active: 0 },
+      },
+    };
+  }
 };

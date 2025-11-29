@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import LoginScreen from '@/screens/auth/LoginScreen';
@@ -34,8 +34,14 @@ import SkillDetailScreen from '@/screens/education/SkillDetailScreen';
 import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
 import QuizScreen from '@/screens/education/QuizScreen';
 import OtherUserProfileScreen from '@/screens/shared/OtherUserProfileScreen';
+import FriendsScreen from '@/screens/shared/FriendsScreen';
+import ChatListScreen from '@/screens/shared/ChatListScreen';
+import ChatRoomScreen from '@/screens/shared/ChatRoomScreen';
+import UserSearchScreen from '@/screens/shared/UserSearchScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
+import { Feather } from '@expo/vector-icons';
+import { Spacing } from '@/constants/theme';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -87,6 +93,10 @@ export type RootStackParamList = {
   CourseDetail: { courseId: string };
   Quiz: { quizId: string; skillId: string };
   OtherUserProfile: { userId: string };
+  Friends: undefined;
+  ChatList: { newChatWithUserId?: string } | undefined;
+  ChatRoom: { roomId: string; otherUserId: string };
+  UserSearch: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -265,6 +275,35 @@ export default function RootNavigator() {
             component={OtherUserProfileScreen}
             options={{ title: 'Perfil do Usuario' }}
           />
+          <Stack.Screen
+            name="Friends"
+            component={FriendsScreen}
+            options={({ route }) => ({
+              headerTitle: () => (
+                <View style={friendsHeaderStyles.container}>
+                  <Feather name="users" size={20} color={theme.text} />
+                  <Text style={[friendsHeaderStyles.title, { color: theme.text }]}>
+                    Amigos do Campo
+                  </Text>
+                </View>
+              ),
+            })}
+          />
+          <Stack.Screen
+            name="ChatList"
+            component={ChatListScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChatRoom"
+            component={ChatRoomScreen}
+            options={{ title: 'Conversa' }}
+          />
+          <Stack.Screen
+            name="UserSearch"
+            component={UserSearchScreen}
+            options={{ title: 'Buscar Usuarios' }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -276,5 +315,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+});
+
+const friendsHeaderStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '600',
+    fontFamily: 'Rubik_600SemiBold',
   },
 });

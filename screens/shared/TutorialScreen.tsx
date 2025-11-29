@@ -1,142 +1,114 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Pressable, FlatList, Dimensions, Animated } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  ScrollView,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
-import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Feather } from '@expo/vector-icons';
-import { updateUser } from '@/utils/storage';
+import { updateUser, setCurrentUser } from '@/utils/storage';
 
-interface TutorialStep {
+interface TutorialCard {
   id: string;
   title: string;
   description: string;
-  icon: string;
-  tips?: string[];
+  icon: keyof typeof Feather.glyphMap;
+  iconColor: string;
 }
 
-const PRODUCER_STEPS: TutorialStep[] = [
+const TUTORIAL_CARDS: TutorialCard[] = [
   {
     id: '1',
-    title: 'Bem-vindo ao Empleitapp',
-    description: 'Este e seu espaco para encontrar trabalhadores qualificados para suas demandas de servico rurais. Vamos aprender juntos!',
-    icon: 'home',
-    tips: ['Voce e um Produtor', 'Sua missao: conectar com bons trabalhadores'],
+    title: 'Bem-vindo ao LidaCacau!',
+    description: 'Conectamos trabalhadores e produtores rurais em Uruara/PA',
+    icon: 'heart',
+    iconColor: '#F15A29',
   },
   {
     id: '2',
-    title: 'Crie Sua Primeira Demanda',
-    description: 'Toque em "Criar Demanda" para oferecer serviços. Escolha o tipo de trabalho, quantidade, valor e prazo.',
-    icon: 'plus-circle',
-    tips: ['Fotos ajudam a atrair trabalhos', 'Descreva bem o que você precisa', 'Quanto melhor o trabalho, mais propostas você recebe'],
+    title: 'Como Funciona',
+    description: 'Produtores publicam demandas, trabalhadores enviam propostas',
+    icon: 'briefcase',
+    iconColor: '#7ED957',
   },
   {
     id: '3',
-    title: 'Gerenciar Propriedades',
-    description: 'Configure suas propriedades rurais no Perfil. O GPS marca o local de cada uma automaticamente.',
-    icon: 'map-pin',
-    tips: ['Nomeie suas propriedades para identificar facilmente', 'O GPS é automático', 'Você pode ter múltiplas propriedades'],
+    title: 'Cards de Servico',
+    description: 'Verde = Demandas | Azul = Ofertas. Deslize para ver mais',
+    icon: 'layers',
+    iconColor: '#0071BC',
   },
   {
     id: '4',
-    title: 'Receba Propostas',
-    description: 'Na tela Início, você verá propostas dos trabalhadores. Analise quem é o melhor para o seu trabalho.',
-    icon: 'message-circle',
-    tips: ['Veja o nível e avaliação de cada um', 'Compare os preços', 'Leia as mensagens deles'],
+    title: 'Amigos do Campo',
+    description: 'De a mao para outros usuarios e construa sua rede de confianca',
+    icon: 'users',
+    iconColor: '#43A047',
   },
   {
     id: '5',
-    title: 'Acompanhe o Trabalho',
-    description: 'Depois de aceitar uma proposta, você recebe um trabalho ativo. Acompanhe com fotos e GPS do trabalhador.',
-    icon: 'map',
-    tips: ['Receba notificações de check-in/out', 'Veja fotos antes e depois', 'Confirme quando terminar'],
+    title: 'Pagamento Seguro',
+    description: 'Pague com PIX. 90% para o trabalhador, 10% taxa da plataforma',
+    icon: 'dollar-sign',
+    iconColor: '#FFD100',
   },
   {
     id: '6',
-    title: 'Avalie o Trabalhador',
-    description: 'Ao finalizar, deixe uma avaliação honesta. Isso ajuda outros produtores e motiva bons trabalhadores.',
-    icon: 'star',
-    tips: ['Avalie em 5 critérios', 'Seja justo e honesto', 'Seu feedback melhora a comunidade'],
+    title: 'Seu Perfil',
+    description: 'Complete seu perfil para receber mais propostas e oportunidades',
+    icon: 'user',
+    iconColor: '#4E342E',
   },
 ];
 
-const WORKER_STEPS: TutorialStep[] = [
-  {
-    id: '1',
-    title: 'Bem-vindo ao Empleitapp',
-    description: 'Este e seu espaco para ganhar dinheiro com servicos rurais. Suba de nivel e consiga melhores trabalhos!',
-    icon: 'home',
-    tips: ['Voce e um Trabalhador', 'Sua missao: executar bons trabalhos e subir de nivel'],
-  },
-  {
-    id: '2',
-    title: 'Explore Trabalhos Disponíveis',
-    description: 'Na tela "Trabalhos", você vê todas as demandas disponíveis. Filtre por tipo de serviço ou valor.',
-    icon: 'briefcase',
-    tips: ['Veja quantas propostas cada trabalho já tem', 'Aceitar caro não garante ser aceito', 'Qualidade vale mais que preço'],
-  },
-  {
-    id: '3',
-    title: 'Envie Suas Propostas',
-    description: 'Toque em um trabalho e envie uma proposta. Defina seu preço e mande uma mensagem ao produtor.',
-    icon: 'send',
-    tips: ['Seja profissional na mensagem', 'Mostre experiência quando tiver', 'Diga por que você é o melhor'],
-  },
-  {
-    id: '4',
-    title: 'Acompanhe Seus Níveis',
-    description: 'Cada trabalho bem feito soma avaliações. Suba de N1 até N5 e desbloqueie serviços melhores pagos!',
-    icon: 'trending-up',
-    tips: ['N1 = Iniciante', 'N5 = Mestre (melhor remuneração)', 'Qualidade leva a melhores propostas'],
-  },
-  {
-    id: '5',
-    title: 'Execute e Rastreie',
-    description: 'Quando sua proposta é aceita, faça check-in na propriedade. O GPS marca seu trabalho. Tire fotos ao terminar.',
-    icon: 'map',
-    tips: ['Check-in com GPS automático', 'Tire foto antes E depois', 'Check-out com fotos prova seu trabalho'],
-  },
-  {
-    id: '6',
-    title: 'Receba Avaliações',
-    description: 'Após terminar, o produtor avalia seu trabalho em 5 critérios. Boas avaliações = mais trabalhos pagos!',
-    icon: 'award',
-    tips: ['Qualidade é tudo', 'Leia os comentários', 'Melhore com base no feedback'],
-  },
-];
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - Spacing['2xl'] * 2;
+const CARD_MARGIN = Spacing.md;
 
 export default function TutorialScreen({ onComplete }: { onComplete?: () => void }) {
   const { user, setUser } = useAuth();
-  const { isDark } = useTheme();
-  const colors = isDark ? Colors.dark : Colors.light;
-  const windowWidth = Dimensions.get('window').width;
+  const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const steps = user?.role === 'producer' ? PRODUCER_STEPS : WORKER_STEPS;
-  const [currentStep, setCurrentStep] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-
-  const goToNextStep = async () => {
-    if (currentStep < steps.length - 1) {
-      const nextStep = currentStep + 1;
-      setCurrentStep(nextStep);
-      flatListRef.current?.scrollToIndex({ index: nextStep, animated: true });
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / SCREEN_WIDTH);
+    if (index !== currentIndex && index >= 0 && index < TUTORIAL_CARDS.length) {
+      setCurrentIndex(index);
     }
   };
 
-  const goToPrevStep = () => {
-    if (currentStep > 0) {
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      flatListRef.current?.scrollToIndex({ index: prevStep, animated: true });
+  const goToNextCard = () => {
+    if (currentIndex < TUTORIAL_CARDS.length - 1) {
+      const nextIndex = currentIndex + 1;
+      scrollViewRef.current?.scrollTo({ x: nextIndex * SCREEN_WIDTH, animated: true });
+      setCurrentIndex(nextIndex);
     }
+  };
+
+  const goToCard = (index: number) => {
+    scrollViewRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
+    setCurrentIndex(index);
   };
 
   const completeTutorial = async () => {
     if (user) {
       try {
+        const updatedUser = { ...user, tutorialCompleted: true };
         await updateUser(user.id, { tutorialCompleted: true });
-        setUser({ ...user, tutorialCompleted: true });
+        await setCurrentUser(updatedUser);
+        setUser(updatedUser);
         if (onComplete) {
           onComplete();
         }
@@ -146,115 +118,108 @@ export default function TutorialScreen({ onComplete }: { onComplete?: () => void
     }
   };
 
-  const step = steps[currentStep];
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const isLastCard = currentIndex === TUTORIAL_CARDS.length - 1;
 
-  const renderStep = ({ item }: { item: TutorialStep }) => (
-    <View style={[styles.stepContainer, { width: windowWidth }]}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
-        <Feather name={item.icon as any} size={72} color={colors.primary} />
-      </View>
+  const renderCard = (card: TutorialCard, index: number) => {
+    const iconBgColor = card.iconColor + '20';
 
-      <ThemedText type="h2" style={styles.title}>
-        {item.title}
-      </ThemedText>
+    return (
+      <View key={card.id} style={[styles.cardWrapper, { width: SCREEN_WIDTH }]}>
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
+          <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}>
+            <Feather name={card.icon} size={80} color={card.iconColor} />
+          </View>
 
-      <ThemedText type="body" style={[styles.description, { color: colors.textSecondary }]}>
-        {item.description}
-      </ThemedText>
-
-      {item.tips && item.tips.length > 0 && (
-        <View style={styles.tipsContainer}>
-          <ThemedText type="h3" style={styles.tipsTitle}>
-            Dica:
+          <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+            {card.title}
           </ThemedText>
-          {item.tips.map((tip, idx) => (
-            <View key={idx} style={styles.tipRow}>
-              <Feather name="check-circle" size={18} color={colors.primary} />
-              <ThemedText type="body" style={[styles.tipText, { color: colors.text }]}>
-                {tip}
-              </ThemedText>
-            </View>
-          ))}
+
+          <ThemedText style={[styles.cardDescription, { color: theme.textSecondary }]}>
+            {card.description}
+          </ThemedText>
         </View>
-      )}
-    </View>
-  );
+      </View>
+    );
+  };
+
+  const renderDots = () => {
+    return (
+      <View style={styles.dotsContainer}>
+        {TUTORIAL_CARDS.map((_, index) => (
+          <Pressable
+            key={index}
+            onPress={() => goToCard(index)}
+            style={[
+              styles.dot,
+              {
+                backgroundColor: index === currentIndex ? theme.primary : theme.border,
+                width: index === currentIndex ? 24 : 8,
+              },
+            ]}
+            hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+          />
+        ))}
+      </View>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText type="h1" style={styles.headerTitle}>
-          Guia Rápido
-        </ThemedText>
-        <Pressable onPress={completeTutorial} style={styles.skipButton}>
-          <ThemedText type="body" style={{ color: colors.primary, fontWeight: '600' }}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={completeTutorial}
+          style={({ pressed }) => [
+            styles.skipButton,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <ThemedText style={[styles.skipText, { color: theme.primary }]}>
             Pular
           </ThemedText>
         </Pressable>
       </View>
 
-      <View style={[styles.progressBar, { backgroundColor: colors.backgroundSecondary }]}>
-        <Animated.View
-          style={[
-            styles.progressFill,
-            { backgroundColor: colors.primary, width: `${progress}%` },
-          ]}
-        />
+      <View style={styles.carouselContainer}>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          decelerationRate="fast"
+          snapToInterval={SCREEN_WIDTH}
+          snapToAlignment="center"
+          contentContainerStyle={styles.scrollContent}
+        >
+          {TUTORIAL_CARDS.map((card, index) => renderCard(card, index))}
+        </ScrollView>
       </View>
 
-      <ThemedText
-        type="body"
-        style={[styles.stepCounter, { color: colors.textSecondary }]}
-      >
-        {currentStep + 1} de {steps.length}
-      </ThemedText>
+      {renderDots()}
 
-      <FlatList
-        ref={flatListRef}
-        data={steps}
-        renderItem={renderStep}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-      />
-
-      <View style={styles.buttonContainer}>
-        {currentStep > 0 && (
-          <Pressable
-            onPress={goToPrevStep}
-            style={[styles.button, { backgroundColor: colors.backgroundSecondary }]}
-          >
-            <Feather name="chevron-left" size={24} color={colors.text} />
-            <ThemedText type="body" style={{ color: colors.text }}>
-              Anterior
-            </ThemedText>
-          </Pressable>
-        )}
-
-        {currentStep < steps.length - 1 ? (
-          <Pressable
-            onPress={goToNextStep}
-            style={[styles.button, { backgroundColor: colors.primary, flex: currentStep === 0 ? 1 : undefined }]}
-          >
-            <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-              Próximo
-            </ThemedText>
-            <Feather name="chevron-right" size={24} color="#FFFFFF" />
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={completeTutorial}
-            style={[styles.button, { backgroundColor: colors.primary, flex: 1 }]}
-          >
-            <Feather name="check" size={24} color="#FFFFFF" />
-            <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-              Começar Agora!
-            </ThemedText>
-          </Pressable>
-        )}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.xl }]}>
+        <Pressable
+          onPress={isLastCard ? completeTutorial : goToNextCard}
+          style={({ pressed }) => [
+            styles.nextButton,
+            { backgroundColor: theme.primary, opacity: pressed ? 0.9 : 1 },
+          ]}
+        >
+          {isLastCard ? (
+            <>
+              <Feather name="check" size={24} color="#FFFFFF" />
+              <ThemedText style={styles.nextButtonText}>Comecar</ThemedText>
+            </>
+          ) : (
+            <>
+              <ThemedText style={styles.nextButtonText}>Proximo</ThemedText>
+              <Feather name="chevron-right" size={24} color="#FFFFFF" />
+            </>
+          )}
+        </Pressable>
       </View>
     </ThemedView>
   );
@@ -263,86 +228,102 @@ export default function TutorialScreen({ onComplete }: { onComplete?: () => void
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: Spacing.xl,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginVertical: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
   },
-  headerTitle: {
+  headerSpacer: {
     flex: 1,
   },
   skipButton: {
-    paddingHorizontal: Spacing.lg,
+    minWidth: Spacing.touchTarget,
+    minHeight: Spacing.touchTarget,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
   },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: Spacing.md,
-    overflow: 'hidden',
+  skipText: {
+    ...Typography.body,
+    fontFamily: 'Rubik_600SemiBold',
+    fontWeight: '600',
   },
-  progressFill: {
-    height: '100%',
+  carouselContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  stepCounter: {
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
+  scrollContent: {
+    alignItems: 'center',
   },
-  stepContainer: {
+  cardWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing['2xl'],
+  },
+  card: {
+    width: CARD_WIDTH,
+    paddingVertical: Spacing['4xl'],
+    paddingHorizontal: Spacing['2xl'],
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.xl,
+    minHeight: SCREEN_HEIGHT * 0.5,
   },
   iconContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing['2xl'],
+    marginBottom: Spacing['3xl'],
   },
-  title: {
+  cardTitle: {
+    ...Typography.h1,
+    fontSize: 28,
+    fontFamily: 'Rubik_700Bold',
     textAlign: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
+    lineHeight: 36,
   },
-  description: {
+  cardDescription: {
+    ...Typography.body,
+    fontSize: 18,
+    fontFamily: 'Rubik_400Regular',
     textAlign: 'center',
-    marginBottom: Spacing['2xl'],
-    lineHeight: 24,
+    lineHeight: 28,
+    paddingHorizontal: Spacing.md,
   },
-  tipsContainer: {
-    width: '100%',
-    backgroundColor: 'rgba(45, 80, 22, 0.05)',
-    borderRadius: Spacing.md,
-    padding: Spacing.lg,
-  },
-  tipsTitle: {
-    marginBottom: Spacing.md,
-  },
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.sm,
-    gap: Spacing.md,
-  },
-  tipText: {
-    flex: 1,
-    lineHeight: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xl,
-  },
-  button: {
-    flex: 1,
-    height: 56,
-    borderRadius: BorderRadius.sm,
+  dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: Spacing.md,
+    paddingVertical: Spacing['2xl'],
+    gap: Spacing.sm,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+  },
+  footer: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+  },
+  nextButton: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.md,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  nextButtonText: {
+    ...Typography.body,
+    fontSize: 18,
+    fontFamily: 'Rubik_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
