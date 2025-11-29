@@ -60,6 +60,15 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - "Quero pegar uma lida" (offer services)
   - "Preciso de gente pra lida" (post demand)
   - "Buscar Gente da Lida" (search users)
+  - "Montar Esquadrao" (create work team)
+
+### Esquadrao da Lida (Work Teams)
+- **Team Formation**: Create or propose work squads with up to 4 members
+- **Leader Selection**: Choose yourself as leader or propose someone else
+- **Invite Friends**: Select from connected friends to join the squad
+- **Service Types**: Optionally specify team specialties
+- **Status Tracking**: proposed, recruiting, active, working, completed, disbanded
+- **Storage Keys**: SQUADS, SQUAD_INVITES, SQUAD_PROPOSALS
 
 ### Gente da Lida Section
 - **New User Showcase**: Horizontal scroll showing recent users in home feed
@@ -131,6 +140,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - Main: MainTabs, Profile screens
 - Social: Friends, ChatList, ChatRoom, UserSearch, OtherUserProfile
 - Jobs: JobDetail, CreateCard, Proposals
+- Teams: CreateSquad
 - Payments: Payment, PaymentHistory, PixSettings
 - Settings: IdentityVerification, SocialLinks, Portfolio, FAQSupport
 
@@ -157,6 +167,8 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 14. **Gente da Lida Section**: Horizontal scroll in home feed showing recent users
 15. **Notification System**: Auto-notifications when new users register
 16. **Lida Terminology**: Updated UI texts with regional phrases ("pegar lida", "gente da lida", "firme na lida")
+17. **Esquadrao da Lida**: Work team system with 4-member squads, leader selection, and invite management
+18. **Tab Navigation Update**: "Conversas" tab replaced "Aprender" for direct chat access
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com

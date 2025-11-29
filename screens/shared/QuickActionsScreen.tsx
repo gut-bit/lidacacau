@@ -71,6 +71,14 @@ export default function QuickActionsScreen() {
       color: colors.accent,
       onPress: () => handleAction('search_people', () => navigation.replace('UserSearch')),
     },
+    {
+      id: 'create_squad',
+      icon: 'shield',
+      title: 'Montar Esquadrao',
+      subtitle: 'Forme uma equipe de ate 4 companheiros',
+      color: colors.secondary,
+      onPress: () => handleAction('create_squad', () => navigation.replace('CreateSquad')),
+    },
   ];
 
   const ActionCard = ({ item }: { item: ActionItem }) => (

@@ -39,6 +39,7 @@ import ChatListScreen from '@/screens/shared/ChatListScreen';
 import ChatRoomScreen from '@/screens/shared/ChatRoomScreen';
 import UserSearchScreen from '@/screens/shared/UserSearchScreen';
 import QuickActionsScreen from '@/screens/shared/QuickActionsScreen';
+import CreateSquadScreen from '@/screens/shared/CreateSquadScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -99,6 +100,7 @@ export type RootStackParamList = {
   ChatRoom: { roomId: string; otherUserId: string };
   UserSearch: undefined;
   QuickActions: undefined;
+  CreateSquad: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -314,6 +316,11 @@ export default function RootNavigator() {
               presentation: 'transparentModal',
               animation: 'fade',
             }}
+          />
+          <Stack.Screen
+            name="CreateSquad"
+            component={CreateSquadScreen}
+            options={{ title: 'Esquadrao da Lida' }}
           />
         </>
       )}

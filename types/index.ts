@@ -871,6 +871,10 @@ export type AnalyticsEventType =
   | 'filter_changed'
   | 'tutorial_step_completed'
   | 'quick_action_tap'
+  | 'squad_created'
+  | 'squad_proposed'
+  | 'squad_invite_sent'
+  | 'squad_invite_responded'
   | 'error_occurred';
 
 export interface AnalyticsEvent {
@@ -967,6 +971,83 @@ export interface AppNotification {
   targetId?: string;            // ID do objeto relacionado (job, offer, etc)
   read: boolean;
   createdAt: string;
+}
+
+// ==========================================
+// ESQUADRAO DA LIDA - GRUPOS DE TRABALHO
+// ==========================================
+
+export type SquadStatus = 
+  | 'proposed'        // Proposta de criacao (aguardando aprovacao)
+  | 'recruiting'      // Recrutando membros
+  | 'active'          // Equipe formada e ativa
+  | 'working'         // Em trabalho
+  | 'completed'       // Trabalho concluido
+  | 'disbanded';      // Equipe dissolvida
+
+export type SquadMemberStatus = 
+  | 'invited'         // Convidado (aguardando resposta)
+  | 'accepted'        // Aceitou o convite
+  | 'declined'        // Recusou o convite
+  | 'removed';        // Removido do grupo
+
+export interface SquadMember {
+  userId: string;
+  role: 'leader' | 'member';        // Lider ou membro
+  status: SquadMemberStatus;
+  joinedAt?: string;                // Quando entrou
+  invitedAt: string;                // Quando foi convidado
+  invitedBy: string;                // Quem convidou
+}
+
+export interface LidaSquad {
+  id: string;
+  name: string;                     // Nome do esquadrao (ex: "Esquadrao do Joao")
+  description?: string;             // Descricao do grupo
+  leaderId: string;                 // ID do lider
+  members: SquadMember[];           // Lista de membros (max 4)
+  maxMembers: number;               // Tamanho maximo (4 por padrao)
+  serviceTypeIds?: string[];        // Tipos de servico que o grupo faz
+  skills?: string[];                // Habilidades do grupo
+  locationText?: string;            // Regiao de atuacao
+  latitude?: number;
+  longitude?: number;
+  status: SquadStatus;
+  totalJobsCompleted: number;
+  totalEarnings: number;
+  averageRating?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SquadWithDetails extends LidaSquad {
+  leader: User;
+  memberUsers: User[];              // Dados dos membros
+}
+
+export interface SquadInvite {
+  id: string;
+  squadId: string;
+  inviterId: string;                // Quem convidou
+  inviteeId: string;                // Quem foi convidado
+  message?: string;                 // Mensagem do convite
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface SquadProposal {
+  id: string;
+  proposerId: string;               // Quem propos
+  proposedLeaderId: string;         // Lider proposto
+  squadName: string;
+  description?: string;
+  invitedUserIds: string[];         // IDs dos convidados iniciais
+  serviceTypeIds?: string[];
+  message?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  respondedAt?: string;
 }
 
 // Frases e trocadilhos da Lida

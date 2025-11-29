@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
   ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
-  FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES
+  FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES,
+  LidaSquad, SquadMember, SquadInvite, SquadProposal
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
@@ -28,6 +29,9 @@ const STORAGE_KEYS = {
   PRESENCE: '@lidacacau_presence',
   ANALYTICS: '@lidacacau_analytics',
   NOTIFICATIONS: '@lidacacau_notifications',
+  SQUADS: '@lidacacau_squads',
+  SQUAD_INVITES: '@lidacacau_squad_invites',
+  SQUAD_PROPOSALS: '@lidacacau_squad_proposals',
 };
 
 export const generateId = (): string => {
@@ -1786,5 +1790,278 @@ export const initializeDevData = async (): Promise<void> => {
     console.log('[LidaCacau DEV] Demo data seeded: Maria (producer) + Joao (worker)');
   } catch (error) {
     console.error('Error seeding dev data:', error);
+  }
+};
+
+// ==========================================
+// ESQUADRAO DA LIDA - GRUPOS DE TRABALHO
+// ==========================================
+
+export const getSquads = async (): Promise<LidaSquad[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SQUADS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting squads:', error);
+    return [];
+  }
+};
+
+export const getSquadById = async (id: string): Promise<LidaSquad | null> => {
+  try {
+    const squads = await getSquads();
+    return squads.find((s) => s.id === id) || null;
+  } catch (error) {
+    console.error('Error getting squad by id:', error);
+    return null;
+  }
+};
+
+export const getUserSquads = async (userId: string): Promise<LidaSquad[]> => {
+  try {
+    const squads = await getSquads();
+    return squads.filter((s) => 
+      s.leaderId === userId || 
+      s.members.some((m) => m.userId === userId && m.status === 'accepted')
+    );
+  } catch (error) {
+    console.error('Error getting user squads:', error);
+    return [];
+  }
+};
+
+export const createSquad = async (
+  data: Omit<LidaSquad, 'id' | 'createdAt' | 'updatedAt' | 'totalJobsCompleted' | 'totalEarnings'>
+): Promise<LidaSquad> => {
+  try {
+    const squads = await getSquads();
+    const newSquad: LidaSquad = {
+      ...data,
+      id: generateId(),
+      totalJobsCompleted: 0,
+      totalEarnings: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUADS, JSON.stringify([...squads, newSquad]));
+    return newSquad;
+  } catch (error) {
+    console.error('Error creating squad:', error);
+    throw error;
+  }
+};
+
+export const updateSquad = async (id: string, updates: Partial<LidaSquad>): Promise<LidaSquad | null> => {
+  try {
+    const squads = await getSquads();
+    const index = squads.findIndex((s) => s.id === id);
+    if (index === -1) return null;
+    
+    squads[index] = { ...squads[index], ...updates, updatedAt: new Date().toISOString() };
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUADS, JSON.stringify(squads));
+    return squads[index];
+  } catch (error) {
+    console.error('Error updating squad:', error);
+    return null;
+  }
+};
+
+export const inviteToSquad = async (
+  squadId: string,
+  inviterId: string,
+  inviteeId: string,
+  message?: string
+): Promise<SquadInvite> => {
+  try {
+    const squad = await getSquadById(squadId);
+    if (!squad) throw new Error('Esquadrao nao encontrado');
+    
+    const acceptedMembers = squad.members.filter((m) => m.status === 'accepted').length;
+    if (acceptedMembers >= squad.maxMembers) {
+      throw new Error('Esquadrao ja esta completo');
+    }
+    
+    const existingMember = squad.members.find((m) => m.userId === inviteeId);
+    if (existingMember && existingMember.status !== 'declined') {
+      throw new Error('Usuario ja foi convidado');
+    }
+    
+    const newMember: SquadMember = {
+      userId: inviteeId,
+      role: 'member',
+      status: 'invited',
+      invitedAt: new Date().toISOString(),
+      invitedBy: inviterId,
+    };
+    
+    const updatedMembers = existingMember
+      ? squad.members.map((m) => (m.userId === inviteeId ? newMember : m))
+      : [...squad.members, newMember];
+    
+    await updateSquad(squadId, { members: updatedMembers });
+    
+    const invite: SquadInvite = {
+      id: generateId(),
+      squadId,
+      inviterId,
+      inviteeId,
+      message,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    
+    const invites = await getSquadInvites();
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_INVITES, JSON.stringify([...invites, invite]));
+    
+    return invite;
+  } catch (error) {
+    console.error('Error inviting to squad:', error);
+    throw error;
+  }
+};
+
+export const getSquadInvites = async (): Promise<SquadInvite[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SQUAD_INVITES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting squad invites:', error);
+    return [];
+  }
+};
+
+export const getUserSquadInvites = async (userId: string): Promise<SquadInvite[]> => {
+  try {
+    const invites = await getSquadInvites();
+    return invites.filter((i) => i.inviteeId === userId && i.status === 'pending');
+  } catch (error) {
+    console.error('Error getting user squad invites:', error);
+    return [];
+  }
+};
+
+export const respondToSquadInvite = async (
+  inviteId: string,
+  accept: boolean
+): Promise<void> => {
+  try {
+    const invites = await getSquadInvites();
+    const inviteIndex = invites.findIndex((i) => i.id === inviteId);
+    if (inviteIndex === -1) throw new Error('Convite nao encontrado');
+    
+    const invite = invites[inviteIndex];
+    invites[inviteIndex] = {
+      ...invite,
+      status: accept ? 'accepted' : 'declined',
+      respondedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_INVITES, JSON.stringify(invites));
+    
+    const squad = await getSquadById(invite.squadId);
+    if (squad) {
+      const updatedMembers = squad.members.map((m) =>
+        m.userId === invite.inviteeId
+          ? { ...m, status: accept ? 'accepted' as const : 'declined' as const, joinedAt: accept ? new Date().toISOString() : undefined }
+          : m
+      );
+      await updateSquad(invite.squadId, { members: updatedMembers });
+    }
+  } catch (error) {
+    console.error('Error responding to squad invite:', error);
+    throw error;
+  }
+};
+
+export const getSquadProposals = async (): Promise<SquadProposal[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SQUAD_PROPOSALS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting squad proposals:', error);
+    return [];
+  }
+};
+
+export const createSquadProposal = async (
+  data: Omit<SquadProposal, 'id' | 'createdAt' | 'status'>
+): Promise<SquadProposal> => {
+  try {
+    const proposals = await getSquadProposals();
+    const newProposal: SquadProposal = {
+      ...data,
+      id: generateId(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_PROPOSALS, JSON.stringify([...proposals, newProposal]));
+    return newProposal;
+  } catch (error) {
+    console.error('Error creating squad proposal:', error);
+    throw error;
+  }
+};
+
+export const getUserSquadProposals = async (userId: string): Promise<SquadProposal[]> => {
+  try {
+    const proposals = await getSquadProposals();
+    return proposals.filter((p) => p.proposedLeaderId === userId && p.status === 'pending');
+  } catch (error) {
+    console.error('Error getting user squad proposals:', error);
+    return [];
+  }
+};
+
+export const respondToSquadProposal = async (
+  proposalId: string,
+  accept: boolean
+): Promise<LidaSquad | null> => {
+  try {
+    const proposals = await getSquadProposals();
+    const proposalIndex = proposals.findIndex((p) => p.id === proposalId);
+    if (proposalIndex === -1) throw new Error('Proposta nao encontrada');
+    
+    const proposal = proposals[proposalIndex];
+    proposals[proposalIndex] = {
+      ...proposal,
+      status: accept ? 'approved' : 'rejected',
+      respondedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_PROPOSALS, JSON.stringify(proposals));
+    
+    if (accept) {
+      const leaderMember: SquadMember = {
+        userId: proposal.proposedLeaderId,
+        role: 'leader',
+        status: 'accepted',
+        invitedAt: proposal.createdAt,
+        invitedBy: proposal.proposerId,
+        joinedAt: new Date().toISOString(),
+      };
+      
+      const invitedMembers: SquadMember[] = proposal.invitedUserIds.map((id) => ({
+        userId: id,
+        role: 'member' as const,
+        status: 'invited' as const,
+        invitedAt: new Date().toISOString(),
+        invitedBy: proposal.proposedLeaderId,
+      }));
+      
+      const squad = await createSquad({
+        name: proposal.squadName,
+        description: proposal.description,
+        leaderId: proposal.proposedLeaderId,
+        members: [leaderMember, ...invitedMembers],
+        maxMembers: 4,
+        serviceTypeIds: proposal.serviceTypeIds,
+        status: 'recruiting',
+      });
+      
+      return squad;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error responding to squad proposal:', error);
+    throw error;
   }
 };
