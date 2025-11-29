@@ -1,0 +1,61 @@
+Lida Cacau - Manual de Identidade Visual
+
+1. A Filosofia: "Confiança de quem é da Lida"
+
+O público-alvo tem baixa familiaridade tecnológica, mas usa WhatsApp e Facebook o dia todo. O design deve seguir essa familiaridade: Colorido, Grande e Óbvio.
+
+Estética "Mãos da Lida": Nada de traços finos ou minimalismo de escritório. O visual deve ser robusto. O aperto de mão não é um "acordo corporativo", é um pacto de parceiros. As mãos devem parecer fortes, rústicas.
+
+Áudio First: Sempre que houver texto importante, inclua um botão de "Ouvir".
+
+2. Paleta de Cores (Vibrante e Natural)
+
+Saímos do tom pastel para cores com mais "vida" e contraste, inspiradas na natureza e na maturação do cacau.
+
+Primária: Marrom Lida (#4E342E)
+
+Uso: Textos, bordas e estruturas.
+
+Significado: A terra fértil, o tronco forte, a seriedade do compromisso.
+
+Secundária: Verde Folha Nova (#43A047)
+
+Uso: Botões de confirmação, fundos de destaque, áreas de sucesso.
+
+Significado: A lavoura crescendo, o sinal de "Siga", a esperança.
+
+Destaque: Amarelo Ouro (#FFC107)
+
+Uso: Botões principais (CTAs), alertas, ícones de dinheiro/valor.
+
+Significado: O cacau maduro, o lucro, o sol.
+
+Fundo: Branco Off-White (#FAFAFA)
+
+Uso: Fundo geral para não cansar a vista, mas mantendo a clareza.
+
+3. Tipografia (Legibilidade Máxima)
+
+Fonte escolhida: Rubik (Google Fonts).
+
+Por que? Possui bordas arredondadas que conversam com o estilo "Emoji/Amigável", mas é extremamente legível.
+
+Títulos: Peso 700 (Bold) - Tamanho grande.
+
+Texto Corrido: Peso 400 (Regular) - Tamanho mínimo 18px.
+
+4. Iconografia (Estilo "Zap" / Emoji)
+
+Esqueça ícones de linhas (outline). Para este público, o ícone deve ser uma ilustração colorida, estilo Emoji. Se o ícone for ruim, é melhor não usar e colocar o texto grande.
+
+Estilo: Colorido, 3D suave ou Flat Vibrante. Deve parecer um "adesivo" ou um botão clicável.
+
+Metáforas Literais:
+
+Roçadeira: Desenho de uma roçadeira laranja/vermelha, não uma silhueta preta.
+
+Dinheiro: Um saco de dinheiro ou notas reais, não um símbolo "$".
+
+Trabalhador: Use avatares com chapéu de palha ou boné, rosto amigável.
+
+Regra de Ouro: Se o usuário olhar e não entender em 1 segundo, o ícone falhou. Na dúvida, use apenas o texto com fundo colorido.

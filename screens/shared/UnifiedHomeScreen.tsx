@@ -1,11 +1,14 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Pressable, RefreshControl, Dimensions, Platform } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { StyleSheet, View, Pressable, RefreshControl, Dimensions, Platform, ScrollView } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
+import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
+import * as Linking from 'expo-linking';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,24 +25,177 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
-import { Job, MapActivity, UserRole } from '@/types';
-import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker } from '@/utils/storage';
-import { getServiceTypeById } from '@/data/serviceTypes';
+import { Job, MapActivity, UserRole, ServiceOffer, CARD_COLORS, CardType, UserPreferences, URUARA_CENTER } from '@/types';
+import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences } from '@/utils/storage';
+import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
+
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
+const DEFAULT_LOCATION: UserLocation = {
+  latitude: URUARA_CENTER.latitude,
+  longitude: URUARA_CENTER.longitude,
+};
+
+const calculateHaversineDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const getDistanceToCard = (
+  userLocation: UserLocation,
+  cardLat?: number,
+  cardLon?: number
+): number | null => {
+  if (cardLat === undefined || cardLon === undefined) {
+    return null;
+  }
+  return calculateHaversineDistance(
+    userLocation.latitude,
+    userLocation.longitude,
+    cardLat,
+    cardLon
+  );
+};
+
+const calculateRelevanceScore = (
+  job: Job,
+  preferences: UserPreferences | null,
+  userLocation: UserLocation
+): { score: number; distance: number | null } => {
+  let score = 0;
+  
+  if (preferences?.preferredServiceTypeIds?.includes(job.serviceTypeId)) {
+    score += 100;
+  }
+  
+  const serviceType = getServiceTypeById(job.serviceTypeId);
+  if (serviceType) {
+    const category = serviceType.id.split('_')[0];
+    const hasPreferredCategory = preferences?.preferredServiceTypeIds?.some(
+      id => id.startsWith(category)
+    );
+    if (hasPreferredCategory) {
+      score += 30;
+    }
+  }
+  
+  const createdAt = new Date(job.createdAt).getTime();
+  const now = Date.now();
+  const hoursOld = (now - createdAt) / (1000 * 60 * 60);
+  score += Math.max(0, 50 - hoursOld);
+  
+  score += Math.min(job.offer / 50, 30);
+  
+  const distance = getDistanceToCard(userLocation, job.latitude, job.longitude);
+  
+  if (distance !== null) {
+    if (distance <= 10) {
+      score += 80;
+    } else if (distance <= 25) {
+      score += 60;
+    } else if (distance <= 50) {
+      score += 40;
+    } else if (distance <= 100) {
+      score += 20;
+    }
+  }
+  
+  return { score, distance };
+};
+
+const calculateOfferRelevanceScore = (
+  offer: ServiceOffer,
+  preferences: UserPreferences | null,
+  userLocation: UserLocation
+): { score: number; distance: number | null } => {
+  let score = 0;
+  
+  if (preferences?.preferredServiceTypeIds) {
+    const matchingServices = offer.serviceTypeIds.filter(
+      id => preferences.preferredServiceTypeIds?.includes(id)
+    );
+    score += matchingServices.length * 50;
+  }
+  
+  const createdAt = new Date(offer.createdAt).getTime();
+  const now = Date.now();
+  const hoursOld = (now - createdAt) / (1000 * 60 * 60);
+  score += Math.max(0, 50 - hoursOld);
+  
+  const price = offer.pricePerDay || offer.pricePerHour || 0;
+  score += Math.min(price / 20, 30);
+  
+  if (offer.extras?.providesFood) score += 10;
+  if (offer.extras?.providesAccommodation) score += 10;
+  if (offer.extras?.providesTransport) score += 10;
+  
+  const distance = getDistanceToCard(userLocation, offer.latitude, offer.longitude);
+  
+  if (distance !== null) {
+    if (distance <= 10) {
+      score += 80;
+    } else if (distance <= 25) {
+      score += 60;
+    } else if (distance <= 50) {
+      score += 40;
+    } else if (distance <= 100) {
+      score += 20;
+    }
+  }
+  
+  return { score, distance };
+};
+
+type FeedFilter = 'all' | 'demands' | 'offers';
+type RadiusFilter = 10 | 25 | 50 | 100 | 'all';
+
+interface JobWithDistance extends Job {
+  calculatedDistance?: number | null;
+}
+
+interface OfferWithDistance extends ServiceOffer {
+  calculatedDistance?: number | null;
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
 
 interface SwipeableJobCardProps {
-  job: Job;
+  job: JobWithDistance;
   onSwipe: (id: string) => void;
   onPress: () => void;
   colors: typeof Colors.dark;
   isWorker: boolean;
   hasBid?: boolean;
 }
+
+const formatDistance = (distance: number | null | undefined): string => {
+  if (distance === null || distance === undefined) return '';
+  if (distance < 1) {
+    return `${Math.round(distance * 1000)}m`;
+  }
+  return `${distance.toFixed(1)}km`;
+};
 
 function SwipeableJobCard({ job, onSwipe, onPress, colors, isWorker, hasBid }: SwipeableJobCardProps) {
   const translateX = useSharedValue(0);
@@ -167,6 +323,14 @@ function SwipeableJobCard({ job, onSwipe, onPress, colors, isWorker, hasBid }: S
                 <ThemedText type="body" style={{ color: colors.textSecondary, flex: 1 }} numberOfLines={1}>
                   {job.locationText}
                 </ThemedText>
+                {job.calculatedDistance !== null && job.calculatedDistance !== undefined ? (
+                  <View style={[styles.distanceBadge, { backgroundColor: colors.primary + '15' }]}>
+                    <Feather name="navigation" size={12} color={colors.primary} />
+                    <ThemedText type="small" style={{ color: colors.primary, fontWeight: '600' }}>
+                      {formatDistance(job.calculatedDistance)}
+                    </ThemedText>
+                  </View>
+                ) : null}
               </View>
               {job.notes ? (
                 <View style={styles.detailRow}>
@@ -214,28 +378,111 @@ export default function UnifiedHomeScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [allJobs, setAllJobs] = useState<JobWithDistance[]>([]);
+  const [allOffers, setAllOffers] = useState<OfferWithDistance[]>([]);
   const [myJobs, setMyJobs] = useState<Job[]>([]);
+  const [myOffers, setMyOffers] = useState<ServiceOffer[]>([]);
   const [bidCounts, setBidCounts] = useState<Record<string, number>>({});
   const [myBidJobIds, setMyBidJobIds] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dismissedJobs, setDismissedJobs] = useState<Set<string>>(new Set());
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>('all');
+  const [radiusFilter, setRadiusFilter] = useState<RadiusFilter>('all');
+  const [userLocation, setUserLocation] = useState<UserLocation>(DEFAULT_LOCATION);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
 
   const isWorker = activeRole === 'worker';
   const isProducer = activeRole === 'producer';
 
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        if (Platform.OS === 'web') {
+          setUserLocation(DEFAULT_LOCATION);
+          setUsingDefaultLocation(true);
+          setLocationLoading(false);
+          return;
+        }
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Location permission denied, using default location');
+          setUserLocation(DEFAULT_LOCATION);
+          setUsingDefaultLocation(true);
+          setLocationLoading(false);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        setUsingDefaultLocation(false);
+      } catch (error) {
+        console.log('Error fetching location, using default:', error);
+        setUserLocation(DEFAULT_LOCATION);
+        setUsingDefaultLocation(true);
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    fetchUserLocation();
+  }, []);
+
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
+      const preferences = await getUserPreferences(user.id);
+      
       if (isWorker) {
         const openJobs = await getOpenJobs(user.level || 1);
         const myBids = await getBidsByWorker(user.id);
         const bidJobIds = new Set(myBids.filter((b) => b.status === 'pending').map((b) => b.jobId));
         setMyBidJobIds(bidJobIds);
-        setJobs(openJobs.filter(j => !dismissedJobs.has(j.id)).sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ));
+        
+        const jobsWithScores = openJobs
+          .filter(j => !dismissedJobs.has(j.id))
+          .map(job => {
+            const { score, distance } = calculateRelevanceScore(job, preferences, userLocation);
+            return {
+              ...job,
+              calculatedDistance: distance,
+              score,
+            };
+          })
+          .sort((a, b) => b.score - a.score)
+          .map(({ score, ...job }) => job as JobWithDistance);
+        
+        setAllJobs(jobsWithScores);
+        
+        const workerOffers = await getServiceOffersByWorker(user.id);
+        setMyOffers(workerOffers.filter(o => o.status === 'active'));
+      }
+      
+      if (isProducer) {
+        const publicOffers = await getPublicServiceOffers();
+        
+        const offersWithScores = publicOffers
+          .filter(o => o.workerId !== user.id)
+          .map(offer => {
+            const { score, distance } = calculateOfferRelevanceScore(offer, preferences, userLocation);
+            return {
+              ...offer,
+              calculatedDistance: distance,
+              score,
+            };
+          })
+          .sort((a, b) => b.score - a.score)
+          .map(({ score, ...offer }) => offer as OfferWithDistance);
+        
+        setAllOffers(offersWithScores);
       }
       
       const userJobs = await getJobsByProducer(user.id);
@@ -253,13 +500,35 @@ export default function UnifiedHomeScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, isWorker, dismissedJobs]);
+  }, [user, isWorker, isProducer, dismissedJobs, userLocation]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [loadData])
   );
+
+  const jobs = useMemo(() => {
+    if (radiusFilter === 'all') return allJobs;
+    return allJobs.filter(job => {
+      if (job.calculatedDistance === null || job.calculatedDistance === undefined) {
+        return true;
+      }
+      const numericRadius = typeof radiusFilter === 'number' ? radiusFilter : Number(radiusFilter);
+      return job.calculatedDistance <= numericRadius;
+    });
+  }, [allJobs, radiusFilter]);
+
+  const offers = useMemo(() => {
+    if (radiusFilter === 'all') return allOffers;
+    return allOffers.filter(offer => {
+      if (offer.calculatedDistance === null || offer.calculatedDistance === undefined) {
+        return true;
+      }
+      const numericRadius = typeof radiusFilter === 'number' ? radiusFilter : Number(radiusFilter);
+      return offer.calculatedDistance <= numericRadius;
+    });
+  }, [allOffers, radiusFilter]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -270,7 +539,39 @@ export default function UnifiedHomeScreen() {
 
   const handleDismissJob = (jobId: string) => {
     setDismissedJobs(prev => new Set([...prev, jobId]));
-    setJobs(prev => prev.filter(j => j.id !== jobId));
+    setAllJobs(prev => prev.filter(j => j.id !== jobId));
+  };
+
+  const handleActivateGPS = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        return;
+      }
+
+      const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === 'granted') {
+        setLocationLoading(true);
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        setUsingDefaultLocation(false);
+        setLocationLoading(false);
+        await loadData();
+      } else if (!canAskAgain) {
+        try {
+          await Linking.openSettings();
+        } catch (error) {
+          console.log('Could not open settings:', error);
+        }
+      }
+    } catch (error) {
+      console.log('Error activating GPS:', error);
+    }
   };
 
   const handleRoleSwitch = async (role: UserRole) => {
@@ -378,6 +679,41 @@ export default function UnifiedHomeScreen() {
     </View>
   );
 
+  const renderLocationBanner = () => {
+    if (!usingDefaultLocation) return null;
+    
+    const isWeb = Platform.OS === 'web';
+    
+    return (
+      <View style={[styles.locationBanner, { backgroundColor: colors.warning + '20' }]}>
+        <View style={[styles.locationBannerIcon, { backgroundColor: colors.warning + '30' }]}>
+          <Feather name="map-pin" size={18} color={colors.warning} />
+        </View>
+        <View style={styles.locationBannerContent}>
+          <ThemedText 
+            type="body" 
+            style={[styles.locationBannerText, { color: colors.text }]}
+          >
+            {isWeb 
+              ? 'Use o app Expo Go no celular para distancias reais' 
+              : 'Usando localizacao de Uruara'}
+          </ThemedText>
+          {!isWeb ? (
+            <Pressable
+              style={[styles.locationBannerButton, { backgroundColor: colors.warning }]}
+              onPress={handleActivateGPS}
+            >
+              <Feather name="navigation" size={14} color="#FFFFFF" />
+              <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                Ativar GPS
+              </ThemedText>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+    );
+  };
+
   const renderQuickStats = () => (
     <View style={styles.statsContainer}>
       <View style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}>
@@ -467,8 +803,148 @@ export default function UnifiedHomeScreen() {
     );
   };
 
+  const renderFeedFilters = () => (
+    <View style={styles.filtersContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
+        <Pressable
+          style={[
+            styles.filterChip,
+            feedFilter === 'all' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setFeedFilter('all')}
+        >
+          <Feather name="layers" size={16} color={feedFilter === 'all' ? '#FFFFFF' : colors.textSecondary} />
+          <ThemedText type="small" style={{ color: feedFilter === 'all' ? '#FFFFFF' : colors.textSecondary }}>
+            Todos
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.filterChip,
+            feedFilter === 'demands' && { backgroundColor: CARD_COLORS.demand.primary },
+          ]}
+          onPress={() => setFeedFilter('demands')}
+        >
+          <Feather name="search" size={16} color={feedFilter === 'demands' ? '#FFFFFF' : colors.textSecondary} />
+          <ThemedText type="small" style={{ color: feedFilter === 'demands' ? '#FFFFFF' : colors.textSecondary }}>
+            Demandas
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.filterChip,
+            feedFilter === 'offers' && { backgroundColor: CARD_COLORS.offer.primary },
+          ]}
+          onPress={() => setFeedFilter('offers')}
+        >
+          <Feather name="briefcase" size={16} color={feedFilter === 'offers' ? '#FFFFFF' : colors.textSecondary} />
+          <ThemedText type="small" style={{ color: feedFilter === 'offers' ? '#FFFFFF' : colors.textSecondary }}>
+            Ofertas
+          </ThemedText>
+        </Pressable>
+        <View style={styles.filterDivider} />
+        {([10, 25, 50, 100, 'all'] as RadiusFilter[]).map((r) => (
+          <Pressable
+            key={r}
+            style={[
+              styles.filterChip,
+              radiusFilter === r && { backgroundColor: colors.secondary },
+            ]}
+            onPress={() => setRadiusFilter(r)}
+          >
+            <Feather name="map-pin" size={14} color={radiusFilter === r ? '#FFFFFF' : colors.textSecondary} />
+            <ThemedText type="small" style={{ color: radiusFilter === r ? '#FFFFFF' : colors.textSecondary }}>
+              {r === 'all' ? 'Todos' : `${r}km`}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
+  const renderOfferCard = (offer: OfferWithDistance) => {
+    const serviceNames = offer.serviceTypeIds
+      .map(id => getServiceTypeById(id)?.name)
+      .filter(Boolean)
+      .slice(0, 2)
+      .join(', ');
+    const price = offer.pricePerDay || offer.pricePerHour || offer.pricePerUnit || 0;
+    const priceLabel = offer.pricePerDay ? '/dia' : offer.pricePerHour ? '/hora' : '/unid';
+    
+    return (
+      <Pressable
+        key={offer.id}
+        style={[styles.offerCard, { backgroundColor: colors.card, borderLeftColor: CARD_COLORS.offer.primary }, Shadows.card]}
+        onPress={() => navigation.navigate('OfferDetail' as any, { offerId: offer.id })}
+      >
+        <View style={styles.offerHeader}>
+          <View style={[styles.offerTypeTag, { backgroundColor: CARD_COLORS.offer.background }]}>
+            <Feather name="briefcase" size={14} color={CARD_COLORS.offer.primary} />
+            <ThemedText type="caption" style={{ color: CARD_COLORS.offer.primary, fontWeight: '600' }}>
+              OFERTA
+            </ThemedText>
+          </View>
+          <View style={styles.offerMeta}>
+            {offer.calculatedDistance !== null && offer.calculatedDistance !== undefined ? (
+              <>
+                <Feather name="navigation" size={12} color={colors.primary} />
+                <ThemedText type="caption" style={{ color: colors.primary, fontWeight: '600' }}>
+                  {formatDistance(offer.calculatedDistance)}
+                </ThemedText>
+                <ThemedText type="caption" style={{ color: colors.textSecondary, marginHorizontal: 4 }}>
+                  |
+                </ThemedText>
+              </>
+            ) : null}
+            <Feather name="map-pin" size={12} color={colors.textSecondary} />
+            <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+              {offer.availableRadius}km
+            </ThemedText>
+          </View>
+        </View>
+        <ThemedText type="body" style={{ fontWeight: '600', marginTop: Spacing.sm }}>
+          {serviceNames}
+        </ThemedText>
+        <ThemedText type="caption" style={{ color: colors.textSecondary, marginTop: Spacing.xs }} numberOfLines={2}>
+          {offer.description}
+        </ThemedText>
+        <View style={styles.offerFooter}>
+          <ThemedText type="h4" style={{ color: CARD_COLORS.offer.primary }}>
+            {formatCurrency(price)}{priceLabel}
+          </ThemedText>
+          {offer.priceNegotiable ? (
+            <View style={[styles.negotiableBadge, { backgroundColor: colors.accent + '20' }]}>
+              <ThemedText type="caption" style={{ color: colors.accent }}>Negociavel</ThemedText>
+            </View>
+          ) : null}
+        </View>
+        {offer.extras && (
+          <View style={styles.extrasRow}>
+            {offer.extras.providesFood && (
+              <View style={[styles.extraBadge, { backgroundColor: colors.success + '20' }]}>
+                <Feather name="coffee" size={12} color={colors.success} />
+              </View>
+            )}
+            {offer.extras.providesAccommodation && (
+              <View style={[styles.extraBadge, { backgroundColor: colors.success + '20' }]}>
+                <Feather name="home" size={12} color={colors.success} />
+              </View>
+            )}
+            {offer.extras.providesTransport && (
+              <View style={[styles.extraBadge, { backgroundColor: colors.success + '20' }]}>
+                <Feather name="truck" size={12} color={colors.success} />
+              </View>
+            )}
+          </View>
+        )}
+      </Pressable>
+    );
+  };
+
   const renderAvailableJobs = () => {
     if (!isWorker) return null;
+    
+    const filteredJobs = feedFilter === 'offers' ? [] : jobs;
     
     return (
       <View style={styles.section}>
@@ -478,17 +954,17 @@ export default function UnifiedHomeScreen() {
             <ThemedText type="h4" style={{ color: colors.accent }}>
               Trabalhos Disponiveis
             </ThemedText>
-            {jobs.length > 0 ? (
+            {filteredJobs.length > 0 ? (
               <View style={[styles.countBadge, { backgroundColor: colors.accent }]}>
-                <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '700' }}>{jobs.length}</ThemedText>
+                <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '700' }}>{filteredJobs.length}</ThemedText>
               </View>
             ) : null}
           </View>
         </View>
         
-        {jobs.length > 0 ? (
+        {filteredJobs.length > 0 ? (
           <GestureHandlerRootView style={styles.jobsContainer}>
-            {jobs.slice(0, 5).map((job) => (
+            {filteredJobs.slice(0, 5).map((job) => (
               <SwipeableJobCard
                 key={job.id}
                 job={job}
@@ -512,10 +988,50 @@ export default function UnifiedHomeScreen() {
     );
   };
 
+  const renderAvailableOffers = () => {
+    if (!isProducer || feedFilter === 'demands') return null;
+    
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Feather name="users" size={20} color={CARD_COLORS.offer.primary} />
+            <ThemedText type="h4" style={{ color: CARD_COLORS.offer.primary }}>
+              Trabalhadores Disponiveis
+            </ThemedText>
+            {offers.length > 0 ? (
+              <View style={[styles.countBadge, { backgroundColor: CARD_COLORS.offer.primary }]}>
+                <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '700' }}>{offers.length}</ThemedText>
+              </View>
+            ) : null}
+          </View>
+        </View>
+        
+        {offers.length > 0 ? (
+          <View style={styles.offersContainer}>
+            {offers.slice(0, 5).map(renderOfferCard)}
+          </View>
+        ) : (
+          <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+            <Feather name="users" size={48} color={colors.textSecondary} />
+            <ThemedText type="body" style={{ color: colors.textSecondary, textAlign: 'center', marginTop: Spacing.md }}>
+              Nenhuma oferta de trabalhador disponivel.{'\n'}Volte mais tarde!
+            </ThemedText>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const handleCreateCard = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.navigate('CreateCard', { type: isProducer ? 'demand' : 'offer' });
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ScreenScrollView
-        contentContainerStyle={{ paddingBottom: tabBarHeight + Spacing['2xl'] }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + Spacing['2xl'] + 80 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
@@ -533,10 +1049,26 @@ export default function UnifiedHomeScreen() {
         </View>
 
         {renderProfileHeader()}
+        {renderLocationBanner()}
         {renderQuickStats()}
+        {renderFeedFilters()}
         {renderMyJobsSection()}
         {renderAvailableJobs()}
+        {renderAvailableOffers()}
       </ScreenScrollView>
+      
+      <Pressable
+        style={[
+          styles.fab,
+          { 
+            backgroundColor: isProducer ? CARD_COLORS.demand.primary : CARD_COLORS.offer.primary,
+            bottom: tabBarHeight + Spacing.xl,
+          },
+        ]}
+        onPress={handleCreateCard}
+      >
+        <Feather name="plus" size={28} color="#FFFFFF" />
+      </Pressable>
     </ThemedView>
   );
 }
@@ -641,6 +1173,43 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  locationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    gap: Spacing.md,
+  },
+  locationBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  locationBannerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  locationBannerText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  locationBannerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -793,6 +1362,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.sm,
   },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 'auto',
+  },
   jobFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -821,6 +1399,92 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xl,
     padding: Spacing['2xl'],
     borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  filtersContainer: {
+    marginBottom: Spacing.lg,
+  },
+  filtersScroll: {
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  filterDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginHorizontal: Spacing.sm,
+  },
+  fab: {
+    position: 'absolute',
+    right: Spacing.xl,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  offersContainer: {
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
+  },
+  offerCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderLeftWidth: 4,
+  },
+  offerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  offerTypeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+  },
+  offerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  offerFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.md,
+  },
+  negotiableBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+  },
+  extrasRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  extraBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
   },
 });

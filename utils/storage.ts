@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem } from '@/types';
+import { 
+  User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
+  ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus
+} from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
 const STORAGE_KEYS = {
@@ -12,6 +15,11 @@ const STORAGE_KEYS = {
   SKILL_PROGRESS: '@cacauserv:skill_progress',
   QUIZ_ATTEMPTS: '@cacauserv:quiz_attempts',
   CONTRACT_HISTORY: '@cacauserv:contract_history',
+  SERVICE_OFFERS: '@cacauserv:service_offers',
+  OFFER_INTERESTS: '@cacauserv:offer_interests',
+  CARD_PRESETS: '@cacauserv:card_presets',
+  USER_PREFERENCES: '@cacauserv:user_preferences',
+  CARD_MATCHES: '@cacauserv:card_matches',
   INITIALIZED: '@cacauserv:initialized',
 };
 
@@ -209,6 +217,15 @@ export const updateJob = async (jobId: string, updates: Partial<Job>): Promise<J
   } catch (error) {
     console.error('Error updating job:', error);
     return null;
+  }
+};
+
+export const deleteJob = async (jobId: string): Promise<boolean> => {
+  try {
+    return await updateJob(jobId, { status: 'cancelled' }) !== null;
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    return false;
   }
 };
 
@@ -724,4 +741,418 @@ export const updateContractHistoryStatus = async (
   } catch (error) {
     console.error('Error updating contract history status:', error);
   }
+};
+
+// ============================================
+// SISTEMA DE OFERTAS DE SERVICO
+// ============================================
+
+export const getServiceOffers = async (): Promise<ServiceOffer[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.SERVICE_OFFERS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting service offers:', error);
+    return [];
+  }
+};
+
+export const getServiceOfferById = async (id: string): Promise<ServiceOffer | null> => {
+  try {
+    const offers = await getServiceOffers();
+    return offers.find((o) => o.id === id) || null;
+  } catch (error) {
+    console.error('Error getting service offer by id:', error);
+    return null;
+  }
+};
+
+export const getServiceOffersByWorker = async (workerId: string): Promise<ServiceOffer[]> => {
+  try {
+    const offers = await getServiceOffers();
+    return offers.filter((o) => o.workerId === workerId && o.visibility !== 'deleted');
+  } catch (error) {
+    console.error('Error getting service offers by worker:', error);
+    return [];
+  }
+};
+
+export const getPublicServiceOffers = async (workerLevel?: number): Promise<ServiceOffer[]> => {
+  try {
+    const offers = await getServiceOffers();
+    return offers.filter((o) => {
+      if (o.visibility !== 'public' || o.status !== 'active') return false;
+      return true;
+    });
+  } catch (error) {
+    console.error('Error getting public service offers:', error);
+    return [];
+  }
+};
+
+export const createServiceOffer = async (
+  offer: Omit<ServiceOffer, 'id' | 'status' | 'viewCount' | 'interestCount' | 'createdAt' | 'updatedAt'>
+): Promise<ServiceOffer> => {
+  try {
+    const offers = await getServiceOffers();
+    const newOffer: ServiceOffer = {
+      ...offer,
+      id: generateId(),
+      status: 'active',
+      viewCount: 0,
+      interestCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.SERVICE_OFFERS, JSON.stringify([...offers, newOffer]));
+    return newOffer;
+  } catch (error) {
+    console.error('Error creating service offer:', error);
+    throw error;
+  }
+};
+
+export const updateServiceOffer = async (
+  offerId: string,
+  updates: Partial<ServiceOffer>
+): Promise<ServiceOffer | null> => {
+  try {
+    const offers = await getServiceOffers();
+    const index = offers.findIndex((o) => o.id === offerId);
+    if (index === -1) return null;
+    offers[index] = { ...offers[index], ...updates, updatedAt: new Date().toISOString() };
+    await AsyncStorage.setItem(STORAGE_KEYS.SERVICE_OFFERS, JSON.stringify(offers));
+    return offers[index];
+  } catch (error) {
+    console.error('Error updating service offer:', error);
+    return null;
+  }
+};
+
+export const deleteServiceOffer = async (offerId: string): Promise<boolean> => {
+  try {
+    return await updateServiceOffer(offerId, { visibility: 'deleted' }) !== null;
+  } catch (error) {
+    console.error('Error deleting service offer:', error);
+    return false;
+  }
+};
+
+export const incrementOfferViewCount = async (offerId: string): Promise<void> => {
+  try {
+    const offer = await getServiceOfferById(offerId);
+    if (offer) {
+      await updateServiceOffer(offerId, { viewCount: (offer.viewCount || 0) + 1 });
+    }
+  } catch (error) {
+    console.error('Error incrementing offer view count:', error);
+  }
+};
+
+// ============================================
+// INTERESSES EM OFERTAS
+// ============================================
+
+export const getOfferInterests = async (): Promise<OfferInterest[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.OFFER_INTERESTS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting offer interests:', error);
+    return [];
+  }
+};
+
+export const getInterestsByOffer = async (offerId: string): Promise<OfferInterest[]> => {
+  try {
+    const interests = await getOfferInterests();
+    return interests.filter((i) => i.offerId === offerId);
+  } catch (error) {
+    console.error('Error getting interests by offer:', error);
+    return [];
+  }
+};
+
+export const getInterestsByProducer = async (producerId: string): Promise<OfferInterest[]> => {
+  try {
+    const interests = await getOfferInterests();
+    return interests.filter((i) => i.producerId === producerId);
+  } catch (error) {
+    console.error('Error getting interests by producer:', error);
+    return [];
+  }
+};
+
+export const createOfferInterest = async (
+  interest: Omit<OfferInterest, 'id' | 'status' | 'createdAt'>
+): Promise<OfferInterest> => {
+  try {
+    const interests = await getOfferInterests();
+    const existingInterest = interests.find(
+      (i) => i.offerId === interest.offerId && i.producerId === interest.producerId
+    );
+    if (existingInterest) {
+      throw new Error('Voce ja demonstrou interesse nesta oferta');
+    }
+    const newInterest: OfferInterest = {
+      ...interest,
+      id: generateId(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.OFFER_INTERESTS, JSON.stringify([...interests, newInterest]));
+    
+    // Incrementar contador de interesses na oferta
+    const offer = await getServiceOfferById(interest.offerId);
+    if (offer) {
+      await updateServiceOffer(interest.offerId, { interestCount: (offer.interestCount || 0) + 1 });
+    }
+    
+    return newInterest;
+  } catch (error) {
+    console.error('Error creating offer interest:', error);
+    throw error;
+  }
+};
+
+export const updateOfferInterest = async (
+  interestId: string,
+  updates: Partial<OfferInterest>
+): Promise<OfferInterest | null> => {
+  try {
+    const interests = await getOfferInterests();
+    const index = interests.findIndex((i) => i.id === interestId);
+    if (index === -1) return null;
+    interests[index] = { ...interests[index], ...updates };
+    await AsyncStorage.setItem(STORAGE_KEYS.OFFER_INTERESTS, JSON.stringify(interests));
+    return interests[index];
+  } catch (error) {
+    console.error('Error updating offer interest:', error);
+    return null;
+  }
+};
+
+// ============================================
+// PRESETS DE CARDS
+// ============================================
+
+export const getCardPresets = async (userId: string): Promise<CardPreset[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CARD_PRESETS);
+    const allPresets: CardPreset[] = data ? JSON.parse(data) : [];
+    return allPresets.filter((p) => p.userId === userId);
+  } catch (error) {
+    console.error('Error getting card presets:', error);
+    return [];
+  }
+};
+
+export const createCardPreset = async (
+  preset: Omit<CardPreset, 'id' | 'createdAt'>
+): Promise<CardPreset> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CARD_PRESETS);
+    const allPresets: CardPreset[] = data ? JSON.parse(data) : [];
+    const newPreset: CardPreset = {
+      ...preset,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.CARD_PRESETS, JSON.stringify([...allPresets, newPreset]));
+    return newPreset;
+  } catch (error) {
+    console.error('Error creating card preset:', error);
+    throw error;
+  }
+};
+
+export const deleteCardPreset = async (presetId: string): Promise<boolean> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CARD_PRESETS);
+    const allPresets: CardPreset[] = data ? JSON.parse(data) : [];
+    const filtered = allPresets.filter((p) => p.id !== presetId);
+    await AsyncStorage.setItem(STORAGE_KEYS.CARD_PRESETS, JSON.stringify(filtered));
+    return true;
+  } catch (error) {
+    console.error('Error deleting card preset:', error);
+    return false;
+  }
+};
+
+// ============================================
+// PREFERENCIAS DO USUARIO
+// ============================================
+
+export const getUserPreferences = async (userId: string): Promise<UserPreferences | null> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
+    const allPrefs: UserPreferences[] = data ? JSON.parse(data) : [];
+    return allPrefs.find((p) => p.userId === userId) || null;
+  } catch (error) {
+    console.error('Error getting user preferences:', error);
+    return null;
+  }
+};
+
+export const updateUserPreferences = async (
+  userId: string,
+  updates: Partial<UserPreferences>
+): Promise<UserPreferences> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
+    const allPrefs: UserPreferences[] = data ? JSON.parse(data) : [];
+    const index = allPrefs.findIndex((p) => p.userId === userId);
+    
+    const defaultPrefs: UserPreferences = {
+      userId,
+      preferredServiceTypes: [],
+      preferredRadius: 50,
+      notificationPreferences: {
+        newMatches: true,
+        newOffers: true,
+        newDemands: true,
+        priceChanges: true,
+      },
+      updatedAt: new Date().toISOString(),
+    };
+    
+    if (index === -1) {
+      const newPrefs = { ...defaultPrefs, ...updates, userId, updatedAt: new Date().toISOString() };
+      allPrefs.push(newPrefs);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, JSON.stringify(allPrefs));
+      return newPrefs;
+    } else {
+      allPrefs[index] = { ...allPrefs[index], ...updates, updatedAt: new Date().toISOString() };
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, JSON.stringify(allPrefs));
+      return allPrefs[index];
+    }
+  } catch (error) {
+    console.error('Error updating user preferences:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// MATCHES DE CARDS
+// ============================================
+
+export const getCardMatches = async (): Promise<CardMatch[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CARD_MATCHES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting card matches:', error);
+    return [];
+  }
+};
+
+export const getMatchesByUser = async (userId: string): Promise<CardMatch[]> => {
+  try {
+    const matches = await getCardMatches();
+    return matches.filter((m) => m.producerId === userId || m.workerId === userId);
+  } catch (error) {
+    console.error('Error getting matches by user:', error);
+    return [];
+  }
+};
+
+export const createCardMatch = async (
+  match: Omit<CardMatch, 'id' | 'matchedAt' | 'status' | 'chatMessages'>
+): Promise<CardMatch> => {
+  try {
+    const matches = await getCardMatches();
+    const newMatch: CardMatch = {
+      ...match,
+      id: generateId(),
+      matchedAt: new Date().toISOString(),
+      status: 'pending_negotiation',
+      chatMessages: [],
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.CARD_MATCHES, JSON.stringify([...matches, newMatch]));
+    return newMatch;
+  } catch (error) {
+    console.error('Error creating card match:', error);
+    throw error;
+  }
+};
+
+export const updateCardMatch = async (
+  matchId: string,
+  updates: Partial<CardMatch>
+): Promise<CardMatch | null> => {
+  try {
+    const matches = await getCardMatches();
+    const index = matches.findIndex((m) => m.id === matchId);
+    if (index === -1) return null;
+    matches[index] = { ...matches[index], ...updates };
+    await AsyncStorage.setItem(STORAGE_KEYS.CARD_MATCHES, JSON.stringify(matches));
+    return matches[index];
+  } catch (error) {
+    console.error('Error updating card match:', error);
+    return null;
+  }
+};
+
+export const addChatMessage = async (
+  matchId: string,
+  message: Omit<ChatMessage, 'id' | 'createdAt' | 'read'>
+): Promise<ChatMessage> => {
+  try {
+    const matches = await getCardMatches();
+    const index = matches.findIndex((m) => m.id === matchId);
+    if (index === -1) throw new Error('Match nao encontrado');
+    
+    const newMessage: ChatMessage = {
+      ...message,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    
+    const chatMessages = matches[index].chatMessages || [];
+    matches[index].chatMessages = [...chatMessages, newMessage];
+    matches[index].status = 'negotiating';
+    
+    await AsyncStorage.setItem(STORAGE_KEYS.CARD_MATCHES, JSON.stringify(matches));
+    return newMessage;
+  } catch (error) {
+    console.error('Error adding chat message:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// UTILITARIOS DE DISTANCIA
+// ============================================
+
+export const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Raio da Terra em km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+export const filterByDistance = <T extends { latitude?: number; longitude?: number }>(
+  items: T[],
+  centerLat: number,
+  centerLon: number,
+  radiusKm: number
+): T[] => {
+  return items.filter((item) => {
+    if (!item.latitude || !item.longitude) return true; // Se nao tem coordenadas, inclui
+    const distance = calculateDistance(centerLat, centerLon, item.latitude, item.longitude);
+    return distance <= radiusKm;
+  });
 };

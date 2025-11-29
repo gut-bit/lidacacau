@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, FlatList } from 'react-native';
+import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, FlatList, Platform, ActionSheetIOS } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import { SocialLinksDisplay } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
+import { shareCard, copyCardLink } from '@/utils/sharing';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, Bid, User, WorkOrder, WorkOrderWithDetails } from '@/types';
 import {
@@ -25,6 +26,7 @@ import {
   getWorkOrderByJobId,
   updateWorkOrder,
   getBidsByWorker,
+  deleteJob,
 } from '@/utils/storage';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import {
@@ -231,6 +233,111 @@ export default function JobDetailScreen() {
     );
   };
 
+  const handleShare = async (method: 'whatsapp' | 'system' | 'copy') => {
+    if (!job) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    if (method === 'copy') {
+      const success = await copyCardLink('demand', job.id);
+      if (success) {
+        Alert.alert('Copiado!', 'Link copiado para a area de transferencia');
+      } else {
+        Alert.alert('Erro', 'Nao foi possivel copiar o link');
+      }
+      return;
+    }
+    
+    const success = await shareCard('demand', job, producer?.name, method);
+    if (!success && method === 'whatsapp') {
+      Alert.alert('Erro', 'Nao foi possivel compartilhar via WhatsApp. Tente pelo botao de compartilhar.');
+    }
+  };
+
+  const showShareOptions = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancelar', 'WhatsApp', 'Compartilhar', 'Copiar Link'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) handleShare('whatsapp');
+          else if (buttonIndex === 2) handleShare('system');
+          else if (buttonIndex === 3) handleShare('copy');
+        }
+      );
+    } else {
+      Alert.alert(
+        'Compartilhar',
+        'Como deseja compartilhar esta demanda?',
+        [
+          { text: 'WhatsApp', onPress: () => handleShare('whatsapp') },
+          { text: 'Outros', onPress: () => handleShare('system') },
+          { text: 'Copiar Link', onPress: () => handleShare('copy') },
+          { text: 'Cancelar', style: 'cancel' },
+        ]
+      );
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    Alert.alert(
+      'Excluir Demanda',
+      'Tem certeza que deseja excluir esta demanda? Esta acao nao pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const deleted = await deleteJob(jobId);
+              if (deleted) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                Alert.alert('Sucesso', 'Demanda excluida com sucesso!');
+                navigation.goBack();
+              } else {
+                throw new Error('Falha ao excluir');
+              }
+            } catch (error) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert('Erro', 'Nao foi possivel excluir a demanda');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const showOwnerOptions = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancelar', 'Compartilhar', 'Excluir Demanda'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) showShareOptions();
+          else if (buttonIndex === 2) handleDeleteJob();
+        }
+      );
+    } else {
+      Alert.alert(
+        'Opcoes',
+        'O que deseja fazer?',
+        [
+          { text: 'Compartilhar', onPress: showShareOptions },
+          { text: 'Excluir Demanda', style: 'destructive', onPress: handleDeleteJob },
+          { text: 'Cancelar', style: 'cancel' },
+        ]
+      );
+    }
+  };
+
+  const isOwner = user?.id === job?.producerId;
+
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -263,18 +370,34 @@ export default function JobDetailScreen() {
                 {formatQuantityWithUnit(job.quantity, serviceType?.unit || '')}
               </ThemedText>
             </View>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(job.status, colors) + '20' },
-              ]}
-            >
-              <ThemedText
-                type="small"
-                style={{ color: getStatusColor(job.status, colors), fontWeight: '600' }}
+            <View style={styles.headerActions}>
+              <Pressable
+                style={[styles.shareButton, { backgroundColor: colors.primary + '20' }]}
+                onPress={showShareOptions}
               >
-                {getStatusLabel(job.status)}
-              </ThemedText>
+                <Feather name="share-2" size={18} color={colors.primary} />
+              </Pressable>
+              {isOwner && (
+                <Pressable
+                  style={[styles.optionsButton, { backgroundColor: colors.error + '20' }]}
+                  onPress={showOwnerOptions}
+                >
+                  <Feather name="more-vertical" size={18} color={colors.error} />
+                </Pressable>
+              )}
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(job.status, colors) + '20' },
+                ]}
+              >
+                <ThemedText
+                  type="small"
+                  style={{ color: getStatusColor(job.status, colors), fontWeight: '600' }}
+                >
+                  {getStatusLabel(job.status)}
+                </ThemedText>
+              </View>
             </View>
           </View>
 
@@ -645,6 +768,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  shareButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailsSection: {
     gap: Spacing.sm,

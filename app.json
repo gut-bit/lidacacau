@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Empleitapp",
-    "slug": "comempleitappapp",
+    "name": "LidaCacau",
+    "slug": "lidacacau",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "empleitapp",
+    "scheme": "lidacacau",
     "userInterfaceStyle": "automatic",
     "sdkVersion": "54.0.0",
     "updates": {
@@ -18,7 +18,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.empleitapp.app",
+      "bundleIdentifier": "com.lidacacau.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
         "NSLocationAlwaysUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
@@ -27,9 +27,9 @@
       }
     },
     "android": {
-      "package": "com.empleitapp.app",
+      "package": "com.lidacacau.app",
       "adaptiveIcon": {
-        "backgroundColor": "#2D5016",
+        "backgroundColor": "#4E342E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -56,7 +56,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#2D5016",
+          "backgroundColor": "#4E342E",
           "dark": {
             "backgroundColor": "#1F2123"
           }

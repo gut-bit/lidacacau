@@ -2,55 +2,57 @@ import { Platform } from "react-native";
 
 export const Colors = {
   light: {
-    text: "#212529",
-    textSecondary: "#6C757D",
+    text: "#3E2723",
+    textSecondary: "#6D4C41",
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6C757D",
-    tabIconSelected: "#2D5016",
-    link: "#2D5016",
-    backgroundRoot: "#F5F5F5",
+    tabIconDefault: "#6D4C41",
+    tabIconSelected: "#4E342E",
+    link: "#2E7D32",
+    backgroundRoot: "#FAFAFA",
     backgroundDefault: "#FFFFFF",
-    backgroundSecondary: "#E6E6E6",
-    backgroundTertiary: "#D9D9D9",
-    border: "#DEE2E6",
-    primary: "#2D5016",
-    primaryLight: "#4A7C2C",
-    secondary: "#8B4513",
-    accent: "#FFB800",
-    success: "#28A745",
-    warning: "#FFC107",
-    error: "#DC3545",
+    backgroundSecondary: "#F5F5F5",
+    backgroundTertiary: "#EEEEEE",
+    border: "#D7CCC8",
+    primary: "#4E342E",
+    primaryLight: "#6D4C41",
+    secondary: "#2E7D32",
+    accent: "#FBC02D",
+    success: "#43A047",
+    warning: "#FBC02D",
+    error: "#D32F2F",
     card: "#FFFFFF",
+    handshake: "#43A047",
   },
   dark: {
-    text: "#ECEDEE",
-    textSecondary: "#9BA1A6",
+    text: "#EFEBE9",
+    textSecondary: "#BCAAA4",
     buttonText: "#FFFFFF",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: "#4A7C2C",
-    link: "#4A7C2C",
+    tabIconDefault: "#BCAAA4",
+    tabIconSelected: "#8D6E63",
+    link: "#81C784",
     backgroundRoot: "#1F2123",
     backgroundDefault: "#2A2C2E",
     backgroundSecondary: "#353739",
     backgroundTertiary: "#404244",
-    border: "#404244",
-    primary: "#4A7C2C",
-    primaryLight: "#5A9C3C",
-    secondary: "#A0522D",
-    accent: "#FFB800",
-    success: "#28A745",
-    warning: "#FFC107",
-    error: "#DC3545",
+    border: "#5D4037",
+    primary: "#6D4C41",
+    primaryLight: "#8D6E63",
+    secondary: "#43A047",
+    accent: "#FBC02D",
+    success: "#43A047",
+    warning: "#FBC02D",
+    error: "#EF5350",
     card: "#2A2C2E",
+    handshake: "#66BB6A",
   },
 };
 
 export const LevelColors = {
-  N1: "#6C757D",
-  N2: "#28A745",
-  N3: "#007BFF",
-  N4: "#6610F2",
-  N5: "#FFD700",
+  N1: "#6D4C41",
+  N2: "#43A047",
+  N3: "#1976D2",
+  N4: "#7B1FA2",
+  N5: "#FBC02D",
 };
 
 export const ServiceIcons: Record<string, string> = {
@@ -61,6 +63,14 @@ export const ServiceIcons: Record<string, string> = {
   aplicacao: "droplet",
   trator: "truck",
   motorista: "navigation",
+  pedreiro: "home",
+  eletricista: "zap",
+  encanador: "droplet",
+  serralheiro: "tool",
+  pintor: "edit-3",
+  carpinteiro: "layers",
+  jardineiro: "feather",
+  soldador: "settings",
 };
 
 export const Spacing = {
@@ -75,16 +85,17 @@ export const Spacing = {
   "5xl": 48,
   inputHeight: 56,
   buttonHeight: 58,
+  touchTarget: 48,
 };
 
 export const BorderRadius = {
   xs: 8,
   sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 30,
-  "2xl": 40,
-  "3xl": 50,
+  md: 16,
+  lg: 20,
+  xl: 24,
+  "2xl": 32,
+  "3xl": 40,
   full: 9999,
 };
 
@@ -92,56 +103,60 @@ export const Typography = {
   h1: {
     fontSize: 32,
     fontWeight: "700" as const,
+    fontFamily: "Rubik_700Bold",
   },
   h2: {
     fontSize: 26,
     fontWeight: "600" as const,
+    fontFamily: "Rubik_600SemiBold",
   },
   h3: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "600" as const,
+    fontFamily: "Rubik_600SemiBold",
   },
   h4: {
     fontSize: 18,
     fontWeight: "600" as const,
+    fontFamily: "Rubik_600SemiBold",
   },
   body: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "400" as const,
+    fontFamily: "Rubik_400Regular",
   },
   small: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "400" as const,
+    fontFamily: "Rubik_400Regular",
   },
   link: {
-    fontSize: 17,
-    fontWeight: "400" as const,
+    fontSize: 18,
+    fontWeight: "500" as const,
+    fontFamily: "Rubik_500Medium",
   },
   caption: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "400" as const,
+    fontFamily: "Rubik_400Regular",
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    sans: "system-ui",
-    serif: "ui-serif",
-    rounded: "ui-rounded",
-    mono: "ui-monospace",
+    sans: "Rubik_400Regular",
+    semibold: "Rubik_600SemiBold",
+    bold: "Rubik_700Bold",
   },
   default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
+    sans: "Rubik_400Regular",
+    semibold: "Rubik_600SemiBold",
+    bold: "Rubik_700Bold",
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    sans: "'Rubik', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    semibold: "'Rubik', system-ui, sans-serif",
+    bold: "'Rubik', system-ui, sans-serif",
   },
 });
 
@@ -160,3 +175,8 @@ export const Shadows = {
   },
 };
 
+export const AppConfig = {
+  name: "LidaCacau",
+  tagline: "Confianca de quem e da Lida",
+  region: "Uruara/PA",
+};

@@ -122,3 +122,42 @@ Empleitapp is a mobile marketplace application (Expo React Native) designed to c
     - Navegação disponível clicando em nomes de trabalhadores/produtores no JobDetailScreen
     - Nomes clicáveis aparecem em cor de link com ícone de "external-link"
 -   **Rotas adicionadas**: `OtherUserProfile: { userId: string }` em RootStackParamList
+
+## Card System (Nov 2025)
+Sistema robusto de cards para demandas e ofertas com design visual distinto e UX simplificada para trabalhadores rurais.
+
+### Tipos e Estrutura
+-   **ServiceOffer**: Card de oferta de serviço do trabalhador (id, workerId, serviceTypeIds, description, prices, extras, status, location, etc.)
+-   **OfferInterest**: Manifestação de interesse em uma oferta (id, offerId, producerId, message, status)
+-   **CardExtra**: Opções adicionais dos cards (food, accommodation, transport, logistics, custom conditions)
+-   **CardPreset**: Templates salvos para criação rápida de cards
+-   **CardMatch**: Registro de match entre demanda e oferta
+-   **UserPreferences**: Preferências do usuário para algoritmo de exibição (serviceTypeIds, radiusKm, showDemands, showOffers)
+
+### Cores e Visual
+-   **Demandas (Produtor busca trabalhador)**: Verde (#2D5016) com ícone de lupa
+-   **Ofertas (Trabalhador oferece serviço)**: Azul (#1E90FF) com ícone de maleta
+-   Cards possuem borda lateral colorida para fácil identificação visual
+
+### Telas
+-   `/screens/shared/CreateCardScreen.tsx` - Tela unificada para criar demandas/ofertas com:
+    - Animação de joinha ao criar card
+    - Seleção de múltiplos tipos de serviço
+    - Configuração de preço (por dia, hora ou unidade)
+    - Opções de extras (alimentação, hospedagem, transporte, etc.)
+    - Sistema de presets para salvar templates
+    - Validação de campos obrigatórios
+-   **UnifiedHomeScreen.tsx aprimorada**:
+    - FAB (Floating Action Button) colorido por papel ativo
+    - Sistema de filtros: Todos, Demandas, Ofertas, distância (10/25/50/100km)
+    - Exibição de cards de oferta para produtores
+    - Swipeable job cards para trabalhadores
+
+### Storage
+-   `createOffer`, `getOffers`, `updateOffer` - CRUD de ofertas
+-   `createOfferInterest`, `acceptOfferInterest` - Sistema de interesse
+-   `saveCardPreset`, `getCardPresets`, `deleteCardPreset` - Presets de cards
+-   `getUserPreferences`, `updateUserPreferences` - Preferências do usuário
+
+### Navegação
+-   Rota `CreateCard: { type: 'demand' | 'offer' }` adicionada ao RootStackParamList

@@ -4,6 +4,9 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
+  Linking,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,6 +29,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { User } from '@/types';
+import { SocialLinksDisplay } from '@/components/SocialLinks';
 
 const { width, height } = Dimensions.get('window');
 
@@ -168,6 +172,45 @@ export default function NegotiationMatchScreen() {
     navigation.goBack();
   };
 
+  const handleWhatsApp = async (user: User) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const phone = user.socialLinks?.whatsapp || user.phone;
+    if (!phone) {
+      Alert.alert('Sem contato', 'Este usuario nao possui telefone cadastrado.');
+      return;
+    }
+    
+    let cleanPhone = phone.replace(/\D/g, '');
+    
+    if (!cleanPhone) {
+      Alert.alert('Numero invalido', 'O numero de telefone informado nao e valido.');
+      return;
+    }
+    
+    if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
+    } else if (cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+      cleanPhone = '55' + cleanPhone;
+    } else if (cleanPhone.length < 10) {
+      Alert.alert('Numero incompleto', 'O numero de telefone parece estar incompleto. Verifique e tente novamente.');
+      return;
+    }
+    
+    const message = encodeURIComponent(`Ola ${user.name.split(' ')[0]}! Vi que fechamos acordo no Empleitapp para ${serviceName}. Vamos conversar?`);
+    const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${message}`;
+    
+    try {
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        Alert.alert('WhatsApp nao encontrado', 'Nao foi possivel abrir o WhatsApp. Verifique se o aplicativo esta instalado no seu dispositivo.');
+      }
+    } catch (error) {
+      Alert.alert('Erro ao abrir', 'Ocorreu um erro ao tentar abrir o WhatsApp. Tente novamente.');
+    }
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -274,11 +317,64 @@ export default function NegotiationMatchScreen() {
           </View>
         </Animated.View>
 
+        <Animated.View style={[styles.contactSection, detailsStyle]}>
+          <ThemedText type="small" style={[styles.contactTitle, { color: colors.textSecondary }]}>
+            Contato Rapido
+          </ThemedText>
+          <View style={styles.contactButtons}>
+            <Pressable
+              style={[styles.whatsappButton, { backgroundColor: '#25D366' }]}
+              onPress={() => handleWhatsApp(isProducer ? worker : producer)}
+            >
+              <Feather name="message-circle" size={18} color="#FFFFFF" />
+              <ThemedText type="small" style={styles.whatsappText}>
+                Falar com {isProducer ? worker.name.split(' ')[0] : producer.name.split(' ')[0]}
+              </ThemedText>
+            </Pressable>
+          </View>
+          {(worker.socialLinks || producer.socialLinks) && (
+            <View style={styles.socialLinksRow}>
+              <ThemedText type="small" style={{ color: colors.textSecondary, marginBottom: Spacing.xs }}>
+                Redes Sociais
+              </ThemedText>
+              <SocialLinksDisplay 
+                socialLinks={(isProducer ? worker : producer).socialLinks || {}} 
+              />
+            </View>
+          )}
+        </Animated.View>
+
         <Animated.View style={[styles.negotiationPrompt, detailsStyle]}>
           <Feather name="file-text" size={20} color={colors.accent} />
           <ThemedText type="body" style={[styles.promptText, { color: colors.text }]}>
             Defina os termos e assine o contrato
           </ThemedText>
+        </Animated.View>
+
+        <Animated.View style={[styles.tipsSection, detailsStyle]}>
+          <ThemedText type="small" style={[styles.tipTitle, { color: colors.success }]}>
+            Dicas para um bom acordo:
+          </ThemedText>
+          <View style={styles.tipsList}>
+            <View style={styles.tipItem}>
+              <Feather name="check-circle" size={12} color={colors.success} />
+              <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }}>
+                Combine o pagamento antes de comecar
+              </ThemedText>
+            </View>
+            <View style={styles.tipItem}>
+              <Feather name="check-circle" size={12} color={colors.success} />
+              <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }}>
+                Confirme horarios e local pelo WhatsApp
+              </ThemedText>
+            </View>
+            <View style={styles.tipItem}>
+              <Feather name="check-circle" size={12} color={colors.success} />
+              <ThemedText type="small" style={{ color: colors.textSecondary, flex: 1 }}>
+                Assine o contrato para garantir seus direitos
+              </ThemedText>
+            </View>
+          </View>
         </Animated.View>
 
         <Animated.View style={[styles.buttonsContainer, buttonStyle]}>
@@ -467,5 +563,53 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
+  },
+  contactSection: {
+    width: '100%',
+    marginBottom: Spacing.lg,
+  },
+  contactTitle: {
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  contactButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.md,
+  },
+  whatsappButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.sm,
+  },
+  whatsappText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  socialLinksRow: {
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  tipsSection: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  tipTitle: {
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
+  },
+  tipsList: {
+    gap: Spacing.xs,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
   },
 });

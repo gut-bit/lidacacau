@@ -600,3 +600,344 @@ export interface ContractHistoryItem {
   status: 'pending' | 'signed' | 'completed' | 'cancelled';
   savedAt: string;
 }
+
+// ============================================
+// SISTEMA DE CARDS DE DEMANDA E OFERTA
+// ============================================
+
+export type CardType = 'demand' | 'offer';
+export type CardVisibility = 'public' | 'private' | 'deleted';
+export type CardStatus = 'active' | 'matched' | 'completed' | 'expired' | 'cancelled';
+
+// Cores para distinguir visualmente Demanda vs Oferta
+export const CARD_COLORS = {
+  demand: {
+    primary: '#2D5016',    // Verde escuro - Produtor busca trabalhador
+    secondary: '#4A7C23',
+    background: '#E8F5E0',
+    icon: 'search',        // Icone de busca
+  },
+  offer: {
+    primary: '#1565C0',    // Azul - Trabalhador oferece servico
+    secondary: '#1976D2',
+    background: '#E3F2FD',
+    icon: 'hand',          // Icone de mao levantada
+  },
+};
+
+// Opcoes adicionais que podem ser incluidas no card
+export interface CardExtras {
+  providesFood?: boolean;           // Alimentacao inclusa
+  providesAccommodation?: boolean;  // Estadia inclusa
+  providesTransport?: boolean;      // Transporte incluso
+  transportCost?: number;           // Custo de transporte (se nao incluso)
+  directions?: string;              // Como chegar
+  toolsProvided?: boolean;          // Ferramentas fornecidas
+  customConditions?: string[];      // Condicoes personalizadas do usuario
+}
+
+// Oferta de servico (Trabalhador oferecendo seu trabalho)
+export interface ServiceOffer {
+  id: string;
+  workerId: string;
+  serviceTypeIds: string[];         // Pode oferecer multiplos servicos
+  pricePerUnit?: number;            // Preco por unidade
+  pricePerDay?: number;             // Diaria
+  pricePerHour?: number;            // Por hora
+  priceNegotiable: boolean;         // Preco negociavel
+  locationText: string;
+  latitude?: number;
+  longitude?: number;
+  availableRadius: number;          // Raio de atendimento em km
+  availability: string;             // Disponibilidade (ex: "Segunda a Sexta")
+  description: string;
+  photos?: string[];
+  extras?: CardExtras;
+  visibility: CardVisibility;
+  status: CardStatus;
+  viewCount: number;
+  interestCount: number;            // Quantos produtores demonstraram interesse
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
+}
+
+// Interesse em uma oferta (Produtor interessado em trabalhador)
+export interface OfferInterest {
+  id: string;
+  offerId: string;
+  producerId: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+}
+
+// Card unificado para o feed (pode ser Demanda ou Oferta)
+export interface FeedCard {
+  id: string;
+  type: CardType;
+  title: string;
+  subtitle: string;
+  serviceTypes: string[];
+  price: number;
+  priceLabel: string;
+  location: string;
+  distance?: number;                // Distancia do usuario em km
+  latitude?: number;
+  longitude?: number;
+  photos?: string[];
+  extras?: CardExtras;
+  ownerName: string;
+  ownerId: string;
+  ownerAvatar?: string;
+  ownerLevel?: number;
+  ownerRating?: number;
+  ownerVerified?: boolean;
+  status: CardStatus;
+  interactionCount: number;         // Propostas ou interesses
+  createdAt: string;
+  originalData: Job | ServiceOffer; // Dados originais
+}
+
+// Preset de card salvo pelo usuario
+export interface CardPreset {
+  id: string;
+  userId: string;
+  name: string;
+  type: CardType;
+  serviceTypeIds: string[];
+  defaultPrice?: number;
+  defaultLocation?: string;
+  defaultDescription?: string;
+  defaultExtras?: CardExtras;
+  createdAt: string;
+}
+
+// Preferencias do usuario para algoritmo de recomendacao
+export interface UserPreferences {
+  userId: string;
+  preferredServiceTypes: string[];  // Tipos de servico mais importantes
+  preferredRadius: number;          // Raio de busca preferido
+  minPrice?: number;
+  maxPrice?: number;
+  preferredPaymentTerms?: PaymentTermType[];
+  notificationPreferences: {
+    newMatches: boolean;
+    newOffers: boolean;
+    newDemands: boolean;
+    priceChanges: boolean;
+  };
+  updatedAt: string;
+}
+
+// Filtros para o feed
+export interface FeedFilters {
+  type?: CardType | 'all';
+  serviceTypeIds?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  radius?: number;                  // Raio em km
+  region?: string;                  // Nome da regiao
+  municipality?: string;            // Municipio
+  sortBy: 'date' | 'distance' | 'price' | 'relevance';
+  showOnlyWithExtras?: boolean;
+}
+
+// Regioes pre-definidas de Uruara
+export const URUARA_REGIONS = [
+  { id: 'vila_alvorada', name: 'Vila Alvorada (Km 140)', latitude: -3.68, longitude: -53.72 },
+  { id: 'centro', name: 'Centro de Uruara', latitude: -3.7167, longitude: -53.7333 },
+  { id: 'km_120', name: 'Km 120', latitude: -3.65, longitude: -53.70 },
+  { id: 'km_160', name: 'Km 160', latitude: -3.71, longitude: -53.75 },
+  { id: 'km_180', name: 'Km 180', latitude: -3.74, longitude: -53.78 },
+];
+
+// Match entre Demanda e Oferta
+export interface CardMatch {
+  id: string;
+  demandId?: string;                // Job ID (se veio de demanda)
+  offerId?: string;                 // ServiceOffer ID (se veio de oferta)
+  producerId: string;
+  workerId: string;
+  matchedAt: string;
+  status: 'pending_negotiation' | 'negotiating' | 'agreed' | 'cancelled';
+  chatMessages?: ChatMessage[];
+  agreedPrice?: number;
+  agreedTerms?: PaymentTerms;
+}
+
+// Mensagem de chat na negociacao
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderRole: 'producer' | 'worker';
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
+// ==========================================
+// SISTEMA "AMIGOS DO CAMPO" - DAR A MAO
+// ==========================================
+
+export type FriendshipStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface FriendConnection {
+  id: string;
+  requesterId: string;          // Quem deu a mao
+  receiverId: string;           // Quem recebeu o convite
+  status: FriendshipStatus;
+  message?: string;             // Mensagem opcional no convite
+  createdAt: string;
+  acceptedAt?: string;
+}
+
+export interface FriendWithUser extends FriendConnection {
+  friend: User;                 // Dados do amigo (o outro usuario)
+}
+
+// ==========================================
+// SISTEMA DE CHAT ENTRE USUARIOS
+// ==========================================
+
+export interface ChatRoom {
+  id: string;
+  participantIds: string[];     // IDs dos 2 usuarios
+  lastMessage?: string;
+  lastMessageAt?: string;
+  lastMessageSenderId?: string;
+  unreadCount: Record<string, number>;  // Contagem por usuario
+  createdAt: string;
+}
+
+export interface ChatRoomWithDetails extends ChatRoom {
+  otherUser: User;              // O outro participante
+  messages: DirectMessage[];
+}
+
+export interface DirectMessage {
+  id: string;
+  roomId: string;
+  senderId: string;
+  content: string;
+  type: 'text' | 'image' | 'audio';
+  imageUri?: string;
+  audioUri?: string;
+  read: boolean;
+  createdAt: string;
+}
+
+// ==========================================
+// SISTEMA DE PRESENCA E ATIVIDADE
+// ==========================================
+
+export interface UserPresence {
+  userId: string;
+  lastActive: string;           // ISO timestamp
+  isOnline: boolean;
+  currentScreen?: string;       // Tela atual (para analytics)
+}
+
+export interface ActiveUsersStats {
+  totalUsers: number;
+  activeNow: number;            // Ativos nos ultimos 5 min
+  activeToday: number;          // Ativos hoje
+  activeThisWeek: number;       // Ativos esta semana
+  byRole: {
+    producers: { total: number; active: number };
+    workers: { total: number; active: number };
+  };
+  byRegion?: Record<string, { total: number; active: number }>;
+}
+
+// ==========================================
+// SISTEMA DE ANALYTICS E LOGS
+// ==========================================
+
+export type AnalyticsEventType = 
+  | 'app_open'
+  | 'login'
+  | 'logout'
+  | 'signup'
+  | 'card_created'
+  | 'card_viewed'
+  | 'bid_sent'
+  | 'bid_accepted'
+  | 'friend_request_sent'
+  | 'friend_request_accepted'
+  | 'chat_message_sent'
+  | 'profile_viewed'
+  | 'search_performed'
+  | 'filter_changed'
+  | 'tutorial_step_completed'
+  | 'error_occurred';
+
+export interface AnalyticsEvent {
+  id: string;
+  userId?: string;
+  eventType: AnalyticsEventType;
+  eventData?: Record<string, unknown>;
+  screen?: string;
+  timestamp: string;
+  sessionId?: string;
+  deviceInfo?: {
+    platform: 'ios' | 'android' | 'web';
+    version?: string;
+  };
+}
+
+export interface AnalyticsSession {
+  id: string;
+  userId?: string;
+  startedAt: string;
+  endedAt?: string;
+  events: AnalyticsEvent[];
+  screens: string[];
+}
+
+// ==========================================
+// TUTORIAL MELHORADO
+// ==========================================
+
+export interface TutorialStep {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  action?: string;              // Acao para executar
+  targetScreen?: string;        // Tela para navegar
+  forRole?: UserRole;           // Se especifico para um papel
+}
+
+export interface TutorialProgress {
+  userId: string;
+  completedSteps: string[];
+  currentStep: number;
+  startedAt: string;
+  completedAt?: string;
+}
+
+// ==========================================
+// PESQUISA DE USUARIOS
+// ==========================================
+
+export interface UserSearchFilters {
+  query?: string;               // Busca por nome
+  role?: UserRole;
+  serviceTypeIds?: string[];
+  region?: string;
+  municipality?: string;
+  minLevel?: number;
+  maxDistance?: number;         // Em km
+  onlyVerified?: boolean;
+  onlyOnline?: boolean;
+  sortBy: 'name' | 'rating' | 'distance' | 'level';
+}
+
+export interface UserSearchResult {
+  user: User;
+  distance?: number;            // Distancia em km
+  isFriend: boolean;
+  pendingRequest: boolean;      // Se tem pedido de amizade pendente
+  mutualFriends?: number;
+}

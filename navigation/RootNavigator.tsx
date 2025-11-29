@@ -8,6 +8,7 @@ import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
 import AdminStackNavigator from '@/navigation/AdminStackNavigator';
 import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
+import CreateCardScreen from '@/screens/shared/CreateCardScreen';
 import ProducerPropertiesScreen from '@/screens/producer/ProducerPropertiesScreen';
 import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
@@ -34,7 +35,7 @@ import CourseDetailScreen from '@/screens/education/CourseDetailScreen';
 import QuizScreen from '@/screens/education/QuizScreen';
 import OtherUserProfileScreen from '@/screens/shared/OtherUserProfileScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
-import { User } from '@/types';
+import { User, CardType } from '@/types';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -42,7 +43,9 @@ export type RootStackParamList = {
   MainTabs: undefined;
   AdminStack: undefined;
   JobDetail: { jobId: string };
+  OfferDetail: { offerId: string };
   CreateJob: undefined;
+  CreateCard: { type?: CardType };
   ProducerProperties: undefined;
   NFSe: undefined;
   ActiveWorkOrder: { workOrderId: string };
@@ -136,6 +139,11 @@ export default function RootNavigator() {
             name="CreateJob"
             component={CreateJobScreen}
             options={{ title: 'Nova Empreita', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="CreateCard"
+            component={CreateCardScreen}
+            options={{ title: 'Novo Anuncio', presentation: 'modal' }}
           />
           <Stack.Screen
             name="ProducerProperties"
