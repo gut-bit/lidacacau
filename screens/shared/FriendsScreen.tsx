@@ -24,6 +24,7 @@ import {
   getOrCreateChatRoom,
 } from '@/utils/storage';
 import { getLevelLabel } from '@/utils/format';
+import { trackEvent } from '@/utils/analytics';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 type TabType = 'friends' | 'received' | 'sent';
@@ -108,6 +109,7 @@ export default function FriendsScreen() {
     setActionLoading(connectionId);
     try {
       await acceptFriendRequest(connectionId);
+      await trackEvent('friend_request_accept', { connectionId });
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -123,6 +125,7 @@ export default function FriendsScreen() {
     setActionLoading(connectionId);
     try {
       await rejectFriendRequest(connectionId);
+      await trackEvent('friend_request_reject', { connectionId });
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
@@ -147,6 +150,7 @@ export default function FriendsScreen() {
             setActionLoading(connectionId);
             try {
               await removeFriend(connectionId);
+              await trackEvent('friend_remove', { connectionId });
               if (Platform.OS !== 'web') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
               }
@@ -167,7 +171,11 @@ export default function FriendsScreen() {
 
     try {
       const room = await getOrCreateChatRoom(user.id, friendId);
-      navigation.navigate('ChatRoom' as any, { roomId: room.id, otherUserId: friendId });
+      if (!room || !room.id) {
+        Alert.alert('Erro', 'Nao foi possivel criar a sala de conversa');
+        return;
+      }
+      navigation.navigate('ChatRoom', { roomId: room.id, otherUserId: friendId });
     } catch (error) {
       console.error('Error creating chat room:', error);
       Alert.alert('Erro', 'Nao foi possivel iniciar a conversa');
@@ -175,7 +183,7 @@ export default function FriendsScreen() {
   };
 
   const handleAddFriend = () => {
-    navigation.navigate('UserSearch' as any);
+    navigation.navigate('UserSearch');
   };
 
   const renderAvatar = (friend: User) => {

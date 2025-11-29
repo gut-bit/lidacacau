@@ -30,6 +30,7 @@ import {
   sendFriendRequest,
   getUserPresence,
 } from '@/utils/storage';
+import { trackEvent } from '@/utils/analytics';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 type FilterType = 'all' | 'producers' | 'workers' | 'verified' | 'online';
@@ -127,6 +128,7 @@ export default function UserSearchScreen() {
     setSendingRequest(targetUserId);
     try {
       await sendFriendRequest(user.id, targetUserId);
+      await trackEvent('friend_request_send', { targetUserId });
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -470,7 +472,7 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.full,
     minHeight: Spacing.touchTarget,
     justifyContent: 'center',

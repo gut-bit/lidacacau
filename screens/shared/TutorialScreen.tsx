@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Feather } from '@expo/vector-icons';
 import { updateUser, setCurrentUser } from '@/utils/storage';
+import { trackEvent } from '@/utils/analytics';
 
 interface TutorialCard {
   id: string;
@@ -103,18 +104,19 @@ export default function TutorialScreen({ onComplete }: { onComplete?: () => void
   };
 
   const completeTutorial = async () => {
-    if (user) {
-      try {
-        const updatedUser = { ...user, tutorialCompleted: true };
-        await updateUser(user.id, { tutorialCompleted: true });
-        await setCurrentUser(updatedUser);
-        setUser(updatedUser);
-        if (onComplete) {
-          onComplete();
-        }
-      } catch (error) {
-        console.error('Error completing tutorial:', error);
+    if (!user) return;
+    
+    try {
+      const updatedUser = { ...user, tutorialCompleted: true };
+      await updateUser(user.id, { tutorialCompleted: true });
+      await setCurrentUser(updatedUser);
+      setUser(updatedUser);
+      await trackEvent('tutorial_complete');
+      if (onComplete) {
+        onComplete();
       }
+    } catch (error) {
+      console.error('Error completing tutorial:', error);
     }
   };
 

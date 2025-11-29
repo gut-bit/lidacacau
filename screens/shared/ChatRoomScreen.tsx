@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { DirectMessage, User } from '@/types';
 import { getMessages, sendDirectMessage, markMessagesAsRead, getUserById } from '@/utils/storage';
+import { trackEvent } from '@/utils/analytics';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChatRoom'>;
@@ -29,7 +30,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ChatRoom'>;
 export default function ChatRoomScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<Props['route']>();
-  const { roomId, otherUserId } = route.params;
+  const { roomId, otherUserId } = route.params ?? {};
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
@@ -42,7 +43,11 @@ export default function ChatRoomScreen() {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
+  const hasValidParams = Boolean(roomId && otherUserId);
+
   const loadData = useCallback(async () => {
+    if (!roomId || !otherUserId) return;
+    
     try {
       const [loadedMessages, loadedUser] = await Promise.all([
         getMessages(roomId),
@@ -64,17 +69,19 @@ export default function ChatRoomScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [loadData])
+      if (hasValidParams) {
+        loadData();
+      }
+    }, [loadData, hasValidParams])
   );
 
   useEffect(() => {
-    if (otherUser) {
+    if (otherUser && hasValidParams) {
       navigation.setOptions({
         headerTitle: () => (
           <Pressable
             style={styles.headerTitle}
-            onPress={() => navigation.navigate('OtherUserProfile', { userId: otherUserId })}
+            onPress={() => navigation.navigate('OtherUserProfile', { userId: otherUserId! })}
           >
             {otherUser.avatar ? (
               <Image
@@ -97,7 +104,19 @@ export default function ChatRoomScreen() {
         ),
       });
     }
-  }, [otherUser, navigation, otherUserId, colors]);
+  }, [otherUser, navigation, otherUserId, colors, hasValidParams]);
+
+  if (!hasValidParams) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ThemedText type="body" style={{ color: colors.textSecondary }}>
+            Parametros de conversa invalidos
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
 
   const handleSend = async () => {
     if (!messageText.trim() || !user || sending) return;
@@ -108,6 +127,7 @@ export default function ChatRoomScreen() {
 
     try {
       const newMessage = await sendDirectMessage(roomId, user.id, text);
+      await trackEvent('chat_send', { roomId, messageLength: text.length });
       setMessages((prev) => [...prev, newMessage]);
       
       if (Platform.OS !== 'web') {
