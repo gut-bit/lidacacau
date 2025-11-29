@@ -180,3 +180,21 @@ export const AppConfig = {
   tagline: "Confianca de quem e da Lida",
   region: "Uruara/PA",
 };
+
+export const ShopColors = {
+  primary: '#5D4037',
+  primaryDark: '#3E2723',
+  secondary: '#2E7D32',
+  accent: '#D4A373',
+  cream: '#FDF8F0',
+  beige: '#F5F0E8',
+  cardBg: '#FFFFFF',
+  heroBg: '#4E342E',
+  categoryBg: '#3E7B3E',
+  categoryText: '#FFFFFF',
+  priceOriginal: '#9E9E9E',
+  priceDiscount: '#D32F2F',
+  priceFinal: '#2E7D32',
+  buttonBg: '#5D4037',
+  buttonText: '#FFFFFF',
+};
