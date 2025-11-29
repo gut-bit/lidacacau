@@ -263,11 +263,11 @@ export default function UnifiedProfileScreen() {
               />
             ) : (
               <ProfileAction
-                icon="home"
+                icon="map-pin"
                 title="Minhas Propriedades"
                 subtitle="Gerenciar propriedades"
-                color={colors.secondary}
-                onPress={() => navigation.navigate('ProducerProperties')}
+                color={colors.primary}
+                onPress={() => navigation.navigate('PropertyList')}
               />
             )}
           </View>

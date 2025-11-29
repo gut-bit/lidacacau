@@ -1084,6 +1084,199 @@ export interface SquadProposal {
   respondedAt?: string;
 }
 
+// ==========================================
+// SISTEMA DE PROPRIEDADES RURAIS
+// ==========================================
+
+export type PropertyVerificationStatus = 
+  | 'none'              // Sem verificacao
+  | 'pending'           // Documentos enviados, aguardando analise
+  | 'verified'          // Propriedade verificada com selo
+  | 'rejected';         // Documentos rejeitados
+
+export type TalhaoVisibility = 'public' | 'private';
+export type TalhaoPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+// Coordenada geografica simples
+export interface GeoCoordinate {
+  latitude: number;
+  longitude: number;
+}
+
+// Poligono geografico (array de coordenadas formando area fechada)
+export interface PolygonGeometry {
+  coordinates: GeoCoordinate[];
+  areaHectares?: number;         // Area calculada em hectares
+  perimeterKm?: number;          // Perimetro em km
+}
+
+// Tag de servico associada a um talhao
+export interface TalhaoServiceTag {
+  id: string;
+  serviceTypeId: string;
+  priority: TalhaoPriority;
+  estimatedCost?: number;
+  notes?: string;
+  status: 'pending' | 'scheduled' | 'in_progress' | 'completed';
+  dueDate?: string;
+  createdAt: string;
+}
+
+// Talhao - Subdivisao da propriedade
+export interface Talhao {
+  id: string;
+  propertyId: string;
+  name: string;                   // Ex: "Talhao 1", "Area do Cacau", etc
+  description?: string;
+  polygon?: PolygonGeometry;      // Poligono do talhao
+  areaHectares?: number;
+  cropType?: string;              // Tipo de cultivo (cacau, cafe, etc)
+  plantingDate?: string;          // Data do plantio
+  harvestDate?: string;           // Previsao de colheita
+  visibility: TalhaoVisibility;   // Publico ou privado
+  serviceTags: TalhaoServiceTag[]; // Tags de servico pendentes
+  photos?: string[];              // Fotos do talhao
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Documento da propriedade (CAR, escritura, etc)
+export interface PropertyDocument {
+  id: string;
+  propertyId: string;
+  type: 'car' | 'escritura' | 'geo_json' | 'kml' | 'shapefile' | 'other';
+  title: string;
+  description?: string;
+  fileUri: string;                // URI do arquivo
+  fileName: string;
+  fileSize?: number;              // Tamanho em bytes
+  mimeType?: string;
+  carNumber?: string;             // Numero do CAR (se aplicavel)
+  verificationStatus: PropertyVerificationStatus;
+  verifiedAt?: string;
+  rejectionReason?: string;
+  uploadedAt: string;
+}
+
+// Propriedade Rural Detalhada
+export interface PropertyDetail {
+  id: string;
+  ownerId: string;                // ID do produtor dono
+  name: string;                   // Nome da propriedade
+  description?: string;
+  
+  // Localizacao
+  address: string;                // Endereco completo
+  city?: string;
+  state?: string;
+  cep?: string;
+  latitude: number;
+  longitude: number;
+  
+  // Geometria
+  polygon?: PolygonGeometry;      // Poligono da propriedade inteira
+  areaHectares?: number;          // Area total
+  
+  // Subdivisoes
+  talhoes: Talhao[];              // Lista de talhoes
+  
+  // Documentacao
+  documents: PropertyDocument[];   // Documentos da propriedade
+  carNumber?: string;             // Numero do CAR principal
+  
+  // Verificacao
+  verificationStatus: PropertyVerificationStatus;
+  verificationBadge?: boolean;    // Selo de propriedade verificada
+  verifiedAt?: string;
+  
+  // Fotos
+  coverPhoto?: string;            // Foto de capa
+  photos?: string[];              // Galeria de fotos
+  
+  // Metadados para tokenizacao futura
+  registryCode?: string;          // Codigo de registro unico
+  blockchainRef?: string;         // Referencia blockchain (futuro)
+  carbonPotential?: number;       // Potencial de credito de carbono
+  certifications?: string[];      // Certificacoes (organico, etc)
+  
+  // Auditoria
+  createdAt: string;
+  updatedAt: string;
+  revisionHistory?: {
+    timestamp: string;
+    changeType: 'create' | 'update' | 'verify' | 'polygon_update';
+    changedBy: string;
+    details?: string;
+  }[];
+}
+
+// Propriedade com detalhes do dono
+export interface PropertyWithOwner extends PropertyDetail {
+  owner: User;
+}
+
+// Filtros para busca de propriedades
+export interface PropertySearchFilters {
+  ownerId?: string;
+  city?: string;
+  state?: string;
+  verified?: boolean;
+  hasCAR?: boolean;
+  minArea?: number;
+  maxArea?: number;
+  cropType?: string;
+  sortBy: 'name' | 'area' | 'date' | 'distance';
+}
+
+// Funcao auxiliar para calcular area de poligono (formula de Shoelace)
+export function calculatePolygonArea(coordinates: GeoCoordinate[]): number {
+  if (coordinates.length < 3) return 0;
+  
+  let area = 0;
+  const n = coordinates.length;
+  
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    // Conversao aproximada para metros (1 grau ~ 111km no equador)
+    const x1 = coordinates[i].longitude * 111320 * Math.cos(coordinates[i].latitude * Math.PI / 180);
+    const y1 = coordinates[i].latitude * 110540;
+    const x2 = coordinates[j].longitude * 111320 * Math.cos(coordinates[j].latitude * Math.PI / 180);
+    const y2 = coordinates[j].latitude * 110540;
+    
+    area += (x1 * y2) - (x2 * y1);
+  }
+  
+  // Area em metros quadrados, convertida para hectares (1 ha = 10000 m2)
+  return Math.abs(area / 2) / 10000;
+}
+
+// Constantes para tipos de documentos
+export const PROPERTY_DOCUMENT_TYPES = [
+  { id: 'car', label: 'CAR - Cadastro Ambiental Rural', icon: 'file-text' },
+  { id: 'escritura', label: 'Escritura / Matricula', icon: 'book' },
+  { id: 'geo_json', label: 'Arquivo GeoJSON', icon: 'map' },
+  { id: 'kml', label: 'Arquivo KML', icon: 'map-pin' },
+  { id: 'shapefile', label: 'Shapefile', icon: 'layers' },
+  { id: 'other', label: 'Outro documento', icon: 'paperclip' },
+] as const;
+
+// Tipos de cultivo comuns na regiao
+export const CROP_TYPES = [
+  { id: 'cacau', label: 'Cacau', icon: 'coffee' },
+  { id: 'cafe', label: 'Cafe', icon: 'coffee' },
+  { id: 'banana', label: 'Banana', icon: 'sun' },
+  { id: 'mandioca', label: 'Mandioca', icon: 'zap' },
+  { id: 'pimenta', label: 'Pimenta do Reino', icon: 'target' },
+  { id: 'gado', label: 'Pastagem/Gado', icon: 'box' },
+  { id: 'acai', label: 'Acai', icon: 'droplet' },
+  { id: 'cupuacu', label: 'Cupuacu', icon: 'circle' },
+  { id: 'reserva', label: 'Reserva Legal', icon: 'shield' },
+  { id: 'app', label: 'APP - Area de Preservacao', icon: 'feather' },
+  { id: 'mixed', label: 'Cultivo Misto', icon: 'grid' },
+  { id: 'other', label: 'Outro', icon: 'more-horizontal' },
+] as const;
+
 // Frases e trocadilhos da Lida
 export const LIDA_PHRASES = {
   welcome: [

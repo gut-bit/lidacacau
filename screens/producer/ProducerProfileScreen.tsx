@@ -44,7 +44,7 @@ export default function ProducerProfileScreen() {
     { icon: 'award', label: 'Clube LidaCacau', onPress: () => navigation.navigate('BenefitsClub'), color: colors.accent },
     { icon: 'file-text', label: 'Nota Fiscal Eletronica', onPress: () => navigation.navigate('NFSe') },
     { icon: 'clipboard', label: 'Modelo de Contrato', onPress: () => navigation.navigate('ContractTemplate', {}), color: colors.secondary },
-    { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('ProducerProperties') },
+    { icon: 'map-pin', label: 'Gerenciar Propriedades', onPress: () => navigation.navigate('PropertyList') },
     { icon: 'book-open', label: 'Capacitacao', onPress: () => navigation.navigate('Education') },
     { icon: 'share-2', label: 'Redes Sociais', onPress: () => navigation.navigate('SocialLinks'), color: '#25D366' },
     { icon: 'edit-3', label: 'Editar Perfil', onPress: () => {} },

@@ -4,7 +4,8 @@ import {
   User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
   ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
   FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES,
-  LidaSquad, SquadMember, SquadInvite, SquadProposal
+  LidaSquad, SquadMember, SquadInvite, SquadProposal,
+  PropertyDetail, Talhao, PropertyDocument, TalhaoServiceTag, calculatePolygonArea, Property
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
@@ -32,6 +33,7 @@ const STORAGE_KEYS = {
   SQUADS: '@lidacacau_squads',
   SQUAD_INVITES: '@lidacacau_squad_invites',
   SQUAD_PROPOSALS: '@lidacacau_squad_proposals',
+  PROPERTIES: '@lidacacau_properties',
 };
 
 export const generateId = (): string => {
@@ -2063,5 +2065,544 @@ export const respondToSquadProposal = async (
   } catch (error) {
     console.error('Error responding to squad proposal:', error);
     throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE PROPRIEDADES RURAIS
+// ==========================================
+
+export const migrateUserProperties = async (userId: string): Promise<number> => {
+  try {
+    const user = await getUserById(userId);
+    if (!user || !user.properties || user.properties.length === 0) {
+      return 0;
+    }
+
+    const existingProperties = await getPropertiesByOwner(userId);
+    let migratedCount = 0;
+
+    for (const legacyProperty of user.properties) {
+      const alreadyExists = existingProperties.some((existing) => {
+        const sameOwner = existing.ownerId === userId;
+        const sameName = existing.name.toLowerCase() === legacyProperty.name.toLowerCase();
+        const sameCoords = 
+          Math.abs(existing.latitude - legacyProperty.latitude) < 0.0001 &&
+          Math.abs(existing.longitude - legacyProperty.longitude) < 0.0001;
+        return sameOwner && (sameName || sameCoords);
+      });
+
+      if (!alreadyExists) {
+        await createProperty({
+          name: legacyProperty.name,
+          address: legacyProperty.address,
+          latitude: legacyProperty.latitude,
+          longitude: legacyProperty.longitude,
+          ownerId: user.id,
+        });
+        migratedCount++;
+      }
+    }
+
+    return migratedCount;
+  } catch (error) {
+    console.error('Error migrating user properties:', error);
+    return 0;
+  }
+};
+
+export const getProperties = async (): Promise<PropertyDetail[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.PROPERTIES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting properties:', error);
+    return [];
+  }
+};
+
+export const getPropertyById = async (id: string): Promise<PropertyDetail | null> => {
+  try {
+    const properties = await getProperties();
+    return properties.find((p) => p.id === id) || null;
+  } catch (error) {
+    console.error('Error getting property by id:', error);
+    return null;
+  }
+};
+
+export const getPropertiesByOwner = async (ownerId: string): Promise<PropertyDetail[]> => {
+  try {
+    const properties = await getProperties();
+    return properties.filter((p) => p.ownerId === ownerId);
+  } catch (error) {
+    console.error('Error getting properties by owner:', error);
+    return [];
+  }
+};
+
+export const createProperty = async (
+  data: Omit<PropertyDetail, 'id' | 'createdAt' | 'updatedAt' | 'talhoes' | 'documents' | 'verificationStatus'>
+): Promise<PropertyDetail> => {
+  try {
+    const properties = await getProperties();
+    const now = new Date().toISOString();
+    
+    const newProperty: PropertyDetail = {
+      ...data,
+      id: generateId(),
+      talhoes: [],
+      documents: [],
+      verificationStatus: 'none',
+      createdAt: now,
+      updatedAt: now,
+      revisionHistory: [{
+        timestamp: now,
+        changeType: 'create',
+        changedBy: data.ownerId,
+        details: 'Propriedade criada',
+      }],
+    };
+    
+    await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify([...properties, newProperty]));
+    return newProperty;
+  } catch (error) {
+    console.error('Error creating property:', error);
+    throw error;
+  }
+};
+
+export const updateProperty = async (
+  propertyId: string,
+  updates: Partial<Omit<PropertyDetail, 'id' | 'createdAt' | 'ownerId'>>,
+  changedBy: string
+): Promise<PropertyDetail> => {
+  try {
+    const properties = await getProperties();
+    const index = properties.findIndex((p) => p.id === propertyId);
+    if (index === -1) throw new Error('Propriedade nao encontrada');
+    
+    const now = new Date().toISOString();
+    const property = properties[index];
+    
+    const updatedProperty: PropertyDetail = {
+      ...property,
+      ...updates,
+      updatedAt: now,
+      revisionHistory: [
+        ...(property.revisionHistory || []),
+        {
+          timestamp: now,
+          changeType: 'update',
+          changedBy,
+          details: 'Propriedade atualizada',
+        },
+      ],
+    };
+    
+    properties[index] = updatedProperty;
+    await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
+    return updatedProperty;
+  } catch (error) {
+    console.error('Error updating property:', error);
+    throw error;
+  }
+};
+
+export const deleteProperty = async (propertyId: string): Promise<void> => {
+  try {
+    const properties = await getProperties();
+    const filtered = properties.filter((p) => p.id !== propertyId);
+    await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error deleting property:', error);
+    throw error;
+  }
+};
+
+// Talhoes (subdivisoes da propriedade)
+export const addTalhao = async (
+  propertyId: string,
+  data: Omit<Talhao, 'id' | 'propertyId' | 'createdAt' | 'updatedAt' | 'serviceTags'>,
+  changedBy: string
+): Promise<Talhao> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const now = new Date().toISOString();
+    const newTalhao: Talhao = {
+      ...data,
+      id: generateId(),
+      propertyId,
+      serviceTags: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    if (newTalhao.polygon && newTalhao.polygon.coordinates.length >= 3) {
+      newTalhao.areaHectares = calculatePolygonArea(newTalhao.polygon.coordinates);
+      newTalhao.polygon.areaHectares = newTalhao.areaHectares;
+    }
+    
+    await updateProperty(
+      propertyId,
+      { talhoes: [...property.talhoes, newTalhao] },
+      changedBy
+    );
+    
+    return newTalhao;
+  } catch (error) {
+    console.error('Error adding talhao:', error);
+    throw error;
+  }
+};
+
+export const updateTalhao = async (
+  propertyId: string,
+  talhaoId: string,
+  updates: Partial<Omit<Talhao, 'id' | 'propertyId' | 'createdAt'>>,
+  changedBy: string
+): Promise<Talhao> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const talhaoIndex = property.talhoes.findIndex((t) => t.id === talhaoId);
+    if (talhaoIndex === -1) throw new Error('Talhao nao encontrado');
+    
+    const now = new Date().toISOString();
+    const talhao = property.talhoes[talhaoIndex];
+    
+    const updatedTalhao: Talhao = {
+      ...talhao,
+      ...updates,
+      updatedAt: now,
+    };
+    
+    if (updatedTalhao.polygon && updatedTalhao.polygon.coordinates.length >= 3) {
+      updatedTalhao.areaHectares = calculatePolygonArea(updatedTalhao.polygon.coordinates);
+      updatedTalhao.polygon.areaHectares = updatedTalhao.areaHectares;
+    }
+    
+    const updatedTalhoes = [...property.talhoes];
+    updatedTalhoes[talhaoIndex] = updatedTalhao;
+    
+    await updateProperty(propertyId, { talhoes: updatedTalhoes }, changedBy);
+    return updatedTalhao;
+  } catch (error) {
+    console.error('Error updating talhao:', error);
+    throw error;
+  }
+};
+
+export const deleteTalhao = async (
+  propertyId: string,
+  talhaoId: string,
+  changedBy: string
+): Promise<void> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const updatedTalhoes = property.talhoes.filter((t) => t.id !== talhaoId);
+    await updateProperty(propertyId, { talhoes: updatedTalhoes }, changedBy);
+  } catch (error) {
+    console.error('Error deleting talhao:', error);
+    throw error;
+  }
+};
+
+// Service Tags para Talhoes
+export const addServiceTag = async (
+  propertyId: string,
+  talhaoId: string,
+  data: Omit<TalhaoServiceTag, 'id' | 'createdAt' | 'status'>,
+  changedBy: string
+): Promise<TalhaoServiceTag> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const talhao = property.talhoes.find((t) => t.id === talhaoId);
+    if (!talhao) throw new Error('Talhao nao encontrado');
+    
+    const now = new Date().toISOString();
+    const newTag: TalhaoServiceTag = {
+      ...data,
+      id: generateId(),
+      status: 'pending',
+      createdAt: now,
+    };
+    
+    await updateTalhao(
+      propertyId,
+      talhaoId,
+      { serviceTags: [...talhao.serviceTags, newTag] },
+      changedBy
+    );
+    
+    return newTag;
+  } catch (error) {
+    console.error('Error adding service tag:', error);
+    throw error;
+  }
+};
+
+export const updateServiceTag = async (
+  propertyId: string,
+  talhaoId: string,
+  tagId: string,
+  updates: Partial<Omit<TalhaoServiceTag, 'id' | 'createdAt'>>,
+  changedBy: string
+): Promise<TalhaoServiceTag> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const talhao = property.talhoes.find((t) => t.id === talhaoId);
+    if (!talhao) throw new Error('Talhao nao encontrado');
+    
+    const tagIndex = talhao.serviceTags.findIndex((t) => t.id === tagId);
+    if (tagIndex === -1) throw new Error('Tag nao encontrada');
+    
+    const updatedTag: TalhaoServiceTag = {
+      ...talhao.serviceTags[tagIndex],
+      ...updates,
+    };
+    
+    const updatedTags = [...talhao.serviceTags];
+    updatedTags[tagIndex] = updatedTag;
+    
+    await updateTalhao(propertyId, talhaoId, { serviceTags: updatedTags }, changedBy);
+    return updatedTag;
+  } catch (error) {
+    console.error('Error updating service tag:', error);
+    throw error;
+  }
+};
+
+// Documentos da propriedade
+export const addPropertyDocument = async (
+  propertyId: string,
+  data: Omit<PropertyDocument, 'id' | 'propertyId' | 'verificationStatus' | 'uploadedAt'>,
+  changedBy: string
+): Promise<PropertyDocument> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const now = new Date().toISOString();
+    const newDocument: PropertyDocument = {
+      ...data,
+      id: generateId(),
+      propertyId,
+      verificationStatus: 'pending',
+      uploadedAt: now,
+    };
+    
+    await updateProperty(
+      propertyId,
+      { 
+        documents: [...property.documents, newDocument],
+        verificationStatus: 'pending',
+      },
+      changedBy
+    );
+    
+    return newDocument;
+  } catch (error) {
+    console.error('Error adding property document:', error);
+    throw error;
+  }
+};
+
+export const updateDocumentVerification = async (
+  propertyId: string,
+  documentId: string,
+  status: PropertyDocument['verificationStatus'],
+  rejectionReason?: string,
+  reviewerId?: string
+): Promise<PropertyDocument> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const docIndex = property.documents.findIndex((d) => d.id === documentId);
+    if (docIndex === -1) throw new Error('Documento nao encontrado');
+    
+    const now = new Date().toISOString();
+    const updatedDoc: PropertyDocument = {
+      ...property.documents[docIndex],
+      verificationStatus: status,
+      verifiedAt: status === 'verified' ? now : undefined,
+      rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+    };
+    
+    const updatedDocs = [...property.documents];
+    updatedDocs[docIndex] = updatedDoc;
+    
+    const allVerified = updatedDocs.every((d) => d.verificationStatus === 'verified');
+    const anyRejected = updatedDocs.some((d) => d.verificationStatus === 'rejected');
+    
+    let propertyStatus: PropertyDetail['verificationStatus'] = 'pending';
+    if (allVerified && updatedDocs.length > 0) {
+      propertyStatus = 'verified';
+    } else if (anyRejected) {
+      propertyStatus = 'rejected';
+    }
+    
+    await updateProperty(
+      propertyId,
+      {
+        documents: updatedDocs,
+        verificationStatus: propertyStatus,
+        verificationBadge: propertyStatus === 'verified',
+        verifiedAt: propertyStatus === 'verified' ? now : undefined,
+      },
+      reviewerId || 'system'
+    );
+    
+    return updatedDoc;
+  } catch (error) {
+    console.error('Error updating document verification:', error);
+    throw error;
+  }
+};
+
+export const deletePropertyDocument = async (
+  propertyId: string,
+  documentId: string,
+  changedBy: string
+): Promise<void> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    const updatedDocs = property.documents.filter((d) => d.id !== documentId);
+    
+    const allVerified = updatedDocs.length > 0 && updatedDocs.every((d) => d.verificationStatus === 'verified');
+    const anyRejected = updatedDocs.some((d) => d.verificationStatus === 'rejected');
+    const anyPending = updatedDocs.some((d) => d.verificationStatus === 'pending');
+    
+    let propertyStatus: PropertyDetail['verificationStatus'] = 'none';
+    if (allVerified) {
+      propertyStatus = 'verified';
+    } else if (anyRejected) {
+      propertyStatus = 'rejected';
+    } else if (anyPending) {
+      propertyStatus = 'pending';
+    }
+    
+    await updateProperty(
+      propertyId,
+      {
+        documents: updatedDocs,
+        verificationStatus: propertyStatus,
+        verificationBadge: propertyStatus === 'verified',
+      },
+      changedBy
+    );
+  } catch (error) {
+    console.error('Error deleting property document:', error);
+    throw error;
+  }
+};
+
+// Atualizar poligono da propriedade
+export const updatePropertyPolygon = async (
+  propertyId: string,
+  polygon: PropertyDetail['polygon'],
+  changedBy: string
+): Promise<PropertyDetail> => {
+  try {
+    const now = new Date().toISOString();
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    
+    let areaHectares: number | undefined;
+    if (polygon && polygon.coordinates.length >= 3) {
+      areaHectares = calculatePolygonArea(polygon.coordinates);
+      polygon.areaHectares = areaHectares;
+    }
+    
+    const properties = await getProperties();
+    const index = properties.findIndex((p) => p.id === propertyId);
+    
+    const updatedProperty: PropertyDetail = {
+      ...property,
+      polygon,
+      areaHectares,
+      updatedAt: now,
+      revisionHistory: [
+        ...(property.revisionHistory || []),
+        {
+          timestamp: now,
+          changeType: 'polygon_update',
+          changedBy,
+          details: `Poligono atualizado - ${areaHectares?.toFixed(2) || 0} hectares`,
+        },
+      ],
+    };
+    
+    properties[index] = updatedProperty;
+    await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
+    return updatedProperty;
+  } catch (error) {
+    console.error('Error updating property polygon:', error);
+    throw error;
+  }
+};
+
+// Buscar propriedades verificadas
+export const getVerifiedProperties = async (): Promise<PropertyDetail[]> => {
+  try {
+    const properties = await getProperties();
+    return properties.filter((p) => p.verificationStatus === 'verified');
+  } catch (error) {
+    console.error('Error getting verified properties:', error);
+    return [];
+  }
+};
+
+// Estatisticas de propriedades
+export const getPropertyStats = async (ownerId?: string): Promise<{
+  totalProperties: number;
+  totalArea: number;
+  verifiedCount: number;
+  totalTalhoes: number;
+  pendingServices: number;
+}> => {
+  try {
+    let properties = await getProperties();
+    if (ownerId) {
+      properties = properties.filter((p) => p.ownerId === ownerId);
+    }
+    
+    const totalArea = properties.reduce((sum, p) => sum + (p.areaHectares || 0), 0);
+    const verifiedCount = properties.filter((p) => p.verificationStatus === 'verified').length;
+    const totalTalhoes = properties.reduce((sum, p) => sum + p.talhoes.length, 0);
+    const pendingServices = properties.reduce((sum, p) => 
+      sum + p.talhoes.reduce((ts, t) => 
+        ts + t.serviceTags.filter((s) => s.status === 'pending').length, 0
+      ), 0
+    );
+    
+    return {
+      totalProperties: properties.length,
+      totalArea,
+      verifiedCount,
+      totalTalhoes,
+      pendingServices,
+    };
+  } catch (error) {
+    console.error('Error getting property stats:', error);
+    return {
+      totalProperties: 0,
+      totalArea: 0,
+      verifiedCount: 0,
+      totalTalhoes: 0,
+      pendingServices: 0,
+    };
   }
 };

@@ -80,6 +80,22 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - **Storage**: @lidacacau_notifications key, max 100 notifications
 - **Functions**: createNotification, getNotifications, markNotificationAsRead
 
+### Rural Property Management System (Nov 2025)
+- **PropertyDetail Type**: Extended property model with polygon boundaries, talhões, documents, verification status
+- **PolygonGeometry**: GeoJSON-compatible format for CAR integration readiness
+- **Talhao System**: Field plot management with crop types, service tags, and priority levels
+- **PropertyDocument**: CAR document upload with verification workflow (pending/verified/rejected)
+- **PropertyVerifiedBadge**: Green shield badge for verified properties
+- **MapPropertyEditor**: Interactive polygon drawing with touch gestures, area calculation in hectares
+- **Property Screens**:
+  - PropertyListScreen: List producer properties with stats, verification badges
+  - PropertyFormScreen: Create/edit with GPS, address, cover photo
+  - PropertyDetailScreen: Full property view with talhões preview, documents summary
+  - TalhaoManagementScreen: Manage talhões with service tags and priorities
+  - PropertyDocumentsScreen: Upload CAR, land titles, environmental licenses
+- **Storage Functions**: createProperty, getPropertiesByOwner, addTalhao, addServiceTag, addPropertyDocument
+- **Data Migration**: Legacy Property to PropertyDetail automatic migration
+
 ### Technical Implementation
 - **UI/UX**: iOS 26 Liquid Glass style with LidaCacau color palette
 - **Persistency**: AsyncStorage for offline-first data persistence (all keys use `@lidacacau_` prefix)
@@ -115,6 +131,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - SERVICE_OFFERS, CARD_PRESETS, USER_PREFERENCES
 - FRIENDS, CHAT_ROOMS, MESSAGES_{roomId}, PRESENCE
 - ANALYTICS, CONTRACT_HISTORY, PORTFOLIO, NOTIFICATIONS
+- PROPERTIES (PropertyDetail storage for rural property management)
 
 ### Custom Hooks
 - `useScreenInsets`: Screen padding calculations (tab bar, header, web differences)
@@ -143,6 +160,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - Teams: CreateSquad
 - Payments: Payment, PaymentHistory, PixSettings
 - Settings: IdentityVerification, SocialLinks, Portfolio, FAQSupport
+- Properties: PropertyList, PropertyDetail, PropertyForm, TalhaoManagement, PropertyDocuments
 
 ## External Dependencies
 - **Expo**: Core framework with expo-location, expo-image-picker, expo-haptics
@@ -176,6 +194,15 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
     - Certificates list with institution info
     - Profile completion tracking (8 fields with progress bar)
     - OtherUserProfileScreen displays "Minha Historia", photos, certificates
+20. **Rural Property Management System**: Full property lifecycle management
+    - PropertyDetail with polygon boundaries for precise land mapping
+    - Talhão system for field plot organization with crop types
+    - Service tags with priority levels (low/medium/high/urgent)
+    - CAR document upload with verification workflow
+    - MapPropertyEditor for interactive polygon drawing via touch gestures
+    - Property verification badge system (pending/verified/rejected)
+    - Legacy property data migration for backward compatibility
+    - Area calculation in hectares using GeoJSON-compatible coordinates
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com

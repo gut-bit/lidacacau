@@ -10,6 +10,7 @@ import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
 import CreateCardScreen from '@/screens/shared/CreateCardScreen';
 import ProducerPropertiesScreen from '@/screens/producer/ProducerPropertiesScreen';
+import PropertyListScreen from '@/screens/shared/PropertyListScreen';
 import ActiveWorkOrderScreen from '@/screens/worker/ActiveWorkOrderScreen';
 import ReviewScreen from '@/screens/shared/ReviewScreen';
 import TutorialScreen from '@/screens/shared/TutorialScreen';
@@ -41,6 +42,10 @@ import UserSearchScreen from '@/screens/shared/UserSearchScreen';
 import QuickActionsScreen from '@/screens/shared/QuickActionsScreen';
 import CreateSquadScreen from '@/screens/shared/CreateSquadScreen';
 import EditProfileScreen from '@/screens/shared/EditProfileScreen';
+import TalhaoManagementScreen from '@/screens/shared/TalhaoManagementScreen';
+import PropertyDocumentsScreen from '@/screens/shared/PropertyDocumentsScreen';
+import PropertyDetailScreen from '@/screens/shared/PropertyDetailScreen';
+import PropertyFormScreen from '@/screens/shared/PropertyFormScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -56,6 +61,7 @@ export type RootStackParamList = {
   CreateJob: undefined;
   CreateCard: { type?: CardType };
   ProducerProperties: undefined;
+  PropertyList: undefined;
   NFSe: undefined;
   ActiveWorkOrder: { workOrderId: string };
   Review: { workOrderId: string; revieweeId: string; revieweeName: string };
@@ -103,6 +109,10 @@ export type RootStackParamList = {
   QuickActions: undefined;
   CreateSquad: undefined;
   EditProfile: undefined;
+  TalhaoManagement: { propertyId: string };
+  PropertyDocuments: { propertyId: string };
+  PropertyDetail: { propertyId: string };
+  PropertyForm: { propertyId?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -164,6 +174,11 @@ export default function RootNavigator() {
           <Stack.Screen
             name="ProducerProperties"
             component={ProducerPropertiesScreen}
+            options={{ title: 'Minhas Propriedades' }}
+          />
+          <Stack.Screen
+            name="PropertyList"
+            component={PropertyListScreen}
             options={{ title: 'Minhas Propriedades' }}
           />
           <Stack.Screen
@@ -328,6 +343,29 @@ export default function RootNavigator() {
             name="EditProfile"
             component={EditProfileScreen}
             options={{ title: 'Editar Perfil' }}
+          />
+          <Stack.Screen
+            name="TalhaoManagement"
+            component={TalhaoManagementScreen}
+            options={{ title: 'Gerenciar Talhoes' }}
+          />
+          <Stack.Screen
+            name="PropertyDocuments"
+            component={PropertyDocumentsScreen}
+            options={{ title: 'Documentos da Propriedade' }}
+          />
+          <Stack.Screen
+            name="PropertyDetail"
+            component={PropertyDetailScreen}
+            options={{ title: 'Detalhes da Propriedade' }}
+          />
+          <Stack.Screen
+            name="PropertyForm"
+            component={PropertyFormScreen}
+            options={({ route }) => ({
+              title: route.params?.propertyId ? 'Editar Propriedade' : 'Nova Propriedade',
+              presentation: 'modal',
+            })}
           />
         </>
       )}
