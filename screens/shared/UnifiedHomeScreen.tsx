@@ -11,6 +11,7 @@ import { Image } from 'expo-image';
 const cacaoCanopyHeader = require('@/assets/decorative/cacao_tree_canopy_header_decoration.png');
 const grassFooter = require('@/assets/decorative/grass_and_dead_leaves_footer.png');
 const cornerBranch = require('@/assets/decorative/corner_cacao_branch_decoration.png');
+const botanicalMockup = require('@/assets/decorative/lidacacau_botanical_mockup.png');
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Linking from 'expo-linking';
