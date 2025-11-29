@@ -98,6 +98,36 @@ export interface PortfolioItem {
   createdAt: string;
 }
 
+export interface PersonalBackground {
+  birthPlace?: string;
+  yearsInRegion?: number;
+  familyConnections?: string;
+  personalStory?: string;
+  funFact?: string;
+}
+
+export interface Recommendation {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  type: 'text' | 'audio';
+  content: string;
+  audioUri?: string;
+  relationship?: string;
+  createdAt: string;
+}
+
+export interface Certificate {
+  id: string;
+  title: string;
+  institution?: string;
+  photoUri?: string;
+  description?: string;
+  issueDate?: string;
+  createdAt: string;
+}
+
 export interface ReferralInfo {
   code: string;
   referredBy?: string;
@@ -182,6 +212,10 @@ export interface User {
   verification?: IdentityVerification;
   portfolio?: PortfolioItem[];
   referral?: ReferralInfo;
+  personalBackground?: PersonalBackground;
+  recommendations?: Recommendation[];
+  certificates?: Certificate[];
+  workPhotos?: PortfolioItem[];
   createdAt: string;
 }
 

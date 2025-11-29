@@ -235,18 +235,9 @@ export default function UnifiedProfileScreen() {
             <ProfileAction
               icon="user"
               title="Editar Perfil"
-              subtitle="Nome, bio, telefone"
+              subtitle="Conte sua historia, fotos, certificados"
               color={colors.primary}
-              onPress={() => {
-                Alert.alert(
-                  'Editar Perfil',
-                  'Em breve voce podera editar seu nome, bio e telefone diretamente no app. Por enquanto, use a secao de redes sociais para adicionar seus contatos.',
-                  [
-                    { text: 'Ir para Redes Sociais', onPress: () => navigation.navigate('SocialLinks') },
-                    { text: 'OK', style: 'cancel' },
-                  ]
-                );
-              }}
+              onPress={() => navigation.navigate('EditProfile')}
             />
             <ProfileAction
               icon="shield"
