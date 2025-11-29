@@ -253,7 +253,7 @@ export const updateJob = async (jobId: string, updates: Partial<Job>): Promise<J
 
 export const deleteJob = async (jobId: string): Promise<boolean> => {
   try {
-    return await updateJob(jobId, { status: 'cancelled' }) !== null;
+    return await updateJob(jobId, { status: 'closed' }) !== null;
   } catch (error) {
     console.error('Error deleting job:', error);
     return false;
@@ -1731,40 +1731,41 @@ export const initializeDevData = async (): Promise<void> => {
       id: 'demo_producer_001',
       name: 'Maria da Silva',
       email: 'maria@demo.lidacacau.com',
+      password: 'demo123',
       phone: '(93) 99999-0001',
-      cpf: '111.222.333-44',
       role: 'producer',
       roles: ['producer'],
-      isVerified: true,
-      verificationStatus: 'approved',
-      location: { latitude: -3.5, longitude: -53.0 },
-      address: 'Km 140 Vila Alvorada',
-      city: 'Uruara',
-      state: 'PA',
+      activeRole: 'producer',
+      location: 'Km 140 Vila Alvorada, Uruara-PA',
       createdAt: new Date().toISOString(),
-      tutorialComplete: true,
-      referralCode: 'MARIA001',
+      tutorialCompleted: true,
+      producerLevel: 2,
+      verification: {
+        status: 'approved',
+        submittedAt: new Date().toISOString(),
+        reviewedAt: new Date().toISOString(),
+      },
     };
     const demoWorker: User = {
       id: 'demo_worker_001',
       name: 'Joao Pereira',
       email: 'joao@demo.lidacacau.com',
+      password: 'demo123',
       phone: '(93) 99999-0002',
-      cpf: '555.666.777-88',
       role: 'worker',
       roles: ['worker'],
-      isVerified: true,
-      verificationStatus: 'approved',
-      location: { latitude: -3.51, longitude: -53.01 },
-      address: 'Km 145 Travessao Norte',
-      city: 'Uruara',
-      state: 'PA',
+      activeRole: 'worker',
+      location: 'Km 145 Travessao Norte, Uruara-PA',
       createdAt: new Date().toISOString(),
-      tutorialComplete: true,
-      referralCode: 'JOAO002',
+      tutorialCompleted: true,
       level: 2,
       totalReviews: 5,
       averageRating: 4.5,
+      verification: {
+        status: 'approved',
+        submittedAt: new Date().toISOString(),
+        reviewedAt: new Date().toISOString(),
+      },
     };
     await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([demoProducer, demoWorker]));
     const friendConnection: FriendConnection = {
@@ -1790,8 +1791,9 @@ export const initializeDevData = async (): Promise<void> => {
       roomId: chatRoom.id,
       senderId: demoProducer.id,
       content: 'Ola! Bom dia, tudo bem?',
+      type: 'text',
       createdAt: new Date().toISOString(),
-      isRead: false,
+      read: false,
     };
     await AsyncStorage.setItem(`${STORAGE_KEYS.CHAT_ROOMS}_${chatRoom.id}_messages`, JSON.stringify([welcomeMessage]));
     await updateUserPresence(demoProducer.id, 'Home');
@@ -1948,6 +1950,32 @@ export const initializeDevData = async (): Promise<void> => {
   } catch (error) {
     console.error('Error seeding dev data:', error);
   }
+};
+
+export const devAutoLogin = async (): Promise<User | null> => {
+  if (!__DEV__) return null;
+  try {
+    await initializeDevData();
+    const users = await getUsers();
+    const demoUser = users.find((u) => u.email === 'maria@demo.lidacacau.com');
+    if (demoUser) {
+      await setCurrentUser(demoUser);
+      console.log('[LidaCacau DEV] Auto-logged in as:', demoUser.name, '(' + demoUser.role + ')');
+      return demoUser;
+    }
+    return null;
+  } catch (error) {
+    console.error('[LidaCacau DEV] Auto-login failed:', error);
+    return null;
+  }
+};
+
+export const getDevCredentials = () => {
+  if (!__DEV__) return null;
+  return {
+    producer: { email: 'maria@demo.lidacacau.com', password: 'demo123' },
+    worker: { email: 'joao@demo.lidacacau.com', password: 'demo123' },
+  };
 };
 
 // ==========================================

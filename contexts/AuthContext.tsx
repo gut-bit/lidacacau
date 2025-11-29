@@ -8,6 +8,7 @@ import {
   logoutUser as logoutUserStorage,
   initializeStorage,
   updateUser,
+  devAutoLogin,
 } from '@/utils/storage';
 
 interface AuthContextType {
@@ -64,7 +65,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initialize = async () => {
       try {
         await initializeStorage();
-        const currentUser = await getCurrentUser();
+        let currentUser = await getCurrentUser();
+        
+        if (!currentUser && __DEV__) {
+          currentUser = await devAutoLogin();
+        }
+        
         if (currentUser) {
           const updatedUser = ensureUserHasNewFields(currentUser);
           setUser(updatedUser);
