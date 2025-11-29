@@ -93,6 +93,14 @@ export default function UnifiedTabNavigator() {
         }}
       />
       <Tab.Screen
+        name="Shop"
+        component={ShopListScreen}
+        options={{
+          title: 'LidaShop',
+          tabBarIcon: ({ color, size }) => <Feather name="shopping-bag" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="Create"
         component={PlaceholderScreen}
         options={{
@@ -112,14 +120,6 @@ export default function UnifiedTabNavigator() {
         options={{
           title: 'Explorar',
           tabBarIcon: ({ color, size }) => <Feather name="compass" size={size} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Shop"
-        component={ShopListScreen}
-        options={{
-          title: 'LidaShop',
-          tabBarIcon: ({ color, size }) => <Feather name="shopping-bag" size={size} color={color} />,
         }}
       />
       <Tab.Screen
