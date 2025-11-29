@@ -67,10 +67,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await initializeStorage();
         let currentUser = await getCurrentUser();
         
-        if (!currentUser && __DEV__) {
-          currentUser = await devAutoLogin();
-        }
-        
         if (currentUser) {
           const updatedUser = ensureUserHasNewFields(currentUser);
           setUser(updatedUser);
