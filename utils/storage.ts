@@ -1607,3 +1607,91 @@ export const getActiveUsersStats = async (): Promise<ActiveUsersStats> => {
     };
   }
 };
+
+const DEV_DATA_KEY = '@lidacacau_dev_data_seeded';
+
+export const initializeDevData = async (): Promise<void> => {
+  if (!__DEV__) return;
+  try {
+    const alreadySeeded = await AsyncStorage.getItem(DEV_DATA_KEY);
+    if (alreadySeeded) return;
+    const existingUsers = await getUsers();
+    if (existingUsers.length > 0) {
+      await AsyncStorage.setItem(DEV_DATA_KEY, 'true');
+      return;
+    }
+    const demoProducer: User = {
+      id: 'demo_producer_001',
+      name: 'Maria da Silva',
+      email: 'maria@demo.lidacacau.com',
+      phone: '(93) 99999-0001',
+      cpf: '111.222.333-44',
+      role: 'producer',
+      roles: ['producer'],
+      isVerified: true,
+      verificationStatus: 'approved',
+      location: { latitude: -3.5, longitude: -53.0 },
+      address: 'Km 140 Vila Alvorada',
+      city: 'Uruara',
+      state: 'PA',
+      createdAt: new Date().toISOString(),
+      tutorialComplete: true,
+      referralCode: 'MARIA001',
+    };
+    const demoWorker: User = {
+      id: 'demo_worker_001',
+      name: 'Joao Pereira',
+      email: 'joao@demo.lidacacau.com',
+      phone: '(93) 99999-0002',
+      cpf: '555.666.777-88',
+      role: 'worker',
+      roles: ['worker'],
+      isVerified: true,
+      verificationStatus: 'approved',
+      location: { latitude: -3.51, longitude: -53.01 },
+      address: 'Km 145 Travessao Norte',
+      city: 'Uruara',
+      state: 'PA',
+      createdAt: new Date().toISOString(),
+      tutorialComplete: true,
+      referralCode: 'JOAO002',
+      level: 2,
+      totalReviews: 5,
+      averageRating: 4.5,
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([demoProducer, demoWorker]));
+    const friendConnection: FriendConnection = {
+      id: 'friend_001',
+      requesterId: demoProducer.id,
+      receiverId: demoWorker.id,
+      status: 'accepted',
+      createdAt: new Date().toISOString(),
+      acceptedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify([friendConnection]));
+    const chatRoom: ChatRoom = {
+      id: 'chat_001',
+      participantIds: [demoProducer.id, demoWorker.id],
+      lastMessage: 'Ola! Bom dia, tudo bem?',
+      lastMessageAt: new Date().toISOString(),
+      unreadCount: { [demoProducer.id]: 0, [demoWorker.id]: 1 },
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify([chatRoom]));
+    const welcomeMessage: DirectMessage = {
+      id: 'msg_001',
+      roomId: chatRoom.id,
+      senderId: demoProducer.id,
+      content: 'Ola! Bom dia, tudo bem?',
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    await AsyncStorage.setItem(`${STORAGE_KEYS.CHAT_ROOMS}_${chatRoom.id}_messages`, JSON.stringify([welcomeMessage]));
+    await updateUserPresence(demoProducer.id, 'Home');
+    await updateUserPresence(demoWorker.id, 'Home');
+    await AsyncStorage.setItem(DEV_DATA_KEY, 'true');
+    console.log('[LidaCacau DEV] Demo data seeded: Maria (producer) + Joao (worker)');
+  } catch (error) {
+    console.error('Error seeding dev data:', error);
+  }
+};

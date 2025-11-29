@@ -131,3 +131,11 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 6. Comunidade section in profile
 7. Fake data removed for MVP readiness
 8. Storage cleanup utilities added
+9. Dev data seeding: initializeDevData() creates demo users (Maria/Joao) in __DEV__ mode
+10. All touch targets verified at 48dp minimum
+11. trackEvent calls added to all key user actions
+
+## Demo Credentials (Development Only)
+- **Maria da Silva** (Producer): maria@demo.lidacacau.com
+- **Joao Pereira** (Worker): joao@demo.lidacacau.com
+- These accounts are friends with an active chat room for testing

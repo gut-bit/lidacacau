@@ -19,6 +19,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Colors } from "@/constants/theme";
 import { startSession } from "@/utils/analytics";
+import { initializeDevData } from "@/utils/storage";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,6 +40,7 @@ export default function App() {
   useEffect(() => {
     if (fontsLoaded) {
       startSession();
+      initializeDevData();
     }
   }, [fontsLoaded]);
 
