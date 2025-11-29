@@ -12,7 +12,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { SocialLinksDisplay } from '@/components/SocialLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
-import { User, Review } from '@/types';
+import { User, Review, PortfolioItem, Certificate } from '@/types';
 import { getUserById, getReviewsByUser } from '@/utils/storage';
 import { getLevelLabel } from '@/utils/format';
 import { RootStackParamList } from '@/navigation/RootNavigator';
@@ -207,6 +207,90 @@ export default function OtherUserProfileScreen() {
           </View>
         ) : null}
 
+        {user.personalBackground?.personalStory ? (
+          <View style={styles.section}>
+            <ThemedText type="h4" style={styles.sectionTitle}>Minha Historia</ThemedText>
+            <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
+              <ThemedText type="body" style={{ color: colors.text }}>
+                {user.personalBackground.personalStory}
+              </ThemedText>
+              {user.personalBackground.birthPlace || user.personalBackground.yearsInRegion ? (
+                <View style={styles.originInfo}>
+                  {user.personalBackground.birthPlace ? (
+                    <View style={styles.originItem}>
+                      <Feather name="map-pin" size={14} color={colors.textSecondary} />
+                      <ThemedText type="small" style={{ color: colors.textSecondary }}>
+                        Natural de {user.personalBackground.birthPlace}
+                      </ThemedText>
+                    </View>
+                  ) : null}
+                  {user.personalBackground.yearsInRegion ? (
+                    <View style={styles.originItem}>
+                      <Feather name="clock" size={14} color={colors.textSecondary} />
+                      <ThemedText type="small" style={{ color: colors.textSecondary }}>
+                        {user.personalBackground.yearsInRegion} anos na regiao
+                      </ThemedText>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+              {user.personalBackground.familyConnections ? (
+                <View style={[styles.familyInfo, { backgroundColor: colors.handshake + '10', borderColor: colors.handshake + '30' }]}>
+                  <Feather name="users" size={16} color={colors.handshake} />
+                  <ThemedText type="small" style={{ color: colors.text, flex: 1 }}>
+                    {user.personalBackground.familyConnections}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
+        {user.workPhotos && user.workPhotos.length > 0 ? (
+          <View style={styles.section}>
+            <ThemedText type="h4" style={styles.sectionTitle}>
+              Trabalhos Realizados ({user.workPhotos.length})
+            </ThemedText>
+            <View style={styles.photosGrid}>
+              {user.workPhotos.slice(0, 6).map((photo) => (
+                <View key={photo.id} style={[styles.photoItem, { backgroundColor: colors.card }]}>
+                  <Image source={{ uri: photo.photoUri }} style={styles.photoImage} contentFit="cover" />
+                  {photo.description ? (
+                    <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: 4 }} numberOfLines={1}>
+                      {photo.description}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {user.certificates && user.certificates.length > 0 ? (
+          <View style={styles.section}>
+            <ThemedText type="h4" style={styles.sectionTitle}>
+              Certificados ({user.certificates.length})
+            </ThemedText>
+            <View style={styles.certList}>
+              {user.certificates.map((cert) => (
+                <View key={cert.id} style={[styles.certItem, { backgroundColor: colors.card }, Shadows.card]}>
+                  <View style={[styles.certIcon, { backgroundColor: colors.accent + '20' }]}>
+                    <Feather name="award" size={20} color={colors.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="body" style={{ fontWeight: '600' }}>{cert.title}</ThemedText>
+                    {cert.institution ? (
+                      <ThemedText type="small" style={{ color: colors.textSecondary }}>
+                        {cert.institution}
+                      </ThemedText>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {isWorker ? (
           <View style={styles.section}>
             <ThemedText type="h4" style={styles.sectionTitle}>Estatisticas</ThemedText>
@@ -354,5 +438,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+  },
+  originInfo: {
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+  originItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  familyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginTop: Spacing.md,
+  },
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+  photoItem: {
+    width: '30%',
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: BorderRadius.md,
+  },
+  certList: {
+    gap: Spacing.md,
+  },
+  certItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.md,
+  },
+  certIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
