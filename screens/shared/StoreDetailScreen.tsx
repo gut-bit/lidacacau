@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Pressable, Alert, Dimensions } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { StyleSheet, View, Pressable, Alert, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, ShopColors } from '@/constants/theme';
 import { Store, Product, StoreSignup } from '@/types';
 import { getStoreById, getProductsByStore, addToCart, addStoreSignup, generateId } from '@/utils/storage';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import StoreSignupModal from '@/screens/shared/StoreSignupModal';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PRODUCT_CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
 
 const CATEGORY_ICONS: Record<string, string> = {
   herbicida: 'droplet',
@@ -24,18 +20,27 @@ const CATEGORY_ICONS: Record<string, string> = {
   fertilizante: 'package',
 };
 
+type LoadingState = 'loading' | 'success' | 'error' | 'not_found';
+
 export default function StoreDetailScreen() {
   const { isDark } = useTheme();
-  const { user } = useAuth();
   const route = useRoute<RouteProp<RootStackParamList, 'StoreDetail'>>();
+  const navigation = useNavigation();
   const colors = isDark ? Colors.dark : Colors.light;
+  const { width: screenWidth } = useWindowDimensions();
+  
+  const productCardWidth = (screenWidth - Spacing.lg * 3) / 2;
 
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [signupModalVisible, setSignupModalVisible] = useState(false);
 
   const { storeId } = route.params;
+
+  useEffect(() => {
+    loadStoreDetails();
+  }, [storeId]);
 
   useEffect(() => {
     if (store?.id === 'cacauprodutos-test') {
@@ -43,21 +48,23 @@ export default function StoreDetailScreen() {
     }
   }, [store?.id]);
 
-  useEffect(() => {
-    loadStoreDetails();
-  }, [storeId]);
-
   const loadStoreDetails = async () => {
     try {
+      setLoadingState('loading');
       const storeData = await getStoreById(storeId);
+      
+      if (!storeData) {
+        setLoadingState('not_found');
+        return;
+      }
+      
       const productsData = await getProductsByStore(storeId);
       setStore(storeData);
       setProducts(productsData.filter(p => p.active));
+      setLoadingState('success');
     } catch (error) {
       console.error('Error loading store:', error);
-      Alert.alert('Erro', 'Nao foi possivel carregar os detalhes da loja');
-    } finally {
-      setLoading(false);
+      setLoadingState('error');
     }
   };
 
@@ -132,7 +139,7 @@ export default function StoreDetailScreen() {
     const iconName = CATEGORY_ICONS[product.category] || 'package';
 
     return (
-      <View key={product.id} style={styles.productCard}>
+      <View key={product.id} style={[styles.productCard, { width: productCardWidth }]}>
         <View style={styles.productImageContainer}>
           <Feather name={iconName as any} size={36} color={ShopColors.primary} />
           {product.discount ? (
@@ -171,12 +178,80 @@ export default function StoreDetailScreen() {
     );
   };
 
-  if (!store) {
+  const renderLoadingState = () => (
+    <View style={styles.centerState}>
+      <ActivityIndicator size="large" color={ShopColors.primary} />
+      <ThemedText type="body" style={styles.centerStateText}>
+        Carregando loja...
+      </ThemedText>
+    </View>
+  );
+
+  const renderErrorState = () => (
+    <View style={styles.centerState}>
+      <View style={styles.errorIconContainer}>
+        <Feather name="alert-circle" size={48} color="#D32F2F" />
+      </View>
+      <ThemedText type="h4" style={styles.errorTitle}>
+        Erro ao carregar
+      </ThemedText>
+      <ThemedText type="body" style={styles.errorSubtitle}>
+        Nao foi possivel carregar os detalhes da loja.
+      </ThemedText>
+      <Pressable style={styles.retryButton} onPress={loadStoreDetails}>
+        <Feather name="refresh-cw" size={16} color="#FFFFFF" />
+        <ThemedText type="body" style={styles.retryButtonText}>Tentar novamente</ThemedText>
+      </Pressable>
+    </View>
+  );
+
+  const renderNotFoundState = () => (
+    <View style={styles.centerState}>
+      <View style={styles.notFoundIconContainer}>
+        <Feather name="search" size={48} color={ShopColors.primary} />
+      </View>
+      <ThemedText type="h4" style={styles.notFoundTitle}>
+        Loja nao encontrada
+      </ThemedText>
+      <ThemedText type="body" style={styles.notFoundSubtitle}>
+        Esta loja pode ter sido removida ou o link esta incorreto.
+      </ThemedText>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Feather name="arrow-left" size={16} color="#FFFFFF" />
+        <ThemedText type="body" style={styles.backButtonText}>Voltar para lojas</ThemedText>
+      </Pressable>
+    </View>
+  );
+
+  const renderEmptyProducts = () => (
+    <View style={styles.emptyProducts}>
+      <Feather name="package" size={40} color="#BDBDBD" />
+      <ThemedText type="body" style={styles.emptyText}>
+        Nenhum produto disponivel
+      </ThemedText>
+    </View>
+  );
+
+  if (loadingState === 'loading') {
     return (
       <ScreenScrollView style={{ backgroundColor: ShopColors.cream }}>
-        <View style={styles.loadingContainer}>
-          <ThemedText type="body">Carregando...</ThemedText>
-        </View>
+        {renderLoadingState()}
+      </ScreenScrollView>
+    );
+  }
+
+  if (loadingState === 'error') {
+    return (
+      <ScreenScrollView style={{ backgroundColor: ShopColors.cream }}>
+        {renderErrorState()}
+      </ScreenScrollView>
+    );
+  }
+
+  if (loadingState === 'not_found' || !store) {
+    return (
+      <ScreenScrollView style={{ backgroundColor: ShopColors.cream }}>
+        {renderNotFoundState()}
       </ScreenScrollView>
     );
   }
@@ -231,12 +306,7 @@ export default function StoreDetailScreen() {
           </View>
 
           {products.length === 0 ? (
-            <View style={styles.emptyProducts}>
-              <Feather name="package" size={40} color="#BDBDBD" />
-              <ThemedText type="body" style={styles.emptyText}>
-                Nenhum produto disponível
-              </ThemedText>
-            </View>
+            renderEmptyProducts()
           ) : (
             <View style={styles.productsGrid}>
               {products.map(renderProductCard)}
@@ -252,11 +322,80 @@ const styles = StyleSheet.create({
   container: {
     paddingBottom: Spacing['4xl'],
   },
-  loadingContainer: {
+  centerState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: Spacing['4xl'],
+    paddingHorizontal: Spacing.xl,
+  },
+  centerStateText: {
+    color: ShopColors.primary,
+    marginTop: Spacing.md,
+  },
+  errorIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: BorderRadius.full,
+    backgroundColor: '#FFEBEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  errorTitle: {
+    color: '#D32F2F',
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  errorSubtitle: {
+    color: '#757575',
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ShopColors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  notFoundIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: BorderRadius.full,
+    backgroundColor: ShopColors.beige,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  notFoundTitle: {
+    color: ShopColors.primaryDark,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  notFoundSubtitle: {
+    color: '#757575',
+    textAlign: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ShopColors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   storeHeader: {
     flexDirection: 'row',
@@ -265,7 +404,6 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
     borderRadius: BorderRadius.lg,
-    elevation: 2,
   },
   storeIconContainer: {
     width: 80,
@@ -375,11 +513,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   productCard: {
-    width: PRODUCT_CARD_WIDTH,
     backgroundColor: ShopColors.cardBg,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
-    elevation: 2,
   },
   productImageContainer: {
     height: 100,
