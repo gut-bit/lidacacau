@@ -28,6 +28,20 @@ export default function LoginScreen() {
 
   const colors = isDark ? Colors.dark : Colors.light;
 
+  // Auto-login in dev mode
+  React.useEffect(() => {
+    if (__DEV__) {
+      const autoLogin = async () => {
+        try {
+          await login('maria@demo.lidacacau.com', 'demo123');
+        } catch (error) {
+          console.log('Auto-login demo user failed (expected if demo data not initialized)');
+        }
+      };
+      autoLogin();
+    }
+  }, []);
+
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
