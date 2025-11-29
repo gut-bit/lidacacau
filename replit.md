@@ -102,7 +102,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Conversas, +, Explorar, Perfil)
   - `RootNavigator.tsx`: Root navigation with auth handling
 - `/contexts/`: Contains `AuthContext.tsx`
-- `/types/`: TypeScript definitions including FriendConnection, ChatRoom, DirectMessage, UserPresence
+- `/types/`: TypeScript definitions including FriendConnection, ChatRoom, DirectMessage, UserPresence, PersonalBackground, Certificate, PortfolioItem
 - `/utils/`: 
   - `storage.ts`: 19 storage keys, friend/chat/presence functions, cleanup utilities
   - `analytics.ts`: Event tracking with trackEvent, startSession, endSession
@@ -169,6 +169,13 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 16. **Lida Terminology**: Updated UI texts with regional phrases ("pegar lida", "gente da lida", "firme na lida")
 17. **Esquadrao da Lida**: Work team system with 4-member squads, leader selection, and invite management
 18. **Tab Navigation Update**: "Conversas" tab replaced "Aprender" for direct chat access
+19. **Enhanced Profile System**: Complete profile-building with personal history, work photos, and certificates
+    - EditProfileScreen with ScreenKeyboardAwareScrollView for keyboard handling
+    - PersonalBackground type: birthPlace, yearsInRegion, familyConnections, personalStory
+    - Work photos gallery (max 6 items with cover-fit images)
+    - Certificates list with institution info
+    - Profile completion tracking (8 fields with progress bar)
+    - OtherUserProfileScreen displays "Minha Historia", photos, certificates
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com
