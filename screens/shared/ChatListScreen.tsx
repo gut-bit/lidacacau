@@ -196,29 +196,9 @@ export default function ChatListScreen() {
     </View>
   );
 
-  const renderHeader = () => {
-    const totalUnread = getTotalUnread();
-    return (
-      <View style={[styles.header, { paddingTop: paddingTop + Spacing.md }]}>
-        <View style={styles.headerContent}>
-          <Feather name="message-circle" size={24} color={colors.text} />
-          <ThemedText type="h2">Mensagens</ThemedText>
-          {totalUnread > 0 ? (
-            <View style={[styles.headerBadge, { backgroundColor: colors.primary }]}>
-              <ThemedText type="small" style={styles.headerBadgeText}>
-                {totalUnread > 99 ? '99+' : totalUnread}
-              </ThemedText>
-            </View>
-          ) : null}
-        </View>
-      </View>
-    );
-  };
-
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
-        {renderHeader()}
+      <ThemedView style={[styles.container, { paddingTop: paddingTop }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <ThemedText type="body" style={{ color: colors.textSecondary, marginTop: Spacing.md }}>
@@ -230,8 +210,7 @@ export default function ChatListScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      {renderHeader()}
+    <ThemedView style={[styles.container, { paddingTop: paddingTop }]}>
       <FlatList
         data={chatRooms}
         renderItem={renderChatItem}
@@ -259,26 +238,6 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  headerBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  headerBadgeText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,

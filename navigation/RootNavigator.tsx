@@ -294,7 +294,7 @@ export default function RootNavigator() {
           <Stack.Screen
             name="ChatList"
             component={ChatListScreen}
-            options={{ headerShown: false }}
+            options={{ title: 'Mensagens' }}
           />
           <Stack.Screen
             name="ChatRoom"
