@@ -7,9 +7,10 @@ import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { Store, Product } from '@/types';
-import { getStoreById, getProductsByStore, addToCart } from '@/utils/storage';
+import { Store, Product, StoreSignup } from '@/types';
+import { getStoreById, getProductsByStore, addToCart, addStoreSignup, generateId } from '@/utils/storage';
 import { RootStackParamList } from '@/navigation/RootNavigator';
+import StoreSignupModal from '@/screens/shared/StoreSignupModal';
 
 const PRIMARY_COLOR = '#F15A29';
 
@@ -22,8 +23,15 @@ export default function StoreDetailScreen() {
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [signupModalVisible, setSignupModalVisible] = useState(false);
 
   const { storeId } = route.params;
+
+  useEffect(() => {
+    if (store?.id === 'cacauprodutos-test') {
+      setSignupModalVisible(true);
+    }
+  }, [store?.id]);
 
   useEffect(() => {
     loadStoreDetails();
@@ -52,6 +60,29 @@ export default function StoreDetailScreen() {
     }
   };
 
+  const handleStoreSignupSubmit = async (formData: {
+    name: string;
+    storeName: string;
+    email: string;
+    whatsapp: string;
+    city: string;
+    state: string;
+    businessType?: string;
+  }) => {
+    const signup: StoreSignup = {
+      id: generateId(),
+      name: formData.name,
+      storeName: formData.storeName,
+      email: formData.email,
+      whatsapp: formData.whatsapp,
+      city: formData.city,
+      state: formData.state,
+      businessType: formData.businessType,
+      createdAt: new Date().toISOString(),
+    };
+    await addStoreSignup(signup);
+  };
+
   if (!store) {
     return (
       <ScreenScrollView>
@@ -61,8 +92,14 @@ export default function StoreDetailScreen() {
   }
 
   return (
-    <ScreenScrollView>
-      <View style={styles.container}>
+    <>
+      <StoreSignupModal
+        visible={signupModalVisible}
+        onClose={() => setSignupModalVisible(false)}
+        onSubmit={handleStoreSignupSubmit}
+      />
+      <ScreenScrollView>
+        <View style={styles.container}>
         <View style={[styles.header, { backgroundColor: colors.backgroundDefault, borderBottomColor: colors.border }]}>
           <View>
             <ThemedText type="h3">{store.name}</ThemedText>
@@ -141,7 +178,8 @@ export default function StoreDetailScreen() {
           )}
         </View>
       </View>
-    </ScreenScrollView>
+      </ScreenScrollView>
+    </>
   );
 }
 

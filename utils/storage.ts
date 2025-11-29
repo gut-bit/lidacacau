@@ -5,7 +5,8 @@ import {
   ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
   FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES,
   LidaSquad, SquadMember, SquadInvite, SquadProposal,
-  PropertyDetail, Talhao, PropertyDocument, TalhaoServiceTag, calculatePolygonArea, Property
+  PropertyDetail, Talhao, PropertyDocument, TalhaoServiceTag, calculatePolygonArea, Property,
+  Store, Product, CartItem, Order, StoreSignup
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
@@ -38,6 +39,7 @@ const STORAGE_KEYS = {
   PRODUCTS: '@lidacacau_products',
   CART: '@lidacacau_cart',
   ORDERS: '@lidacacau_orders',
+  STORE_SIGNUPS: '@lidacacau_store_signups',
 };
 
 export const generateId = (): string => {
@@ -2608,5 +2610,135 @@ export const getPropertyStats = async (ownerId?: string): Promise<{
       totalTalhoes: 0,
       pendingServices: 0,
     };
+  }
+};
+
+// LIDASHOP - E-commerce functions
+export const getStores = async (): Promise<Store[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.STORES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting stores:', error);
+    return [];
+  }
+};
+
+export const getStoreById = async (id: string): Promise<Store | null> => {
+  try {
+    const stores = await getStores();
+    return stores.find(s => s.id === id) || null;
+  } catch (error) {
+    console.error('Error getting store by id:', error);
+    return null;
+  }
+};
+
+export const createStore = async (store: Omit<Store, 'id' | 'createdAt' | 'updatedAt'>): Promise<Store> => {
+  try {
+    const stores = await getStores();
+    const newStore: Store = {
+      ...store,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    stores.push(newStore);
+    await AsyncStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(stores));
+    return newStore;
+  } catch (error) {
+    console.error('Error creating store:', error);
+    throw error;
+  }
+};
+
+export const getProductsByStore = async (storeId: string): Promise<Product[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS);
+    const products = data ? JSON.parse(data) : [];
+    return products.filter((p: Product) => p.storeId === storeId);
+  } catch (error) {
+    console.error('Error getting products by store:', error);
+    return [];
+  }
+};
+
+export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS);
+    const products = data ? JSON.parse(data) : [];
+    const newProduct: Product = {
+      ...product,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    products.push(newProduct);
+    await AsyncStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+    return newProduct;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+};
+
+export const getCart = async (): Promise<CartItem[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.CART);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting cart:', error);
+    return [];
+  }
+};
+
+export const addToCart = async (productId: string, storeId: string, quantity: number): Promise<void> => {
+  try {
+    const cart = await getCart();
+    const existingItem = cart.find(item => item.productId === productId);
+    
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      const products = await getProductsByStore(storeId);
+      const product = products.find(p => p.id === productId);
+      if (!product) throw new Error('Product not found');
+      
+      const newItem: CartItem = {
+        id: generateId(),
+        productId,
+        product,
+        storeId,
+        quantity,
+        addedAt: new Date().toISOString(),
+      };
+      cart.push(newItem);
+    }
+    
+    await AsyncStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    throw error;
+  }
+};
+
+export const getStoreSignups = async (): Promise<StoreSignup[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.STORE_SIGNUPS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting store signups:', error);
+    return [];
+  }
+};
+
+export const addStoreSignup = async (signup: StoreSignup): Promise<void> => {
+  try {
+    const signups = await getStoreSignups();
+    signups.push(signup);
+    await AsyncStorage.setItem(STORAGE_KEYS.STORE_SIGNUPS, JSON.stringify(signups));
+  } catch (error) {
+    console.error('Error adding store signup:', error);
+    throw error;
   }
 };

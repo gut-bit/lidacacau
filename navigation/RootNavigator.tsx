@@ -369,6 +369,11 @@ export default function RootNavigator() {
               presentation: 'modal',
             })}
           />
+          <Stack.Screen
+            name="StoreDetail"
+            component={StoreDetailScreen}
+            options={{ title: 'Detalhes da Loja' }}
+          />
         </>
       )}
     </Stack.Navigator>

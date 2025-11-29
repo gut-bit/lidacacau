@@ -1370,3 +1370,15 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface StoreSignup {
+  id: string;
+  name: string;
+  storeName: string;
+  email: string;
+  whatsapp: string;
+  city: string;
+  state: string;
+  businessType?: string;
+  createdAt: string;
+}
