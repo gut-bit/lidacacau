@@ -8,7 +8,6 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { trackEvent } from '@/utils/analytics';
@@ -25,7 +24,6 @@ interface ActionItem {
 export default function QuickActionsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDark } = useTheme();
-  const { activeRole } = useAuth();
   const insets = useSafeAreaInsets();
   const colors = isDark ? Colors.dark : Colors.light;
 
@@ -44,25 +42,33 @@ export default function QuickActionsScreen() {
     navigateTo();
   };
 
-  const isProducer = activeRole === 'producer';
-
   const actions: ActionItem[] = [
     {
-      id: 'create_card',
-      icon: isProducer ? 'file-plus' : 'briefcase',
-      title: isProducer ? 'Criar Demanda' : 'Criar Oferta',
-      subtitle: isProducer 
-        ? 'Publique um servico que voce precisa' 
-        : 'Ofereca seus servicos para produtores',
+      id: 'offer_service',
+      icon: 'tool',
+      title: 'Quero fazer um servico',
+      subtitle: 'Ofereca seus servicos para produtores',
+      color: colors.handshake,
+      onPress: () => handleAction('offer_service', () => 
+        navigation.replace('CreateCard', { type: 'offer' })
+      ),
+    },
+    {
+      id: 'hire_service',
+      icon: 'user-plus',
+      title: 'Quero contratar um servico',
+      subtitle: 'Publique uma demanda de trabalho',
       color: colors.primary,
-      onPress: () => handleAction('create_card', () => navigation.replace('CreateJob')),
+      onPress: () => handleAction('hire_service', () => 
+        navigation.replace('CreateCard', { type: 'demand' })
+      ),
     },
     {
       id: 'search_people',
       icon: 'users',
       title: 'Buscar Pessoas',
       subtitle: 'Encontre produtores ou trabalhadores',
-      color: colors.handshake,
+      color: colors.accent,
       onPress: () => handleAction('search_people', () => navigation.replace('UserSearch')),
     },
   ];
@@ -95,11 +101,9 @@ export default function QuickActionsScreen() {
     </Pressable>
   );
 
-  return (
-    <View style={styles.container}>
-      <Pressable style={styles.backdrop} onPress={handleClose} />
-      
-      {Platform.OS === 'ios' ? (
+  const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (Platform.OS === 'ios') {
+      return (
         <BlurView 
           intensity={80} 
           tint={isDark ? 'dark' : 'light'}
@@ -108,81 +112,49 @@ export default function QuickActionsScreen() {
             { paddingBottom: insets.bottom + Spacing.xl }
           ]}
         >
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <ThemedText type="h3" style={styles.title}>
-              O que voce quer fazer?
-            </ThemedText>
-            <Pressable 
-              style={[styles.closeButton, { backgroundColor: colors.backgroundDefault }]}
-              onPress={handleClose}
-            >
-              <Feather name="x" size={20} color={colors.text} />
-            </Pressable>
-          </View>
-
-          <View style={styles.actionsContainer}>
-            {actions.map((action) => (
-              <ActionCard key={action.id} item={action} />
-            ))}
-          </View>
-
-          <View style={styles.roleIndicator}>
-            <View style={[styles.roleBadge, { backgroundColor: colors.primary + '15' }]}>
-              <Feather 
-                name={isProducer ? 'home' : 'tool'} 
-                size={14} 
-                color={colors.primary} 
-              />
-              <ThemedText type="small" style={{ color: colors.primary }}>
-                Modo: {isProducer ? 'Produtor' : 'Trabalhador'}
-              </ThemedText>
-            </View>
-          </View>
+          {children}
         </BlurView>
-      ) : (
-        <View 
-          style={[
-            styles.content,
-            { 
-              backgroundColor: colors.backgroundRoot,
-              paddingBottom: insets.bottom + Spacing.xl 
-            }
-          ]}
-        >
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <ThemedText type="h3" style={styles.title}>
-              O que voce quer fazer?
-            </ThemedText>
-            <Pressable 
-              style={[styles.closeButton, { backgroundColor: colors.backgroundDefault }]}
-              onPress={handleClose}
-            >
-              <Feather name="x" size={20} color={colors.text} />
-            </Pressable>
-          </View>
+      );
+    }
+    return (
+      <View 
+        style={[
+          styles.content,
+          { 
+            backgroundColor: colors.backgroundRoot,
+            paddingBottom: insets.bottom + Spacing.xl 
+          }
+        ]}
+      >
+        {children}
+      </View>
+    );
+  };
 
-          <View style={styles.actionsContainer}>
-            {actions.map((action) => (
-              <ActionCard key={action.id} item={action} />
-            ))}
-          </View>
-
-          <View style={styles.roleIndicator}>
-            <View style={[styles.roleBadge, { backgroundColor: colors.primary + '15' }]}>
-              <Feather 
-                name={isProducer ? 'home' : 'tool'} 
-                size={14} 
-                color={colors.primary} 
-              />
-              <ThemedText type="small" style={{ color: colors.primary }}>
-                Modo: {isProducer ? 'Produtor' : 'Trabalhador'}
-              </ThemedText>
-            </View>
-          </View>
+  return (
+    <View style={styles.container}>
+      <Pressable style={styles.backdrop} onPress={handleClose} />
+      
+      <ContentWrapper>
+        <View style={styles.header}>
+          <View style={styles.handle} />
+          <ThemedText type="h3" style={styles.title}>
+            O que voce quer fazer?
+          </ThemedText>
+          <Pressable 
+            style={[styles.closeButton, { backgroundColor: colors.backgroundDefault }]}
+            onPress={handleClose}
+          >
+            <Feather name="x" size={20} color={colors.text} />
+          </Pressable>
         </View>
-      )}
+
+        <View style={styles.actionsContainer}>
+          {actions.map((action) => (
+            <ActionCard key={action.id} item={action} />
+          ))}
+        </View>
+      </ContentWrapper>
     </View>
   );
 }
@@ -251,18 +223,5 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 16,
-  },
-  roleIndicator: {
-    alignItems: 'center',
-    marginTop: Spacing.xl,
-    paddingTop: Spacing.lg,
-  },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
   },
 });
