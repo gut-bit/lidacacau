@@ -214,7 +214,14 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
     - Storage key: @lidacacau_cocoa_prices
     - Navigation route: CacauPrices
 
+## Development Mode Features
+- **Auto-Login**: In __DEV__ mode, the app automatically logs in using Maria (Producer) without showing the login screen
+- **devAutoLogin()**: Function in storage.ts that handles automatic authentication for development testing
+- **Session Persistence**: User data persists between app restarts via AsyncStorage (@lidacacau_current_user key)
+- **Skip Tutorial**: Demo users have `tutorialCompleted: true` to bypass the onboarding tutorial
+
 ## Demo Credentials (Development Only)
-- **Maria da Silva** (Producer): maria@demo.lidacacau.com
-- **Joao Pereira** (Worker): joao@demo.lidacacau.com
+- **Maria da Silva** (Producer): maria@demo.lidacacau.com / demo123
+- **Joao Pereira** (Worker): joao@demo.lidacacau.com / demo123
+- Both accounts have verification status 'approved' with IdentityVerification object
 - These accounts are friends with an active chat room for testing
