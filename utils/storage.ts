@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
   ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
-  FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats
+  FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 
@@ -27,6 +27,7 @@ const STORAGE_KEYS = {
   CHAT_ROOMS: '@lidacacau_chatrooms',
   PRESENCE: '@lidacacau_presence',
   ANALYTICS: '@lidacacau_analytics',
+  NOTIFICATIONS: '@lidacacau_notifications',
 };
 
 export const generateId = (): string => {
@@ -107,6 +108,18 @@ export const createUser = async (user: Omit<User, 'id' | 'createdAt'>): Promise<
       averageRating: user.role === 'worker' ? 0 : undefined,
     };
     await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([...users, newUser]));
+    
+    const welcomePhrases = LIDA_PHRASES.welcome;
+    const randomPhrase = welcomePhrases[Math.floor(Math.random() * welcomePhrases.length)];
+    const roleText = user.role === 'worker' ? 'trabalhador' : 'produtor';
+    
+    await createNotification({
+      type: 'new_user',
+      title: randomPhrase,
+      message: `${user.name} entrou como ${roleText}. Bora dar as boas-vindas!`,
+      userId: newUser.id,
+    });
+    
     return newUser;
   } catch (error) {
     console.error('Error creating user:', error);
@@ -1605,6 +1618,86 @@ export const getActiveUsersStats = async (): Promise<ActiveUsersStats> => {
         workers: { total: 0, active: 0 },
       },
     };
+  }
+};
+
+// ==========================================
+// NOTIFICACOES - GENTE DA LIDA
+// ==========================================
+
+export const getNotifications = async (): Promise<AppNotification[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error getting notifications:', error);
+    return [];
+  }
+};
+
+export const createNotification = async (
+  notification: Omit<AppNotification, 'id' | 'read' | 'createdAt'>
+): Promise<AppNotification> => {
+  try {
+    const notifications = await getNotifications();
+    const newNotification: AppNotification = {
+      ...notification,
+      id: generateId(),
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedNotifications = [newNotification, ...notifications].slice(0, 100);
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updatedNotifications));
+    return newNotification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    throw error;
+  }
+};
+
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    const notifications = await getNotifications();
+    const updated = notifications.map((n) =>
+      n.id === notificationId ? { ...n, read: true } : n
+    );
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+};
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  try {
+    const notifications = await getNotifications();
+    return notifications.filter((n) => !n.read).length;
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return 0;
+  }
+};
+
+export const getRecentNewUsers = async (limit: number = 10): Promise<User[]> => {
+  try {
+    const users = await getUsers();
+    const sortedUsers = users
+      .filter((u) => u.createdAt)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .slice(0, limit);
+    return sortedUsers;
+  } catch (error) {
+    console.error('Error getting recent users:', error);
+    return [];
+  }
+};
+
+export const getNewUserNotifications = async (limit: number = 10): Promise<AppNotification[]> => {
+  try {
+    const notifications = await getNotifications();
+    return notifications.filter((n) => n.type === 'new_user').slice(0, limit);
+  } catch (error) {
+    console.error('Error getting new user notifications:', error);
+    return [];
   }
 };
 

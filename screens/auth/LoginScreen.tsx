@@ -85,7 +85,7 @@ export default function LoginScreen() {
 
         <View style={styles.formContainer}>
           <ThemedText type="h2" style={styles.title}>
-            {mode === 'login' ? 'Entrar' : 'Criar Conta'}
+            {mode === 'login' ? 'Bora pra Lida!' : 'Entre pra comunidade'}
           </ThemedText>
 
           {mode === 'register' && (
@@ -116,7 +116,7 @@ export default function LoginScreen() {
                     type="small"
                     style={{ color: role === 'producer' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
                   >
-                    Tenho propriedade
+                    Preciso de mao de obra
                   </ThemedText>
                 </Pressable>
                 <Pressable
@@ -144,7 +144,7 @@ export default function LoginScreen() {
                     type="small"
                     style={{ color: role === 'worker' ? '#FFFFFF' : colors.textSecondary, textAlign: 'center' }}
                   >
-                    Busco trabalho
+                    Quero pegar lida
                   </ThemedText>
                 </Pressable>
               </View>

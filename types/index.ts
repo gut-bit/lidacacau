@@ -942,3 +942,58 @@ export interface UserSearchResult {
   pendingRequest: boolean;      // Se tem pedido de amizade pendente
   mutualFriends?: number;
 }
+
+// ==========================================
+// NOTIFICACOES - GENTE DA LIDA
+// ==========================================
+
+export type NotificationType = 
+  | 'new_user'            // Novo usuario se cadastrou
+  | 'friend_request'      // Pedido de amizade
+  | 'friend_accepted'     // Amizade aceita
+  | 'new_message'         // Nova mensagem
+  | 'new_job'             // Nova demanda criada
+  | 'new_offer'           // Nova oferta de servico
+  | 'bid_received'        // Proposta recebida
+  | 'bid_accepted'        // Proposta aceita
+  | 'system';             // Notificacao do sistema
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  userId?: string;              // Usuario relacionado (ex: quem se cadastrou)
+  targetId?: string;            // ID do objeto relacionado (job, offer, etc)
+  read: boolean;
+  createdAt: string;
+}
+
+// Frases e trocadilhos da Lida
+export const LIDA_PHRASES = {
+  welcome: [
+    'Mais um companheiro de lida!',
+    'Chegou mais gente da lida!',
+    'Bora meter a mao na massa!',
+    'Bem-vindo a comunidade da lida!',
+    'Mais um pra fortalecer a lida!',
+  ],
+  greeting: [
+    'E ai, parceiro de lida!',
+    'Opa, companheiro!',
+    'Tudo certo por ai?',
+    'Firme na lida?',
+  ],
+  success: [
+    'Servico bem feito, lida bem paga!',
+    'Isso que e trabalhar direito!',
+    'Mandou bem na lida!',
+    'Ta de parabens, parceiro!',
+  ],
+  encouragement: [
+    'Bora que a lida nao para!',
+    'Vamos que vamos!',
+    'A lida e todo dia!',
+    'Trabalho bom aparece!',
+  ],
+} as const;

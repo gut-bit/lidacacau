@@ -55,13 +55,21 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - Online indicators
 
 ### Quick Actions ("+" Button)
-- **Unified Action Hub**: Single "+" button opens modal with all creation/search actions
-- **Context-Aware**: Shows "Criar Demanda" for producers, "Criar Oferta" for workers
+- **Unified Action Hub**: Single "+" button opens modal with work-focused actions
 - **Options**:
-  - Create demand/offer (based on active role)
-  - Search people (producers/workers)
-  - Start new conversation
-- **Role Indicator**: Shows current mode at bottom of modal
+  - "Quero pegar uma lida" (offer services)
+  - "Preciso de gente pra lida" (post demand)
+  - "Buscar Gente da Lida" (search users)
+
+### Gente da Lida Section
+- **New User Showcase**: Horizontal scroll showing recent users in home feed
+- **Visual Elements**: Avatar, name, role tag, level badge, "NOVO" badge for users < 7 days
+- **Navigation**: Click to view user profile
+
+### Notification System
+- **New User Notifications**: Auto-generated when users register with "Lida" phrases
+- **Storage**: @lidacacau_notifications key, max 100 notifications
+- **Functions**: createNotification, getNotifications, markNotificationAsRead
 
 ### Technical Implementation
 - **UI/UX**: iOS 26 Liquid Glass style with LidaCacau color palette
@@ -97,7 +105,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - CURRENT_USER, USERS, JOBS, BIDS, WORK_ORDERS, REVIEWS
 - SERVICE_OFFERS, CARD_PRESETS, USER_PREFERENCES
 - FRIENDS, CHAT_ROOMS, MESSAGES_{roomId}, PRESENCE
-- ANALYTICS, CONTRACT_HISTORY, PORTFOLIO
+- ANALYTICS, CONTRACT_HISTORY, PORTFOLIO, NOTIFICATIONS
 
 ### Custom Hooks
 - `useScreenInsets`: Screen padding calculations (tab bar, header, web differences)
@@ -144,8 +152,11 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 9. Dev data seeding: initializeDevData() creates demo users (Maria/Joao) in __DEV__ mode
 10. All touch targets verified at 48dp minimum
 11. trackEvent calls added to all key user actions
-12. **Quick Actions Hub**: Unified "+" button with modal for create/search/chat actions
+12. **Quick Actions Hub**: Unified "+" button with modal for work-focused actions only
 13. **New Logo**: Handshake with cocoa fruit design applied across app
+14. **Gente da Lida Section**: Horizontal scroll in home feed showing recent users
+15. **Notification System**: Auto-notifications when new users register
+16. **Lida Terminology**: Updated UI texts with regional phrases ("pegar lida", "gente da lida", "firme na lida")
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com

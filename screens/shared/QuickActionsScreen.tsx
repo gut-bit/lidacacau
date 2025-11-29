@@ -46,8 +46,8 @@ export default function QuickActionsScreen() {
     {
       id: 'offer_service',
       icon: 'tool',
-      title: 'Quero fazer um servico',
-      subtitle: 'Ofereca seus servicos para produtores',
+      title: 'Quero pegar uma lida',
+      subtitle: 'Ofereca seu trabalho para produtores',
       color: colors.handshake,
       onPress: () => handleAction('offer_service', () => 
         navigation.replace('CreateCard', { type: 'offer' })
@@ -56,7 +56,7 @@ export default function QuickActionsScreen() {
     {
       id: 'hire_service',
       icon: 'user-plus',
-      title: 'Quero contratar um servico',
+      title: 'Preciso de gente pra lida',
       subtitle: 'Publique uma demanda de trabalho',
       color: colors.primary,
       onPress: () => handleAction('hire_service', () => 
@@ -66,8 +66,8 @@ export default function QuickActionsScreen() {
     {
       id: 'search_people',
       icon: 'users',
-      title: 'Buscar Pessoas',
-      subtitle: 'Encontre produtores ou trabalhadores',
+      title: 'Buscar Gente da Lida',
+      subtitle: 'Encontre companheiros de trabalho',
       color: colors.accent,
       onPress: () => handleAction('search_people', () => navigation.replace('UserSearch')),
     },

@@ -25,8 +25,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
-import { Job, MapActivity, UserRole, ServiceOffer, CARD_COLORS, CardType, UserPreferences, URUARA_CENTER } from '@/types';
-import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences } from '@/utils/storage';
+import { Job, MapActivity, UserRole, ServiceOffer, CARD_COLORS, CardType, UserPreferences, URUARA_CENTER, User, LIDA_PHRASES } from '@/types';
+import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences, getRecentNewUsers } from '@/utils/storage';
 import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
@@ -392,6 +392,7 @@ export default function UnifiedHomeScreen() {
   const [userLocation, setUserLocation] = useState<UserLocation>(DEFAULT_LOCATION);
   const [locationLoading, setLocationLoading] = useState(true);
   const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
+  const [recentUsers, setRecentUsers] = useState<User[]>([]);
 
   const isWorker = activeRole === 'worker';
   const isProducer = activeRole === 'producer';
@@ -495,6 +496,9 @@ export default function UnifiedHomeScreen() {
         counts[job.id] = bids.filter((b) => b.status === 'pending').length;
       }
       setBidCounts(counts);
+      
+      const newUsers = await getRecentNewUsers(6);
+      setRecentUsers(newUsers.filter((u) => u.id !== user.id));
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -664,9 +668,9 @@ export default function UnifiedHomeScreen() {
         ) : null}
       </View>
       <View style={styles.profileInfo}>
-        <ThemedText type="h3">Ola, {user?.name?.split(' ')[0]}!</ThemedText>
+        <ThemedText type="h3">E ai, {user?.name?.split(' ')[0]}!</ThemedText>
         <ThemedText type="body" style={{ color: colors.textSecondary }}>
-          {isProducer ? 'Pronto para contratar?' : 'Procurando trabalho?'}
+          {isProducer ? 'Bora meter a mao na massa?' : 'Firme na lida?'}
         </ThemedText>
       </View>
       <Pressable 
@@ -751,6 +755,92 @@ export default function UnifiedHomeScreen() {
       </View>
     </View>
   );
+
+  const renderGenteDaLida = () => {
+    if (recentUsers.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Feather name="users" size={20} color={colors.handshake} />
+            <ThemedText type="h4" style={{ color: colors.handshake }}>
+              Gente da Lida
+            </ThemedText>
+            <View style={[styles.countBadge, { backgroundColor: colors.handshake }]}>
+              <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+                {recentUsers.length}
+              </ThemedText>
+            </View>
+          </View>
+          <Pressable onPress={() => navigation.navigate('UserSearch')}>
+            <ThemedText type="small" style={{ color: colors.link }}>
+              Ver todos
+            </ThemedText>
+          </Pressable>
+        </View>
+        
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.genteDaLidaScroll}
+        >
+          {recentUsers.map((person) => {
+            const isNewUser = new Date(person.createdAt!).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
+            const roleLabel = person.role === 'worker' ? 'Trabalhador' : 'Produtor';
+            const roleColor = person.role === 'worker' ? colors.handshake : colors.primary;
+            
+            return (
+              <Pressable
+                key={person.id}
+                style={[styles.personCard, { backgroundColor: colors.card }]}
+                onPress={() => navigation.navigate('OtherUserProfile', { userId: person.id })}
+              >
+                <View style={styles.personAvatarContainer}>
+                  {person.avatar ? (
+                    <Image source={{ uri: person.avatar }} style={styles.personAvatar} contentFit="cover" />
+                  ) : (
+                    <View style={[styles.personAvatarPlaceholder, { backgroundColor: roleColor }]}>
+                      <ThemedText type="h4" style={{ color: '#FFFFFF' }}>
+                        {person.name?.charAt(0) || '?'}
+                      </ThemedText>
+                    </View>
+                  )}
+                  {isNewUser ? (
+                    <View style={[styles.newBadge, { backgroundColor: colors.success }]}>
+                      <ThemedText type="small" style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '700' }}>
+                        NOVO
+                      </ThemedText>
+                    </View>
+                  ) : null}
+                  {person.verification?.status === 'approved' ? (
+                    <View style={[styles.miniVerifiedBadge, { backgroundColor: colors.success }]}>
+                      <Feather name="check" size={8} color="#FFFFFF" />
+                    </View>
+                  ) : null}
+                </View>
+                <ThemedText type="body" style={styles.personName} numberOfLines={1}>
+                  {person.name?.split(' ')[0]}
+                </ThemedText>
+                <View style={[styles.roleTag, { backgroundColor: roleColor + '20' }]}>
+                  <ThemedText type="small" style={{ color: roleColor, fontSize: 10, fontWeight: '600' }}>
+                    {roleLabel}
+                  </ThemedText>
+                </View>
+                {person.level ? (
+                  <View style={[styles.levelTag, { backgroundColor: LevelColors[`N${person.level}` as keyof typeof LevelColors] + '20' }]}>
+                    <ThemedText type="small" style={{ color: LevelColors[`N${person.level}` as keyof typeof LevelColors], fontSize: 9, fontWeight: '700' }}>
+                      {getLevelLabel(person.level)}
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
 
   const renderMyJobsSection = () => {
     if (myJobs.length === 0) return null;
@@ -1046,6 +1136,7 @@ export default function UnifiedHomeScreen() {
         {renderProfileHeader()}
         {renderLocationBanner()}
         {renderQuickStats()}
+        {renderGenteDaLida()}
         {renderFeedFilters()}
         {renderMyJobsSection()}
         {renderAvailableJobs()}
@@ -1454,5 +1545,68 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  genteDaLidaScroll: {
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
+  },
+  personCard: {
+    width: 100,
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  personAvatarContainer: {
+    position: 'relative',
+    marginBottom: Spacing.xs,
+  },
+  personAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  personAvatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  personName: {
+    fontWeight: '600',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  roleTag: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+  },
+  levelTag: {
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    marginTop: 2,
+  },
+  newBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  miniVerifiedBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
