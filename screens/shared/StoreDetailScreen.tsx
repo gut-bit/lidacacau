@@ -105,20 +105,20 @@ export default function StoreDetailScreen() {
           <ThemedText type="body" style={styles.ratingValue}>
             {store?.rating.toFixed(1)}
           </ThemedText>
-          <ThemedText type="caption" style={styles.reviewCount}>
+          <ThemedText type="small" style={styles.reviewCount}>
             ({store?.totalReviews} avaliacoes)
           </ThemedText>
         </View>
         <View style={styles.locationRow}>
           <Feather name="map-pin" size={12} color={ShopColors.primary} />
-          <ThemedText type="caption" style={styles.locationText}>
+          <ThemedText type="small" style={styles.locationText}>
             {store?.city}, {store?.state}
           </ThemedText>
         </View>
         {store?.verified && (
           <View style={styles.verifiedTag}>
             <Feather name="check-circle" size={12} color="#FFFFFF" />
-            <ThemedText type="caption" style={styles.verifiedText}>Loja Verificada</ThemedText>
+            <ThemedText type="small" style={styles.verifiedText}>Loja Verificada</ThemedText>
           </View>
         )}
       </View>
@@ -137,7 +137,7 @@ export default function StoreDetailScreen() {
           <Feather name={iconName as any} size={36} color={ShopColors.primary} />
           {product.discount ? (
             <View style={styles.discountBadge}>
-              <ThemedText type="caption" style={styles.discountText}>
+              <ThemedText type="small" style={styles.discountText}>
                 -{product.discount}%
               </ThemedText>
             </View>
@@ -149,11 +149,11 @@ export default function StoreDetailScreen() {
           </ThemedText>
           <View style={styles.priceContainer}>
             {product.discount ? (
-              <ThemedText type="caption" style={styles.originalPrice}>
+              <ThemedText type="small" style={styles.originalPrice}>
                 R$ {product.price.toFixed(2)}
               </ThemedText>
             ) : null}
-            <ThemedText type="h5" style={styles.finalPrice}>
+            <ThemedText type="h4" style={styles.finalPrice}>
               R$ {finalPrice.toFixed(2)}
             </ThemedText>
           </View>
@@ -203,18 +203,18 @@ export default function StoreDetailScreen() {
         ) : null}
 
         <View style={styles.contactSection}>
-          <ThemedText type="h5" style={styles.sectionTitle}>Contato</ThemedText>
+          <ThemedText type="h4" style={styles.sectionTitle}>Contato</ThemedText>
           <View style={styles.contactRow}>
             {store.phone ? (
               <View style={styles.contactItem}>
                 <Feather name="phone" size={16} color={ShopColors.primary} />
-                <ThemedText type="caption" style={styles.contactText}>{store.phone}</ThemedText>
+                <ThemedText type="small" style={styles.contactText}>{store.phone}</ThemedText>
               </View>
             ) : null}
             {store.whatsapp ? (
               <View style={styles.contactItem}>
                 <Feather name="message-circle" size={16} color={ShopColors.secondary} />
-                <ThemedText type="caption" style={styles.contactText}>{store.whatsapp}</ThemedText>
+                <ThemedText type="small" style={styles.contactText}>{store.whatsapp}</ThemedText>
               </View>
             ) : null}
           </View>
@@ -225,7 +225,7 @@ export default function StoreDetailScreen() {
             <ThemedText type="h4" style={styles.sectionTitle}>
               Produtos
             </ThemedText>
-            <ThemedText type="caption" style={styles.productCount}>
+            <ThemedText type="small" style={styles.productCount}>
               {products.length} {products.length === 1 ? 'item' : 'itens'}
             </ThemedText>
           </View>

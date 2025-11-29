@@ -93,7 +93,7 @@ export default function ShopListScreen() {
               />
             </View>
             <ThemedText 
-              type="caption" 
+              type="small" 
               style={[
                 styles.categoryText,
                 selectedCategory === cat.id && styles.categoryTextActive
@@ -121,28 +121,28 @@ export default function ShopListScreen() {
         <Feather name="shopping-bag" size={32} color={ShopColors.primary} />
       </View>
       <View style={styles.storeInfo}>
-        <ThemedText type="h5" style={styles.storeName} numberOfLines={1}>
+        <ThemedText type="h4" style={styles.storeName} numberOfLines={1}>
           {store.name}
         </ThemedText>
         <View style={styles.ratingRow}>
           <Feather name="star" size={12} color="#FFB800" />
-          <ThemedText type="caption" style={styles.ratingText}>
+          <ThemedText type="small" style={styles.ratingText}>
             {store.rating.toFixed(1)}
           </ThemedText>
-          <ThemedText type="caption" style={styles.reviewsText}>
+          <ThemedText type="small" style={styles.reviewsText}>
             ({store.totalReviews})
           </ThemedText>
         </View>
         <View style={styles.locationRow}>
           <Feather name="map-pin" size={10} color={ShopColors.primary} />
-          <ThemedText type="caption" style={styles.locationText} numberOfLines={1}>
+          <ThemedText type="small" style={styles.locationText} numberOfLines={1}>
             {store.city}
           </ThemedText>
         </View>
         {store.verified && (
           <View style={styles.verifiedBadge}>
             <Feather name="check-circle" size={10} color="#FFFFFF" />
-            <ThemedText type="caption" style={styles.verifiedText}>Verificada</ThemedText>
+            <ThemedText type="small" style={styles.verifiedText}>Verificada</ThemedText>
           </View>
         )}
       </View>
@@ -155,7 +155,7 @@ export default function ShopListScreen() {
         <ThemedText type="h4" style={{ color: ShopColors.primaryDark }}>
           Lojas Disponíveis
         </ThemedText>
-        <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+        <ThemedText type="small" style={{ color: colors.textSecondary }}>
           {stores.length} {stores.length === 1 ? 'loja' : 'lojas'}
         </ThemedText>
       </View>
