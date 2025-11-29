@@ -8,7 +8,6 @@ import {
   logoutUser as logoutUserStorage,
   initializeStorage,
   updateUser,
-  devAutoLogin,
 } from '@/utils/storage';
 
 interface AuthContextType {
