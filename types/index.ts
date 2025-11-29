@@ -870,6 +870,7 @@ export type AnalyticsEventType =
   | 'search_performed'
   | 'filter_changed'
   | 'tutorial_step_completed'
+  | 'quick_action_tap'
   | 'error_occurred';
 
 export interface AnalyticsEvent {

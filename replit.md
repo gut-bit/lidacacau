@@ -54,6 +54,15 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - Statistics by role
   - Online indicators
 
+### Quick Actions ("+" Button)
+- **Unified Action Hub**: Single "+" button opens modal with all creation/search actions
+- **Context-Aware**: Shows "Criar Demanda" for producers, "Criar Oferta" for workers
+- **Options**:
+  - Create demand/offer (based on active role)
+  - Search people (producers/workers)
+  - Start new conversation
+- **Role Indicator**: Shows current mode at bottom of modal
+
 ### Technical Implementation
 - **UI/UX**: iOS 26 Liquid Glass style with LidaCacau color palette
 - **Persistency**: AsyncStorage for offline-first data persistence (all keys use `@lidacacau_` prefix)
@@ -71,8 +80,9 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `/screens/shared/ChatRoomScreen.tsx`: Individual chat
   - `/screens/shared/UserSearchScreen.tsx`: User search with filters
   - `/screens/shared/TutorialScreen.tsx`: Interactive 6-card tutorial carousel
+  - `/screens/shared/QuickActionsScreen.tsx`: Unified action modal (create, search, chat)
 - `/navigation/`: Navigation flows
-  - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Explore, Create, Learn, Profile)
+  - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Explore, +, Learn, Profile)
   - `RootNavigator.tsx`: Root navigation with auth handling
 - `/contexts/`: Contains `AuthContext.tsx`
 - `/types/`: TypeScript definitions including FriendConnection, ChatRoom, DirectMessage, UserPresence
@@ -134,6 +144,8 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 9. Dev data seeding: initializeDevData() creates demo users (Maria/Joao) in __DEV__ mode
 10. All touch targets verified at 48dp minimum
 11. trackEvent calls added to all key user actions
+12. **Quick Actions Hub**: Unified "+" button with modal for create/search/chat actions
+13. **New Logo**: Handshake with cocoa fruit design applied across app
 
 ## Demo Credentials (Development Only)
 - **Maria da Silva** (Producer): maria@demo.lidacacau.com

@@ -38,6 +38,7 @@ import FriendsScreen from '@/screens/shared/FriendsScreen';
 import ChatListScreen from '@/screens/shared/ChatListScreen';
 import ChatRoomScreen from '@/screens/shared/ChatRoomScreen';
 import UserSearchScreen from '@/screens/shared/UserSearchScreen';
+import QuickActionsScreen from '@/screens/shared/QuickActionsScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -97,6 +98,7 @@ export type RootStackParamList = {
   ChatList: { newChatWithUserId?: string } | undefined;
   ChatRoom: { roomId: string; otherUserId: string };
   UserSearch: undefined;
+  QuickActions: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -303,6 +305,15 @@ export default function RootNavigator() {
             name="UserSearch"
             component={UserSearchScreen}
             options={{ title: 'Buscar Usuarios' }}
+          />
+          <Stack.Screen
+            name="QuickActions"
+            component={QuickActionsScreen}
+            options={{ 
+              headerShown: false, 
+              presentation: 'transparentModal',
+              animation: 'fade',
+            }}
           />
         </>
       )}

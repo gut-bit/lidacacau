@@ -1,16 +1,17 @@
 import React from 'react';
-import { StyleSheet, View, Platform, Pressable } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/hooks/useAuth';
-import { Colors, Spacing, Shadows } from '@/constants/theme';
+import { Colors, Shadows } from '@/constants/theme';
 import UnifiedHomeScreen from '@/screens/shared/UnifiedHomeScreen';
 import ExploreScreen from '@/screens/shared/ExploreScreen';
-import CreateJobScreen from '@/screens/producer/CreateJobScreen';
 import EducationScreen from '@/screens/education/EducationScreen';
 import UnifiedProfileScreen from '@/screens/shared/UnifiedProfileScreen';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export type UnifiedTabParamList = {
   Home: undefined;
@@ -26,15 +27,19 @@ function CreateButtonIconComponent({ focused, isDark }: { focused: boolean; isDa
   const colors = isDark ? Colors.dark : Colors.light;
   
   return (
-    <View style={[styles.createButton, { backgroundColor: focused ? colors.primary : colors.accent }, Shadows.fab]}>
+    <View style={[styles.createButton, { backgroundColor: colors.primary }, Shadows.fab]}>
       <Feather name="plus" size={28} color="#FFFFFF" />
     </View>
   );
 }
 
+function PlaceholderScreen() {
+  return <View style={{ flex: 1 }} />;
+}
+
 export default function UnifiedTabNavigator() {
-  const { theme, isDark } = useTheme();
-  const { activeRole } = useAuth();
+  const { isDark } = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const colors = isDark ? Colors.dark : Colors.light;
 
   return (
@@ -87,10 +92,16 @@ export default function UnifiedTabNavigator() {
       />
       <Tab.Screen
         name="Create"
-        component={CreateJobScreen}
+        component={PlaceholderScreen}
         options={{
           title: '',
           tabBarIcon: ({ focused }) => <CreateButtonIconComponent focused={focused} isDark={isDark} />,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('QuickActions');
+          },
         }}
       />
       <Tab.Screen
