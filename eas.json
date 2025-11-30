@@ -9,7 +9,6 @@
     },
     "development": {
       "extends": "base",
-      "developmentClient": true,
       "distribution": "internal",
       "android": {
         "buildType": "apk",
