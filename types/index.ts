@@ -185,7 +185,7 @@ export interface RoleProfile {
 export interface User {
   id: string;
   email: string;
-  password: string;
+  password?: string;
   name: string;
   phone?: string;
   location?: string;

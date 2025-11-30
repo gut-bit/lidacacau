@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, UserRole, ProfileCompletion, DEFAULT_BADGES, DEFAULT_GOALS } from '@/types';
-import {
-  getCurrentUser,
-  setCurrentUser,
-  createUser,
-  loginUser as loginUserStorage,
-  logoutUser as logoutUserStorage,
-  initializeStorage,
-  updateUser,
-} from '@/utils/storage';
+import { User, UserRole, ProfileCompletion, DEFAULT_GOALS } from '@/types';
+import { serviceFactory } from '@/services';
+import { initializeStorage, updateUser } from '@/utils/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -60,12 +53,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const authService = serviceFactory.getAuthService();
+
   useEffect(() => {
     const initialize = async () => {
       try {
         await initializeStorage();
-        // Force logout on web to show login screen
-        await setCurrentUser(null);
+        await authService.logout();
         setUser(null);
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -93,9 +87,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loggedInUser = await loginUserStorage(email, password);
-      const updatedUser = ensureUserHasNewFields(loggedInUser);
-      setUser(updatedUser);
+      const result = await authService.login({ email, password });
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao fazer login');
+      }
+      
+      if (result.user) {
+        const updatedUser = ensureUserHasNewFields(result.user);
+        setUser(updatedUser);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -104,22 +105,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (email: string, password: string, name: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      const newUser = await createUser({ 
-        email, 
-        password, 
-        name, 
-        role,
-        roles: [role],
-        activeRole: role,
-        searchRadius: 50,
-        level: role === 'worker' ? 1 : undefined,
-        producerLevel: role === 'producer' ? 1 : undefined,
-        badges: [],
-        goals: DEFAULT_GOALS.map(g => ({ ...g })),
+      const result = await authService.register({
+        email,
+        password,
+        name,
+        role: role as 'producer' | 'worker',
       });
-      await setCurrentUser(newUser);
-      const updatedUser = ensureUserHasNewFields(newUser);
-      setUser(updatedUser);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao criar conta');
+      }
+      
+      if (result.user) {
+        const updatedUser = ensureUserHasNewFields(result.user);
+        setUser(updatedUser);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await logoutUserStorage();
+      await authService.logout();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await authService.getCurrentUser();
       if (currentUser) {
         const updatedUser = ensureUserHasNewFields(currentUser);
         setUser(updatedUser);
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateProfile = async (updates: Partial<User>) => {
     if (!user) return;
     try {
-      const updatedUser = await updateUser(user.id, updates);
+      const updatedUser = await authService.updateUser(user.id, updates);
       if (updatedUser) {
         const finalUser = ensureUserHasNewFields(updatedUser);
         setUser(finalUser);
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw new Error('Role not enabled for this user');
     }
     try {
-      const updatedUser = await updateUser(user.id, { activeRole: role, role });
+      const updatedUser = await authService.updateUser(user.id, { activeRole: role, role });
       if (updatedUser) {
         const finalUser = ensureUserHasNewFields(updatedUser);
         setUser(finalUser);
@@ -202,7 +202,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
-      const updatedUser = await updateUser(user.id, updates);
+      const updatedUser = await authService.updateUser(user.id, updates);
       if (updatedUser) {
         const finalUser = ensureUserHasNewFields(updatedUser);
         setUser(finalUser);
