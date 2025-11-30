@@ -2,6 +2,7 @@
  * LidaCacau - Implementação Mock do Serviço de Autenticação
  * 
  * Usa AsyncStorageAdapter para simular autenticação.
+ * Senhas são hasheadas usando PasswordUtils para segurança.
  * Para produção, substitua por ApiAuthService.
  */
 
@@ -13,6 +14,7 @@ import {
   AuthResult 
 } from '../interfaces/IAuthService';
 import { storageAdapter, StorageKeys } from '../common/AsyncStorageAdapter';
+import { hashPassword, verifyPassword } from '../common/PasswordUtils';
 
 export class MockAuthService implements IAuthService {
   private generateId(): string {
@@ -22,9 +24,7 @@ export class MockAuthService implements IAuthService {
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     try {
       const users = await this.getUsers();
-      const user = users.find(
-        u => u.email === credentials.email && u.password === credentials.password
-      );
+      const user = users.find(u => u.email === credentials.email);
 
       if (!user) {
         return {
@@ -33,11 +33,20 @@ export class MockAuthService implements IAuthService {
         };
       }
 
-      await storageAdapter.set(StorageKeys.CURRENT_USER, user);
+      const passwordValid = await verifyPassword(credentials.password, user.password || '');
+      if (!passwordValid) {
+        return {
+          success: false,
+          error: 'Email ou senha inválidos',
+        };
+      }
+
+      const userWithoutPassword = { ...user, password: undefined };
+      await storageAdapter.set(StorageKeys.CURRENT_USER, userWithoutPassword);
       
       return {
         success: true,
-        user,
+        user: userWithoutPassword,
         token: `mock_token_${user.id}_${Date.now()}`,
       };
     } catch (error) {
@@ -59,11 +68,13 @@ export class MockAuthService implements IAuthService {
         };
       }
 
+      const hashedPassword = await hashPassword(data.password);
+
       const newUser: User = {
         id: this.generateId(),
         name: data.name,
         email: data.email,
-        password: data.password,
+        password: hashedPassword,
         role: data.role,
         roles: [data.role],
         activeRole: data.role,
@@ -76,11 +87,13 @@ export class MockAuthService implements IAuthService {
       };
 
       await storageAdapter.set(StorageKeys.USERS, [...users, newUser]);
-      await storageAdapter.set(StorageKeys.CURRENT_USER, newUser);
+      
+      const userWithoutPassword = { ...newUser, password: undefined };
+      await storageAdapter.set(StorageKeys.CURRENT_USER, userWithoutPassword);
 
       return {
         success: true,
-        user: newUser,
+        user: userWithoutPassword,
         token: `mock_token_${newUser.id}_${Date.now()}`,
       };
     } catch (error) {

@@ -13,11 +13,30 @@
  * const jobService = serviceFactory.getJobService();
  * ```
  * 
+ * ## Estado Atual (MVP)
+ * 
+ * Todas as implementações usam Mock (AsyncStorage) para o MVP.
+ * O schema PostgreSQL está pronto em server/db/schema.sql.
+ * 
  * ## Para Migrar para Produção
  * 
- * 1. Crie implementações de API em services/api/
- * 2. Atualize os métodos get*Service() para retornar a implementação correta
- * 3. Configure AppConfiguration.api.baseUrl com a URL do servidor
+ * 1. Deploy backend API usando server/db/schema.sql
+ * 2. Crie implementações em services/api/ (ex: ApiAuthService)
+ *    - Use ApiAdapter de services/common/ApiAdapter.ts
+ * 3. Atualize os métodos get*Service() abaixo
+ * 4. Configure AppConfiguration.api.baseUrl
+ * 
+ * Exemplo de implementação API:
+ * ```typescript
+ * // services/api/ApiAuthService.ts
+ * import { apiAdapter } from '../common/ApiAdapter';
+ * 
+ * export class ApiAuthService implements IAuthService {
+ *   async login(credentials) {
+ *     return apiAdapter.post('/auth/login', credentials);
+ *   }
+ * }
+ * ```
  */
 
 import { AppConfiguration } from '@/config';
@@ -78,60 +97,55 @@ class ServiceFactory {
 
   /**
    * Serviço de Autenticação
+   * TODO: Criar ApiAuthService e trocar quando provider === 'api'
    */
   getAuthService(): IAuthService {
     if (!this.instances.auth) {
-      this.instances.auth = this.provider === 'api' 
-        ? new MockAuthService()
-        : new MockAuthService();
+      this.instances.auth = new MockAuthService();
     }
     return this.instances.auth;
   }
 
   /**
    * Serviço de Demandas (Jobs)
+   * TODO: Criar ApiJobService e trocar quando provider === 'api'
    */
   getJobService(): IJobService {
     if (!this.instances.job) {
-      this.instances.job = this.provider === 'api'
-        ? new MockJobService()
-        : new MockJobService();
+      this.instances.job = new MockJobService();
     }
     return this.instances.job;
   }
 
   /**
    * Serviço de Ordens de Trabalho
+   * TODO: Criar ApiWorkOrderService e trocar quando provider === 'api'
    */
   getWorkOrderService(): IWorkOrderService {
     if (!this.instances.workOrder) {
-      this.instances.workOrder = this.provider === 'api'
-        ? new MockWorkOrderService()
-        : new MockWorkOrderService();
+      this.instances.workOrder = new MockWorkOrderService();
     }
     return this.instances.workOrder;
   }
 
   /**
    * Serviço de Propriedades Rurais
+   * TODO: Criar ApiPropertyService e trocar quando provider === 'api'
    */
   getPropertyService(): IPropertyService {
     if (!this.instances.property) {
-      this.instances.property = this.provider === 'api'
-        ? new MockPropertyService()
-        : new MockPropertyService();
+      this.instances.property = new MockPropertyService();
     }
     return this.instances.property;
   }
 
   /**
    * Serviço Social (Amigos, Chat, Presença)
+   * TODO: Criar ApiSocialService e trocar quando provider === 'api'
    */
   getSocialService(): ISocialService {
     if (!this.instances.social) {
-      this.instances.social = this.provider === 'api'
-        ? new MockSocialService()
-        : new MockSocialService();
+      this.instances.social = new MockSocialService();
     }
     return this.instances.social;
   }
