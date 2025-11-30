@@ -26,23 +26,16 @@ export class MockAuthService implements IAuthService {
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     try {
       const users = await this.getUsers();
-      console.log('[MockAuthService] Login attempt for:', credentials.email);
-      console.log('[MockAuthService] Found users count:', users.length);
-      
       const user = users.find(u => u.email === credentials.email);
 
       if (!user) {
-        console.log('[MockAuthService] User not found. Available emails:', users.map(u => u.email));
         return {
           success: false,
           error: 'Email ou senha inválidos',
         };
       }
 
-      console.log('[MockAuthService] User found:', user.name, 'Password stored:', user.password ? 'yes' : 'no');
       const passwordValid = await verifyPassword(credentials.password, user.password || '');
-      console.log('[MockAuthService] Password valid:', passwordValid);
-      
       if (!passwordValid) {
         return {
           success: false,

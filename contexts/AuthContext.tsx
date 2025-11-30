@@ -59,10 +59,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initialize = async () => {
       try {
         await initializeStorage();
-        await authService.logout();
-        setUser(null);
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          const restoredUser = ensureUserHasNewFields(currentUser);
+          setUser(restoredUser);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
