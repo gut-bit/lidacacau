@@ -16,10 +16,11 @@ import {
 
 import RootNavigator from "@/navigation/RootNavigator";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ConfigProvider, AppConfiguration } from "@/config";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Colors } from "@/constants/theme";
 import { startSession } from "@/utils/analytics";
-import { initializeDevData } from "@/utils/storage";
+import { initializeMockData } from "@/data/MockDataProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,8 +40,12 @@ export default function App() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      startSession();
-      initializeDevData();
+      if (AppConfiguration.features.enableAnalytics) {
+        startSession();
+      }
+      if (AppConfiguration.features.enableMockData) {
+        initializeMockData();
+      }
     }
   }, [fontsLoaded]);
 
@@ -54,18 +59,20 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
-          <KeyboardProvider>
-            <AuthProvider>
-              <NavigationContainer>
-                <RootNavigator />
-              </NavigationContainer>
-            </AuthProvider>
-            <StatusBar style="auto" />
-          </KeyboardProvider>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+      <ConfigProvider>
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+            <KeyboardProvider>
+              <AuthProvider>
+                <NavigationContainer>
+                  <RootNavigator />
+                </NavigationContainer>
+              </AuthProvider>
+              <StatusBar style="auto" />
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </ConfigProvider>
     </ErrorBoundary>
   );
 }
