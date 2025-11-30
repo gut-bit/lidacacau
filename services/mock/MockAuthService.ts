@@ -3,6 +3,7 @@
  * 
  * Usa AsyncStorageAdapter para simular autenticação.
  * Senhas são hasheadas usando PasswordUtils para segurança.
+ * Tokens e IDs de usuário são armazenados com SecureStore.
  * Para produção, substitua por ApiAuthService.
  */
 
@@ -15,6 +16,7 @@ import {
 } from '../interfaces/IAuthService';
 import { storageAdapter, StorageKeys } from '../common/AsyncStorageAdapter';
 import { hashPassword, verifyPassword } from '../common/PasswordUtils';
+import { sessionManager } from '../common/SessionManager';
 
 export class MockAuthService implements IAuthService {
   private generateId(): string {
@@ -42,12 +44,15 @@ export class MockAuthService implements IAuthService {
       }
 
       const userWithoutPassword = { ...user, password: undefined };
+      const token = `mock_token_${user.id}_${Date.now()}`;
+      
+      await sessionManager.saveSession(token, user.id);
       await storageAdapter.set(StorageKeys.CURRENT_USER, userWithoutPassword);
       
       return {
         success: true,
         user: userWithoutPassword,
-        token: `mock_token_${user.id}_${Date.now()}`,
+        token,
       };
     } catch (error) {
       return {
@@ -89,12 +94,15 @@ export class MockAuthService implements IAuthService {
       await storageAdapter.set(StorageKeys.USERS, [...users, newUser]);
       
       const userWithoutPassword = { ...newUser, password: undefined };
+      const token = `mock_token_${newUser.id}_${Date.now()}`;
+      
+      await sessionManager.saveSession(token, newUser.id);
       await storageAdapter.set(StorageKeys.CURRENT_USER, userWithoutPassword);
 
       return {
         success: true,
         user: userWithoutPassword,
-        token: `mock_token_${newUser.id}_${Date.now()}`,
+        token,
       };
     } catch (error) {
       return {
@@ -105,7 +113,7 @@ export class MockAuthService implements IAuthService {
   }
 
   async logout(): Promise<void> {
-    await storageAdapter.remove(StorageKeys.CURRENT_USER);
+    await sessionManager.clearSession();
   }
 
   async getCurrentUser(): Promise<User | null> {
