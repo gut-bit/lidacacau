@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,6 +21,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Colors } from "@/constants/theme";
 import { startSession } from "@/utils/analytics";
 import { initializeMockData } from "@/data/MockDataProvider";
+import { AppInitializer } from "@/components/AppInitializer";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,12 +32,6 @@ export default function App() {
     Rubik_600SemiBold,
     Rubik_700Bold,
   });
-
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -61,12 +56,14 @@ export default function App() {
     <ErrorBoundary>
       <ConfigProvider>
         <SafeAreaProvider>
-          <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+          <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
               <AuthProvider>
-                <NavigationContainer>
-                  <RootNavigator />
-                </NavigationContainer>
+                <AppInitializer>
+                  <NavigationContainer>
+                    <RootNavigator />
+                  </NavigationContainer>
+                </AppInitializer>
               </AuthProvider>
               <StatusBar style="auto" />
             </KeyboardProvider>
