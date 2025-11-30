@@ -111,21 +111,32 @@ The service layer is designed for easy migration from mock (AsyncStorage) to pro
 
 ## Deployment Architecture
 
-### Production Server (Unified)
-The application uses a unified Express.js server for production:
-- **Port**: 5000 (configurable via PORT env var)
+### Production Server (Unified Express.js)
+The application uses a unified Express.js server for production that serves BOTH:
 - **API Routes**: `/api/*` - RESTful endpoints for auth, users, jobs, properties, social
-- **Static Files**: Expo web export served from `/dist` folder
+- **Static Files**: Expo web export served from `static-build/` folder
+- **Port**: 5000 (required for Replit deployment)
 - **Health Check**: `/api/health` - Returns server status and version
 
 ### Build & Deploy Process
-1. **Build**: `npx expo export --platform web --output-dir dist`
-2. **Run**: `NODE_ENV=production npx tsx server/index.ts`
+1. **Build Static Files**: `npx expo export --platform web --output-dir static-build`
+2. **Run Server**: `NODE_ENV=production npx tsx server/index.ts`
 3. **Environment Variables**:
-   - `DATABASE_URL`: PostgreSQL connection string
+   - `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
    - `SESSION_SECRET`: JWT signing secret
    - `NODE_ENV`: Set to "production"
    - `PORT`: Server port (default 5000)
+
+### Replit Deployment (IMPORTANT)
+**Must use Autoscale Deployment** (not Static) because the app requires a backend server:
+
+1. Click "Publish" in the Replit workspace header
+2. Select **"Autoscale"** deployment type
+3. Set run command: `NODE_ENV=production npx tsx server/index.ts`
+4. Configure machine power as needed
+5. Click "Publish"
+
+**Note**: The current `.replit` configuration uses `deploymentTarget = "static"` which WILL NOT work for production because the API server won't run. You must manually select Autoscale deployment when publishing.
 
 ### Server Components
 - **Express.js** with Helmet, CORS, rate limiting
