@@ -125,7 +125,6 @@ integrations = ["github:1.0.0"]
 
 [deployment]
 deploymentTarget = "cloudrun"
-publicDir = "static-build"
 build = ["node", "scripts/build.js"]
 run = ["sh", "-c", "NODE_ENV=production npx tsx server/index.ts"]
 
