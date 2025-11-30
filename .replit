@@ -38,16 +38,16 @@ localPort = 34155
 externalPort = 3002
 
 [[ports]]
-localPort = 35627
-externalPort = 8099
-
-[[ports]]
 localPort = 38537
 externalPort = 5000
 
 [[ports]]
 localPort = 39195
 externalPort = 8008
+
+[[ports]]
+localPort = 41897
+externalPort = 8099
 
 [[ports]]
 localPort = 42791
@@ -140,3 +140,8 @@ value = "0"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-de99b782-37a1-4217-a63e-b4d544930d8a"
+
+[userenv]
+
+[userenv.development]
+EXPO_NO_DEV_CLIENT = "1"

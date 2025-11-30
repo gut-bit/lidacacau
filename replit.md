@@ -188,3 +188,22 @@ The application uses a unified Express.js server for production:
 - **PostgreSQL**: Neon-backed database (DATABASE_URL in secrets).
 - **Express.js**: Backend API server with security middleware.
 - **Drizzle ORM**: Type-safe database operations.
+
+## Development Notes
+
+### Expo Go vs Development Build Mode
+**IMPORTANT**: The project has `expo-dev-client` installed which causes the dev server to default to "development build" mode. This produces a QR code URL like `exp+lidacacau://expo-development-client/...` which CANNOT be opened by Expo Go.
+
+**To use Expo Go on your phone:**
+- Run: `EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start --go`
+- The `--go` flag forces Expo Go mode
+- The QR code will show `exp://...` which CAN be opened by Expo Go
+
+**Demo Credentials:**
+- Producer: `maria@demo.lidacacau.com` / `demo123`
+- Worker: `joao@demo.lidacacau.com` / `demo123`
+
+### Production URLs
+- Custom Domain: https://lidacacau.com
+- Replit: https://lidacacau.replit.app
+- Expo Hosting: https://lidacacau.expo.app
