@@ -33,7 +33,7 @@ export class MockAuthService implements IAuthService {
         };
       }
 
-      await storageAdapter.setItem(StorageKeys.CURRENT_USER, user);
+      await storageAdapter.set(StorageKeys.CURRENT_USER, user);
       
       return {
         success: true,
@@ -75,8 +75,8 @@ export class MockAuthService implements IAuthService {
         averageRating: data.role === 'worker' ? 0 : undefined,
       };
 
-      await storageAdapter.setItem(StorageKeys.USERS, [...users, newUser]);
-      await storageAdapter.setItem(StorageKeys.CURRENT_USER, newUser);
+      await storageAdapter.set(StorageKeys.USERS, [...users, newUser]);
+      await storageAdapter.set(StorageKeys.CURRENT_USER, newUser);
 
       return {
         success: true,
@@ -92,12 +92,12 @@ export class MockAuthService implements IAuthService {
   }
 
   async logout(): Promise<void> {
-    await storageAdapter.removeItem(StorageKeys.CURRENT_USER);
+    await storageAdapter.remove(StorageKeys.CURRENT_USER);
   }
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      return await storageAdapter.getItem<User>(StorageKeys.CURRENT_USER);
+      return await storageAdapter.get<User>(StorageKeys.CURRENT_USER);
     } catch {
       return null;
     }
@@ -116,11 +116,11 @@ export class MockAuthService implements IAuthService {
       if (index === -1) return null;
 
       users[index] = { ...users[index], ...updates };
-      await storageAdapter.setItem(StorageKeys.USERS, users);
+      await storageAdapter.set(StorageKeys.USERS, users);
 
       const currentUser = await this.getCurrentUser();
       if (currentUser && currentUser.id === userId) {
-        await storageAdapter.setItem(StorageKeys.CURRENT_USER, users[index]);
+        await storageAdapter.set(StorageKeys.CURRENT_USER, users[index]);
       }
 
       return users[index];

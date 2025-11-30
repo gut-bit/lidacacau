@@ -53,8 +53,51 @@ LidaCacau is a mobile marketplace application (Expo React Native) connecting pro
 - **Service Layer**: Designed for production migration with interfaces (`IAuthService`, `IJobService`, etc.), mock implementations, and a `ServiceFactory` for dependency injection.
 - **Development Mode Features**: Auto-login for demo users (Maria/Joao), session persistence, and tutorial skipping for streamlined testing.
 
+## Database Architecture
+
+### PostgreSQL Schema (Neon-backed)
+The app now has a complete PostgreSQL database schema with 17 core tables:
+
+**Core Tables:**
+- `users` - User accounts with dual-role support (producer/worker)
+- `user_profiles` - Role-specific profiles (skills, equipment, earnings)
+- `user_verification` - Identity verification workflow
+- `service_types` - 10 pre-seeded service categories
+- `properties` - Rural property management with GPS polygons
+- `talhoes` - Field plot subdivisions with crop types
+- `property_documents` - CAR and land document uploads
+- `jobs` - Work demand postings
+- `bids` - Worker proposals
+- `work_orders` - Assigned work with check-in/out tracking
+- `reviews` - 5-criterion bilateral evaluation
+- `friend_connections` - "Amigos do Campo" social connections
+- `chat_rooms` / `direct_messages` - Real-time messaging
+- `user_presence` - Online status tracking
+- `sessions` - Authentication sessions
+- `notifications` - Push notification queue
+
+**Schema Location:** `server/db/schema.sql`
+
+### Service Layer Architecture
+The service layer is designed for easy migration from mock (AsyncStorage) to production (PostgreSQL API):
+
+1. **Interfaces** (`services/interfaces/`): Define contracts for all domains
+2. **Mock Implementations** (`services/mock/`): AsyncStorage-based for MVP
+3. **Common Utilities** (`services/common/`):
+   - `AsyncStorageAdapter` - Local storage abstraction
+   - `ApiAdapter` - HTTP client for backend API
+   - `PasswordUtils` - Secure password hashing (expo-crypto)
+4. **ServiceFactory**: Dependency injection with mode switching
+
+**Migration Path:**
+1. Deploy backend API server using `server/db/schema.sql`
+2. Create API service implementations (e.g., `ApiAuthService`)
+3. Update `ServiceFactory` to return API services in production mode
+4. Set `API_BASE_URL` environment variable
+
 ## External Dependencies
-- **Expo**: Core framework, including `expo-location`, `expo-image-picker`, `expo-haptics`.
+- **Expo**: Core framework, including `expo-location`, `expo-image-picker`, `expo-haptics`, `expo-crypto`.
 - **Navigation**: `@react-navigation/native`, `@react-navigation/bottom-tabs`.
 - **Maps**: `react-native-maps` (with web fallback placeholder).
 - **OpenPix**: Payment gateway (requires `OPENPIX_APP_ID`).
+- **PostgreSQL**: Neon-backed database (DATABASE_URL in secrets).
