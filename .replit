@@ -42,6 +42,10 @@ localPort = 38537
 externalPort = 5000
 
 [[ports]]
+localPort = 38817
+externalPort = 8099
+
+[[ports]]
 localPort = 39195
 externalPort = 8008
 
@@ -52,10 +56,6 @@ externalPort = 3003
 [[ports]]
 localPort = 42943
 externalPort = 8081
-
-[[ports]]
-localPort = 43277
-externalPort = 9000
 
 [[ports]]
 localPort = 43725
@@ -123,7 +123,7 @@ ensurePreviewReachable = "/status"
 stack = "EXPO"
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "static"
 publicDir = "static-build"
 build = ["node", "scripts/build.js"]
 run = ["sh", "-c", "node server.js"]

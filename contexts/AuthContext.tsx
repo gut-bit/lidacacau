@@ -57,20 +57,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const initialize = async () => {
+      console.log('[AuthContext] Starting initialization...');
       try {
         await initializeStorage();
+        console.log('[AuthContext] Storage initialized');
         const currentUser = await authService.getCurrentUser();
+        console.log('[AuthContext] getCurrentUser result:', currentUser ? `User: ${currentUser.email}` : 'null');
         if (currentUser) {
           const restoredUser = ensureUserHasNewFields(currentUser);
           setUser(restoredUser);
+          console.log('[AuthContext] User restored:', restoredUser.email);
         } else {
           setUser(null);
+          console.log('[AuthContext] No user to restore');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('[AuthContext] Error initializing auth:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
+        console.log('[AuthContext] Initialization complete, isLoading=false');
       }
     };
     initialize();
@@ -91,9 +97,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const login = async (email: string, password: string) => {
+    console.log('[AuthContext] Login called for:', email);
     setIsLoading(true);
     try {
       const result = await authService.login({ email, password });
+      console.log('[AuthContext] Login result:', result.success ? 'SUCCESS' : `FAILED: ${result.error}`);
       
       if (!result.success) {
         throw new Error(result.error || 'Erro ao fazer login');
@@ -102,6 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result.user) {
         const updatedUser = ensureUserHasNewFields(result.user);
         setUser(updatedUser);
+        console.log('[AuthContext] User set after login:', updatedUser.email);
       }
     } finally {
       setIsLoading(false);

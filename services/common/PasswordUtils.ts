@@ -21,13 +21,19 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   try {
+    console.log('[PasswordUtils] Verifying password. Input:', password, '| Stored:', storedHash);
     const [salt, originalHash] = storedHash.split(':');
     if (!salt || !originalHash) {
-      return password === storedHash;
+      const match = password === storedHash;
+      console.log('[PasswordUtils] Plain text comparison result:', match);
+      return match;
     }
     const hash = await deriveKey(password, salt);
-    return hash === originalHash;
+    const match = hash === originalHash;
+    console.log('[PasswordUtils] Hash comparison result:', match);
+    return match;
   } catch (error) {
+    console.error('[PasswordUtils] Error:', error);
     return password === storedHash;
   }
 }

@@ -25,17 +25,24 @@ export class MockAuthService implements IAuthService {
 
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     try {
+      console.log('[MockAuthService] Login attempt for:', credentials.email);
       const users = await this.getUsers();
+      console.log('[MockAuthService] Found', users.length, 'users. Emails:', users.map(u => u.email).join(', '));
+      
       const user = users.find(u => u.email === credentials.email);
 
       if (!user) {
+        console.log('[MockAuthService] User not found');
         return {
           success: false,
           error: 'Email ou senha inválidos',
         };
       }
 
+      console.log('[MockAuthService] User found:', user.name, '| Has password:', !!user.password, '| Password length:', user.password?.length);
       const passwordValid = await verifyPassword(credentials.password, user.password || '');
+      console.log('[MockAuthService] Password verification result:', passwordValid);
+      
       if (!passwordValid) {
         return {
           success: false,
@@ -48,6 +55,7 @@ export class MockAuthService implements IAuthService {
       
       await sessionManager.saveSession(token, user.id);
       await storageAdapter.set(StorageKeys.CURRENT_USER, userWithoutPassword);
+      console.log('[MockAuthService] Login successful, user saved to storage');
       
       return {
         success: true,
@@ -55,6 +63,7 @@ export class MockAuthService implements IAuthService {
         token,
       };
     } catch (error) {
+      console.error('[MockAuthService] Login error:', error);
       return {
         success: false,
         error: 'Erro ao fazer login',
@@ -118,8 +127,11 @@ export class MockAuthService implements IAuthService {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      return await storageAdapter.get<User>(StorageKeys.CURRENT_USER);
-    } catch {
+      const user = await storageAdapter.get<User>(StorageKeys.CURRENT_USER);
+      console.log('[MockAuthService] getCurrentUser:', user ? `Found: ${user.email}` : 'null');
+      return user;
+    } catch (error) {
+      console.error('[MockAuthService] getCurrentUser error:', error);
       return null;
     }
   }

@@ -12,15 +12,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, FriendConnection, ChatRoom } from '@/types';
 import { AppConfiguration } from '@/config';
+import { hashPassword } from '@/services/common/PasswordUtils';
 
 const STORAGE_PREFIX = AppConfiguration.storage.prefix;
+
+const SEEDING_VERSION = 'v2_hashed';
 
 const KEYS = {
   USERS: `${STORAGE_PREFIX}users`,
   FRIENDS: `${STORAGE_PREFIX}friends`,
   CHAT_ROOMS: `${STORAGE_PREFIX}chatrooms`,
   INITIALIZED: `${STORAGE_PREFIX}initialized`,
-  DEV_DATA_SEEDED: `${STORAGE_PREFIX}dev_data_seeded`,
+  DEV_DATA_SEEDED: `${STORAGE_PREFIX}dev_data_seeded_${SEEDING_VERSION}`,
 };
 
 /**
@@ -90,25 +93,29 @@ export async function initializeMockData(): Promise<void> {
       return;
     }
 
-    console.log('[MockData] Initializing demo data...');
+    console.log('[MockData] Initializing demo data with hashed passwords...');
 
     // Criar usuários de demonstração
     const existingUsers = await AsyncStorage.getItem(KEYS.USERS);
-    const users: User[] = existingUsers ? JSON.parse(existingUsers) : [];
+    let users: User[] = existingUsers ? JSON.parse(existingUsers) : [];
+
+    // Remove old demo users (they might have plain-text passwords)
+    const demoEmails = DEMO_USERS.map(u => u.email);
+    users = users.filter(u => !demoEmails.includes(u.email));
 
     const createdUsers: User[] = [];
 
     for (const demoUser of DEMO_USERS) {
-      const exists = users.some(u => u.email === demoUser.email);
-      if (!exists) {
-        const newUser: User = {
-          ...demoUser,
-          id: generateId(),
-          createdAt: new Date().toISOString(),
-        };
-        users.push(newUser);
-        createdUsers.push(newUser);
-      }
+      const hashedPassword = await hashPassword(demoUser.password || 'demo123');
+      const newUser: User = {
+        ...demoUser,
+        password: hashedPassword,
+        id: generateId(),
+        createdAt: new Date().toISOString(),
+      };
+      users.push(newUser);
+      createdUsers.push(newUser);
+      console.log('[MockData] Created user:', demoUser.email, 'with hashed password');
     }
 
     await AsyncStorage.setItem(KEYS.USERS, JSON.stringify(users));

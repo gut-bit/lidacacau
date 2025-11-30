@@ -80,7 +80,10 @@ class ServiceFactory {
   private provider: ServiceProvider = 'mock';
 
   constructor() {
-    this.provider = AppConfiguration.api.baseUrl ? 'api' : 'mock';
+    // Use mock services only when explicitly enabled (development)
+    // In production, enableMockData is false, so we use real API
+    this.provider = AppConfiguration.features.enableMockData ? 'mock' : 'api';
+    console.log(`[ServiceFactory] Provider: ${this.provider} (enableMockData: ${AppConfiguration.features.enableMockData})`);
   }
 
   /**
