@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 
+import { testConnection, db } from './db/drizzle';
 import authRoutes from './routes/auth';
 import usersRoutes from './routes/users';
 import jobsRoutes from './routes/jobs';
@@ -14,6 +15,8 @@ import socialRoutes from './routes/social';
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 const isProduction = process.env.NODE_ENV === 'production';
+
+let dbConnected = false;
 
 app.use(helmet());
 
@@ -48,9 +51,10 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/social', socialRoutes);
 
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get('/api/health', async (_req: Request, res: Response) => {
   res.json({ 
-    status: 'ok', 
+    status: dbConnected ? 'ok' : 'degraded',
+    database: dbConnected ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   });
@@ -64,38 +68,50 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-if (isProduction) {
-  const distPath = path.join(__dirname, '..', 'dist');
+const staticPath = path.join(__dirname, '..', 'static-build');
+
+if (fs.existsSync(staticPath)) {
+  app.use(express.static(staticPath));
   
-  if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-    
-    app.get('/{*splat}', (_req: Request, res: Response) => {
-      const indexPath = path.join(distPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-      } else {
-        res.status(404).send('App not found');
-      }
-    });
-    
-    app.use((_req: Request, res: Response) => {
-      res.status(404).json({ error: 'Endpoint nao encontrado' });
-    });
-    
-    console.log('[LidaCacau] Servindo arquivos estaticos de:', distPath);
-  } else {
-    console.warn('[LidaCacau] Pasta dist nao encontrada. Execute: npx expo export --platform web');
-  }
+  app.get('*', (_req: Request, res: Response) => {
+    const indexPath = path.join(staticPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send('App not found');
+    }
+  });
+  
+  console.log('[LidaCacau] Servindo arquivos estaticos de:', staticPath);
 } else {
+  console.warn('[LidaCacau] Pasta static-build nao encontrada. Execute: node scripts/build-web.js');
+  
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Endpoint nao encontrado' });
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[LidaCacau API] Servidor rodando na porta ${PORT}`);
-  console.log(`[LidaCacau] Ambiente: ${isProduction ? 'Producao' : 'Desenvolvimento'}`);
-});
+async function startServer() {
+  console.log('[LidaCacau] Iniciando servidor...');
+  
+  try {
+    dbConnected = await testConnection();
+    if (dbConnected) {
+      console.log('[LidaCacau] Banco de dados conectado com sucesso');
+    } else {
+      console.warn('[LidaCacau] Banco de dados nao conectado - usando modo offline');
+    }
+  } catch (error) {
+    console.error('[LidaCacau] Erro ao conectar banco de dados:', error);
+  }
+  
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[LidaCacau API] Servidor rodando na porta ${PORT}`);
+    console.log(`[LidaCacau] Ambiente: ${isProduction ? 'Producao' : 'Desenvolvimento'}`);
+    console.log(`[LidaCacau] Banco de dados: ${dbConnected ? 'Conectado' : 'Desconectado'}`);
+  });
+}
+
+startServer();
 
 export default app;
