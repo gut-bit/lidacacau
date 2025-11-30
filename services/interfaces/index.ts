@@ -1,11 +1,13 @@
 /**
- * LidaCacau - Exportação de Interfaces de Serviços
+ * LidaCacau - Service Interfaces Index
  * 
- * Ponto central de exportação para todas as interfaces.
- * 
- * Nota: Apenas IAuthService está implementado no MVP.
- * Outros serviços usam funções legacy em utils/storage.ts.
- * Consulte ARCHITECTURE.md para detalhes de migração.
+ * Exporta todas as interfaces de serviço.
+ * Cada interface define um contrato que pode ser implementado
+ * com AsyncStorage (mock) ou API real.
  */
 
 export * from './IAuthService';
+export * from './IJobService';
+export * from './IWorkOrderService';
+export * from './IPropertyService';
+export * from './ISocialService';

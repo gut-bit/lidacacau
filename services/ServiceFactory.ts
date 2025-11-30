@@ -1,100 +1,172 @@
 /**
- * LidaCacau - Factory de Serviços
+ * LidaCacau - Service Factory
  * 
- * Este é o ponto central para obter instâncias de serviços.
+ * Ponto central para obter instâncias de todos os serviços.
+ * Suporta injeção de dependência e troca entre mock/API.
  * 
- * ## Estado Atual (MVP)
+ * ## Uso
  * 
- * Apenas AuthService está implementado via interface. Os demais serviços
- * ainda usam as funções legacy em utils/storage.ts diretamente.
+ * ```typescript
+ * import { serviceFactory } from '@/services';
+ * 
+ * const authService = serviceFactory.getAuthService();
+ * const jobService = serviceFactory.getJobService();
+ * ```
  * 
  * ## Para Migrar para Produção
  * 
  * 1. Crie implementações de API em services/api/
  * 2. Atualize os métodos get*Service() para retornar a implementação correta
  * 3. Configure AppConfiguration.api.baseUrl com a URL do servidor
- * 
- * ## Serviços Disponíveis
- * 
- * | Serviço | Status | Uso Atual |
- * |---------|--------|-----------|
- * | AuthService | Implementado | serviceFactory.getAuthService() |
- * | JobService | Legacy | utils/storage.ts (createJob, getJobs, etc) |
- * | PropertyService | Legacy | utils/storage.ts (createProperty, etc) |
- * | CommerceService | Não impl. | N/A |
- * | SocialService | Legacy | utils/storage.ts (friends, chat, etc) |
  */
 
 import { AppConfiguration } from '@/config';
+
 import { IAuthService } from './interfaces/IAuthService';
+import { IJobService } from './interfaces/IJobService';
+import { IWorkOrderService } from './interfaces/IWorkOrderService';
+import { IPropertyService } from './interfaces/IPropertyService';
+import { ISocialService } from './interfaces/ISocialService';
+
 import { MockAuthService } from './mock/MockAuthService';
+import { MockJobService } from './mock/MockJobService';
+import { MockWorkOrderService } from './mock/MockWorkOrderService';
+import { MockPropertyService } from './mock/MockPropertyService';
+import { MockSocialService } from './mock/MockSocialService';
+
+export type ServiceProvider = 'mock' | 'api';
+
+interface ServiceInstances {
+  auth: IAuthService | null;
+  job: IJobService | null;
+  workOrder: IWorkOrderService | null;
+  property: IPropertyService | null;
+  social: ISocialService | null;
+}
 
 class ServiceFactory {
-  private authService: IAuthService | null = null;
+  private instances: ServiceInstances = {
+    auth: null,
+    job: null,
+    workOrder: null,
+    property: null,
+    social: null,
+  };
+
+  private provider: ServiceProvider = 'mock';
+
+  constructor() {
+    this.provider = AppConfiguration.api.baseUrl ? 'api' : 'mock';
+  }
 
   /**
-   * Obtém o serviço de autenticação
-   * 
-   * Este é o único serviço completamente abstraído.
-   * Para produção, crie ApiAuthService e atualize aqui.
+   * Define o provedor de serviços (mock ou api)
+   */
+  setProvider(provider: ServiceProvider): void {
+    if (this.provider !== provider) {
+      this.provider = provider;
+      this.resetAll();
+    }
+  }
+
+  /**
+   * Obtém o provedor atual
+   */
+  getProvider(): ServiceProvider {
+    return this.provider;
+  }
+
+  /**
+   * Serviço de Autenticação
    */
   getAuthService(): IAuthService {
-    if (!this.authService) {
-      this.authService = new MockAuthService();
+    if (!this.instances.auth) {
+      this.instances.auth = this.provider === 'api' 
+        ? new MockAuthService()
+        : new MockAuthService();
     }
-    return this.authService;
+    return this.instances.auth;
   }
 
   /**
-   * Indica se o serviço de Jobs está disponível via interface
-   * @returns false - Use funções legacy em utils/storage.ts
+   * Serviço de Demandas (Jobs)
    */
-  isJobServiceAvailable(): boolean {
-    return false;
+  getJobService(): IJobService {
+    if (!this.instances.job) {
+      this.instances.job = this.provider === 'api'
+        ? new MockJobService()
+        : new MockJobService();
+    }
+    return this.instances.job;
   }
 
   /**
-   * Indica se o serviço de Properties está disponível via interface
-   * @returns false - Use funções legacy em utils/storage.ts
+   * Serviço de Ordens de Trabalho
    */
-  isPropertyServiceAvailable(): boolean {
-    return false;
+  getWorkOrderService(): IWorkOrderService {
+    if (!this.instances.workOrder) {
+      this.instances.workOrder = this.provider === 'api'
+        ? new MockWorkOrderService()
+        : new MockWorkOrderService();
+    }
+    return this.instances.workOrder;
   }
 
   /**
-   * Indica se o serviço de Commerce está disponível via interface
-   * @returns false - Não implementado ainda
+   * Serviço de Propriedades Rurais
    */
-  isCommerceServiceAvailable(): boolean {
-    return false;
+  getPropertyService(): IPropertyService {
+    if (!this.instances.property) {
+      this.instances.property = this.provider === 'api'
+        ? new MockPropertyService()
+        : new MockPropertyService();
+    }
+    return this.instances.property;
   }
 
   /**
-   * Indica se o serviço Social está disponível via interface
-   * @returns false - Use funções legacy em utils/storage.ts
+   * Serviço Social (Amigos, Chat, Presença)
    */
-  isSocialServiceAvailable(): boolean {
-    return false;
+  getSocialService(): ISocialService {
+    if (!this.instances.social) {
+      this.instances.social = this.provider === 'api'
+        ? new MockSocialService()
+        : new MockSocialService();
+    }
+    return this.instances.social;
   }
 
   /**
-   * Reseta todos os serviços (útil para testes ou logout)
+   * Reseta todas as instâncias de serviço
    */
   resetAll(): void {
-    this.authService = null;
+    this.instances = {
+      auth: null,
+      job: null,
+      workOrder: null,
+      property: null,
+      social: null,
+    };
   }
 
   /**
-   * Obtém informações sobre o estado dos serviços
+   * Obtém status de todos os serviços
    */
-  getServiceStatus(): Record<string, { available: boolean; source: string }> {
+  getServiceStatus(): Record<string, { available: boolean; provider: ServiceProvider }> {
     return {
-      auth: { available: true, source: 'MockAuthService' },
-      jobs: { available: false, source: 'utils/storage.ts' },
-      properties: { available: false, source: 'utils/storage.ts' },
-      commerce: { available: false, source: 'N/A' },
-      social: { available: false, source: 'utils/storage.ts' },
+      auth: { available: true, provider: this.provider },
+      job: { available: true, provider: this.provider },
+      workOrder: { available: true, provider: this.provider },
+      property: { available: true, provider: this.provider },
+      social: { available: true, provider: this.provider },
     };
+  }
+
+  /**
+   * Verifica se a API está configurada
+   */
+  isApiConfigured(): boolean {
+    return Boolean(AppConfiguration.api.baseUrl);
   }
 }
 

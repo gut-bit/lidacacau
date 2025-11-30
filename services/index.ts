@@ -1,13 +1,28 @@
 /**
- * LidaCacau - Exportações de Serviços
+ * LidaCacau - Services Index
  * 
- * Ponto central de exportação para o módulo de serviços.
+ * Exporta todos os serviços e interfaces.
  * 
- * Uso:
+ * ## Uso Recomendado
+ * 
+ * Use sempre o ServiceFactory para obter instâncias de serviço:
+ * 
+ * ```typescript
  * import { serviceFactory } from '@/services';
+ * 
  * const authService = serviceFactory.getAuthService();
+ * const result = await authService.login({ email, password });
+ * 
+ * if (result.success) {
+ *   console.log('Logged in:', result.user);
+ * }
+ * ```
  */
 
-export * from './interfaces';
 export { serviceFactory } from './ServiceFactory';
-export { MockAuthService } from './mock/MockAuthService';
+export type { ServiceProvider } from './ServiceFactory';
+
+export * from './interfaces';
+
+export * from './common/types';
+export { storageAdapter, StorageKeys } from './common/AsyncStorageAdapter';
