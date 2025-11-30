@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, TextInput, Pressable, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -14,9 +14,16 @@ import { UserRole } from '@/types';
 
 type AuthMode = 'login' | 'register';
 
+type ErrorType = 'validation' | 'credentials' | 'network' | 'exists' | 'server' | null;
+
+interface ErrorState {
+  type: ErrorType;
+  message: string;
+}
+
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
-  const { login, register, isLoading } = useAuth();
+  const { login, register, logout } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [mode, setMode] = useState<AuthMode>('login');
@@ -25,34 +32,95 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<ErrorState | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const colors = isDark ? Colors.dark : Colors.light;
 
+  const clearError = () => setError(null);
+
+  const getErrorIcon = (type: ErrorType): string => {
+    switch (type) {
+      case 'credentials': return 'x-circle';
+      case 'network': return 'wifi-off';
+      case 'exists': return 'user-x';
+      case 'server': return 'alert-triangle';
+      default: return 'alert-circle';
+    }
+  };
+
+  const parseErrorMessage = (errorMsg: string): ErrorState => {
+    const lowerMsg = errorMsg.toLowerCase();
+    
+    if (lowerMsg.includes('senha') || lowerMsg.includes('password') || lowerMsg.includes('incorreta') || lowerMsg.includes('invalid')) {
+      return { type: 'credentials', message: 'Email ou senha incorretos' };
+    }
+    if (lowerMsg.includes('usuario nao encontrado') || lowerMsg.includes('not found') || lowerMsg.includes('nao existe')) {
+      return { type: 'credentials', message: 'Usuario nao encontrado. Verifique o email ou crie uma conta.' };
+    }
+    if (lowerMsg.includes('ja existe') || lowerMsg.includes('already exists') || lowerMsg.includes('ja cadastrado')) {
+      return { type: 'exists', message: 'Este email ja esta cadastrado. Tente fazer login.' };
+    }
+    if (lowerMsg.includes('network') || lowerMsg.includes('conexao') || lowerMsg.includes('internet')) {
+      return { type: 'network', message: 'Erro de conexao. Verifique sua internet.' };
+    }
+    if (lowerMsg.includes('server') || lowerMsg.includes('servidor')) {
+      return { type: 'server', message: 'Erro no servidor. Tente novamente em alguns minutos.' };
+    }
+    
+    return { type: 'validation', message: errorMsg };
+  };
+
+  const handleClearSession = async () => {
+    try {
+      await logout();
+      setError(null);
+      setPassword('');
+    } catch (e) {
+      console.log('Error clearing session:', e);
+    }
+  };
+
   const handleSubmit = async () => {
+    clearError();
+
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
+      setError({ type: 'validation', message: 'Preencha todos os campos obrigatorios' });
       return;
     }
 
     if (mode === 'register' && !name.trim()) {
-      Alert.alert('Erro', 'Preencha seu nome');
+      setError({ type: 'validation', message: 'Preencha seu nome' });
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       if (mode === 'login') {
+        console.log('[LoginScreen] Attempting login for:', email.trim());
         await login(email.trim(), password);
+        console.log('[LoginScreen] Login succeeded');
       } else {
+        console.log('[LoginScreen] Attempting register for:', email.trim());
         await register(email.trim(), password, name.trim(), role);
+        console.log('[LoginScreen] Register succeeded');
       }
-    } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Ocorreu um erro');
+    } catch (err: any) {
+      console.log('[LoginScreen] Auth error caught:', err.message);
+      const errorMsg = err.message || 'Ocorreu um erro inesperado';
+      const parsedError = parseErrorMessage(errorMsg);
+      console.log('[LoginScreen] Setting error state:', parsedError);
+      setError(parsedError);
+      setPassword('');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const toggleMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
-    setEmail('');
+    setError(null);
     setPassword('');
     setName('');
   };
@@ -87,6 +155,21 @@ export default function LoginScreen() {
           <ThemedText type="h2" style={styles.title}>
             {mode === 'login' ? 'Bora pra Lida!' : 'Entre pra comunidade'}
           </ThemedText>
+
+          {error ? (
+            <Pressable 
+              style={[styles.errorContainer, { backgroundColor: colors.error + '15', borderColor: colors.error }]}
+              onPress={clearError}
+            >
+              <View style={styles.errorContent}>
+                <Feather name={getErrorIcon(error.type) as any} size={20} color={colors.error} />
+                <ThemedText type="body" style={[styles.errorText, { color: colors.error }]}>
+                  {error.message}
+                </ThemedText>
+              </View>
+              <Feather name="x" size={18} color={colors.error} />
+            </Pressable>
+          ) : null}
 
           {mode === 'register' && (
             <>
@@ -227,8 +310,8 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <Button onPress={handleSubmit} disabled={isLoading} style={styles.submitButton}>
-            {isLoading ? (
+          <Button onPress={handleSubmit} disabled={isSubmitting} style={styles.submitButton}>
+            {isSubmitting ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : mode === 'login' ? (
               'Entrar'
@@ -239,7 +322,7 @@ export default function LoginScreen() {
 
           <View style={styles.toggleContainer}>
             <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              {mode === 'login' ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+              {mode === 'login' ? 'Nao tem uma conta?' : 'Ja tem uma conta?'}
             </ThemedText>
             <Pressable onPress={toggleMode}>
               <ThemedText type="small" style={{ color: colors.primary, fontWeight: '600' }}>
@@ -247,6 +330,13 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
           </View>
+
+          <Pressable onPress={handleClearSession} style={styles.clearSessionButton}>
+            <Feather name="log-out" size={16} color={colors.textSecondary} />
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>
+              Limpar sessao anterior
+            </ThemedText>
+          </Pressable>
         </View>
       </ScrollComponent>
     </ThemedView>
@@ -331,5 +421,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: Spacing['2xl'],
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xs,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
+  },
+  errorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flex: 1,
+  },
+  errorText: {
+    flex: 1,
+    fontWeight: '500',
+  },
+  clearSessionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xl,
+    padding: Spacing.md,
   },
 });

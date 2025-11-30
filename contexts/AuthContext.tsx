@@ -98,7 +98,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string) => {
     console.log('[AuthContext] Login called for:', email);
-    setIsLoading(true);
     try {
       const result = await authService.login({ email, password });
       console.log('[AuthContext] Login result:', result.success ? 'SUCCESS' : `FAILED: ${result.error}`);
@@ -112,13 +111,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(updatedUser);
         console.log('[AuthContext] User set after login:', updatedUser.email);
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 
   const register = async (email: string, password: string, name: string, role: UserRole) => {
-    setIsLoading(true);
     try {
       const result = await authService.register({
         email,
@@ -135,8 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const updatedUser = ensureUserHasNewFields(result.user);
         setUser(updatedUser);
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 
