@@ -104,8 +104,19 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - **Analytics**: Event tracking with 1000-event buffer for AI analysis
 
 ### Directory Structure
-- `/App.tsx`: Entry point with ErrorBoundary and Rubik fonts
-- `/screens/`: Organized by authentication, producer, worker, admin, and shared functionalities
+- `/App.tsx`: Entry point with ErrorBoundary, Rubik fonts, and ConfigProvider
+- `/config/`: Environment configuration and feature flags
+  - `app.config.ts`: Environment-specific configuration (dev/staging/prod)
+  - `ConfigContext.tsx`: React context for runtime configuration
+  - `index.ts`: Centralized exports
+- `/services/`: Service abstraction layer for production migration
+  - `/interfaces/`: Service contracts (IAuthService, IJobService, etc.)
+  - `/mock/`: AsyncStorage-based mock implementations
+  - `/api/`: Real API implementations (future)
+  - `ServiceFactory.ts`: Factory pattern for service instantiation
+- `/data/`: Data providers and mock data
+  - `MockDataProvider.ts`: Demo data initialization (dev only)
+- `/screens/`: Organized by authentication, producer, worker, admin, and shared
   - `/screens/shared/UnifiedHomeScreen.tsx`: Main home with animated swipeable job cards
   - `/screens/shared/UnifiedProfileScreen.tsx`: User profile with Comunidade section
   - `/screens/shared/FriendsScreen.tsx`: Amigos do Campo system
@@ -115,6 +126,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `/screens/shared/TutorialScreen.tsx`: Interactive 6-card tutorial carousel
   - `/screens/shared/QuickActionsScreen.tsx`: Unified action modal (create, search, chat)
 - `/navigation/`: Navigation flows
+  - `routes.ts`: Centralized route definitions with TypeScript types
   - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Conversas, +, Explorar, Perfil)
   - `RootNavigator.tsx`: Root navigation with auth handling
 - `/contexts/`: Contains `AuthContext.tsx`
@@ -123,8 +135,8 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `storage.ts`: 19 storage keys, friend/chat/presence functions, cleanup utilities
   - `analytics.ts`: Event tracking with trackEvent, startSession, endSession
   - `format.ts`, `contract.ts`, `receipt.ts`, `payment.ts`
-- `/data/`: Service types and educational content (fake data removed for MVP)
 - `/constants/`: Theme definitions with LidaCacau colors
+- `ARCHITECTURE.md`: Documentation for production migration
 
 ### Storage Keys (@lidacacau_ prefix)
 - CURRENT_USER, USERS, JOBS, BIDS, WORK_ORDERS, REVIEWS
@@ -178,7 +190,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 6. Comunidade section in profile
 7. Fake data removed for MVP readiness
 8. Storage cleanup utilities added
-9. Dev data seeding: initializeDevData() creates demo users (Maria/Joao) in __DEV__ mode
+9. Dev data seeding: MockDataProvider creates demo users (Maria/Joao) when enableMockData=true
 10. All touch targets verified at 48dp minimum
 11. trackEvent calls added to all key user actions
 12. **Quick Actions Hub**: Unified "+" button with modal for work-focused actions only

@@ -1,103 +1,100 @@
 /**
  * LidaCacau - Factory de Serviços
  * 
- * Centraliza a criação de instâncias de serviços.
- * Para migrar para produção, altere as implementações aqui.
+ * Este é o ponto central para obter instâncias de serviços.
  * 
- * Exemplo de migração:
- * - Desenvolvimento: usa MockAuthService (AsyncStorage)
- * - Produção: usa ApiAuthService (chamadas HTTP)
+ * ## Estado Atual (MVP)
+ * 
+ * Apenas AuthService está implementado via interface. Os demais serviços
+ * ainda usam as funções legacy em utils/storage.ts diretamente.
+ * 
+ * ## Para Migrar para Produção
+ * 
+ * 1. Crie implementações de API em services/api/
+ * 2. Atualize os métodos get*Service() para retornar a implementação correta
+ * 3. Configure AppConfiguration.api.baseUrl com a URL do servidor
+ * 
+ * ## Serviços Disponíveis
+ * 
+ * | Serviço | Status | Uso Atual |
+ * |---------|--------|-----------|
+ * | AuthService | Implementado | serviceFactory.getAuthService() |
+ * | JobService | Legacy | utils/storage.ts (createJob, getJobs, etc) |
+ * | PropertyService | Legacy | utils/storage.ts (createProperty, etc) |
+ * | CommerceService | Não impl. | N/A |
+ * | SocialService | Legacy | utils/storage.ts (friends, chat, etc) |
  */
 
 import { AppConfiguration } from '@/config';
 import { IAuthService } from './interfaces/IAuthService';
-import { IJobService } from './interfaces/IJobService';
-import { IPropertyService } from './interfaces/IPropertyService';
-import { ICommerceService } from './interfaces/ICommerceService';
-import { ISocialService } from './interfaces/ISocialService';
 import { MockAuthService } from './mock/MockAuthService';
 
 class ServiceFactory {
   private authService: IAuthService | null = null;
-  private jobService: IJobService | null = null;
-  private propertyService: IPropertyService | null = null;
-  private commerceService: ICommerceService | null = null;
-  private socialService: ISocialService | null = null;
 
   /**
    * Obtém o serviço de autenticação
-   * Para produção, substitua MockAuthService por ApiAuthService
+   * 
+   * Este é o único serviço completamente abstraído.
+   * Para produção, crie ApiAuthService e atualize aqui.
    */
   getAuthService(): IAuthService {
     if (!this.authService) {
-      if (AppConfiguration.features.enableMockData) {
-        this.authService = new MockAuthService();
-      } else {
-        // TODO: Implementar ApiAuthService para produção
-        // this.authService = new ApiAuthService(AppConfiguration.api.baseUrl);
-        this.authService = new MockAuthService();
-      }
+      this.authService = new MockAuthService();
     }
     return this.authService;
   }
 
   /**
-   * Obtém o serviço de trabalhos/demandas
-   * TODO: Implementar MockJobService e ApiJobService
+   * Indica se o serviço de Jobs está disponível via interface
+   * @returns false - Use funções legacy em utils/storage.ts
    */
-  getJobService(): IJobService {
-    if (!this.jobService) {
-      // TODO: Implementar quando necessário
-      throw new Error('JobService não implementado. Use as funções legacy em utils/storage.ts');
-    }
-    return this.jobService;
+  isJobServiceAvailable(): boolean {
+    return false;
   }
 
   /**
-   * Obtém o serviço de propriedades
-   * TODO: Implementar MockPropertyService e ApiPropertyService
+   * Indica se o serviço de Properties está disponível via interface
+   * @returns false - Use funções legacy em utils/storage.ts
    */
-  getPropertyService(): IPropertyService {
-    if (!this.propertyService) {
-      // TODO: Implementar quando necessário
-      throw new Error('PropertyService não implementado. Use as funções legacy em utils/storage.ts');
-    }
-    return this.propertyService;
+  isPropertyServiceAvailable(): boolean {
+    return false;
   }
 
   /**
-   * Obtém o serviço de comércio (LidaShop)
-   * TODO: Implementar MockCommerceService e ApiCommerceService
+   * Indica se o serviço de Commerce está disponível via interface
+   * @returns false - Não implementado ainda
    */
-  getCommerceService(): ICommerceService {
-    if (!this.commerceService) {
-      // TODO: Implementar quando necessário
-      throw new Error('CommerceService não implementado. Use as funções legacy em utils/storage.ts');
-    }
-    return this.commerceService;
+  isCommerceServiceAvailable(): boolean {
+    return false;
   }
 
   /**
-   * Obtém o serviço social (amizades, chat, esquadrões)
-   * TODO: Implementar MockSocialService e ApiSocialService
+   * Indica se o serviço Social está disponível via interface
+   * @returns false - Use funções legacy em utils/storage.ts
    */
-  getSocialService(): ISocialService {
-    if (!this.socialService) {
-      // TODO: Implementar quando necessário
-      throw new Error('SocialService não implementado. Use as funções legacy em utils/storage.ts');
-    }
-    return this.socialService;
+  isSocialServiceAvailable(): boolean {
+    return false;
   }
 
   /**
-   * Reseta todos os serviços (útil para testes ou troca de ambiente)
+   * Reseta todos os serviços (útil para testes ou logout)
    */
   resetAll(): void {
     this.authService = null;
-    this.jobService = null;
-    this.propertyService = null;
-    this.commerceService = null;
-    this.socialService = null;
+  }
+
+  /**
+   * Obtém informações sobre o estado dos serviços
+   */
+  getServiceStatus(): Record<string, { available: boolean; source: string }> {
+    return {
+      auth: { available: true, source: 'MockAuthService' },
+      jobs: { available: false, source: 'utils/storage.ts' },
+      properties: { available: false, source: 'utils/storage.ts' },
+      commerce: { available: false, source: 'N/A' },
+      social: { available: false, source: 'utils/storage.ts' },
+    };
   }
 }
 
