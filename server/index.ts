@@ -73,7 +73,7 @@ const staticPath = path.join(__dirname, '..', 'static-build');
 if (fs.existsSync(staticPath)) {
   app.use(express.static(staticPath));
   
-  app.get('*', (_req: Request, res: Response) => {
+  app.get('/{*path}', (_req: Request, res: Response) => {
     const indexPath = path.join(staticPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);

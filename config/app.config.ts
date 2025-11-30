@@ -68,13 +68,13 @@ const developmentConfig: AppConfig = {
   appVersion: '1.0.0',
   
   api: {
-    baseUrl: 'http://localhost:3001/api',
+    baseUrl: '/api',
     timeout: 30000,
     retryAttempts: 3,
   },
   
   features: {
-    enableMockData: true,
+    enableMockData: false,
     enableAnalytics: true,
     enableDevTools: true,
     enableAutoLogin: false,
@@ -141,9 +141,7 @@ const productionConfig: AppConfig = {
   },
   
   features: {
-    // MVP: Using mock data until backend API is deployed
-    // Set to false and deploy backend when ready for real database
-    enableMockData: true,
+    enableMockData: false,
     enableAnalytics: true,
     enableDevTools: false,
     enableAutoLogin: false,
