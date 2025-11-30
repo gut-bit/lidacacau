@@ -120,9 +120,10 @@ stack = "EXPO"
 integrations = ["github:1.0.0"]
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "cloudrun"
 publicDir = "static-build"
 build = ["node", "scripts/build.js"]
+run = ["sh", "-c", "NODE_ENV=production npx tsx server/index.ts"]
 
 # Expo manifest headers
 [[deployment.responseHeaders]]
