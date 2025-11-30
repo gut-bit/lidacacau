@@ -1,9 +1,7 @@
 # LidaCacau - Marketplace Rural
 
 ## Overview
-LidaCacau is a mobile marketplace application (Expo React Native) designed to connect property owners with rural workers in Uruara/PA, Brazil. The app facilitates the posting of service demands, a proposal system, GPS-based work tracking, photo uploads, and bilateral evaluations. Beyond agricultural services, the platform supports general construction and maintenance services (masonry, electrical, plumbing, metalwork, painting, carpentry).
-
-**Brand Philosophy**: "Confianca de quem e da Lida" - connecting people who work the land with trust and community.
+LidaCacau is a mobile marketplace application (Expo React Native) connecting property owners with rural workers in Uruara/PA, Brazil. It facilitates service demand posting, a proposal system, GPS-based work tracking, photo uploads, and bilateral evaluations. The platform supports agricultural, construction, and maintenance services, aiming to build trust and community with the brand philosophy: "Confianca de quem e da Lida". The project envisions gamification, legal contract systems, and an education platform to empower rural workers and streamline operations.
 
 ## User Preferences
 - Idioma: Portugues (PT-BR)
@@ -11,233 +9,52 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
 - Design: iOS 26 Liquid Glass style
 - Sem emojis na interface (emoji-style icons allowed)
 
-## Brand Identity (LidaCacau)
-- **Primary Color**: #F15A29 (Laranja - warmth, energy)
-- **Secondary Colors**: 
-  - #7ED957 (Verde - growth, nature)
-  - #FFD100 (Amarelo - optimism, harvest)
-  - #0071BC (Azul - trust, reliability)
-- **Typography**: Rubik font family (Rubik_400Regular, Rubik_500Medium, Rubik_600SemiBold, Rubik_700Bold)
-- **Level Colors**: N1 Gray, N2 Green, N3 Blue, N4 Purple, N5 Gold
-
 ## System Architecture
 
-### Core Features
-- **Authentication**: Three user profiles (Producer, Worker, Admin) with identity verification (selfie + document upload) and "Verified Badge"
-- **Service Demand & Proposal System**: Producers post job demands, workers submit proposals
-- **GPS Tracking**: Check-in/check-out functionality for work orders
-- **Bilateral Evaluation**: 5-criterion rating system for both producers and workers
-- **Gamification**: Worker leveling system (N1-N5) based on experience and evaluations
-- **Dual-Role Architecture**: Users can switch between Producer and Worker roles
-- **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA"
-- **Property Management**: GPS-based location and photo uploads for properties
-- **Education System**: Training platform with XP, quizzes, and skill progression
-- **Legal Contract System ("Empreitada")**: Automatic legally compliant contracts with digital signing
-- **Referral Program**: Unique referral codes rewarding both parties with XP
+### UI/UX Decisions
+- **Brand Identity**: Primary #F15A29, Secondary #7ED957, #FFD100, #0071BC. Typography: Rubik font family.
+- **Theming**: Support for dark/light mode.
+- **Level Colors**: N1 Gray, N2 Green, N3 Blue, N4 Purple, N5 Gold.
+- **Unified Action Hub**: Single "+" button opens a modal for work-focused actions.
+- **Gente da Lida Section**: Horizontal scroll on the home feed showcasing recent users.
+- **Notifications**: Auto-generated when new users register.
+- **Cocoa Price Ticker**: Compact widget on the home screen with price change indicators.
 
-### Social Features (Nov 2025)
-- **Amigos do Campo ("Dar a Mao")**: Friend connection system for building community trust
-  - Send/accept/reject friend requests
-  - View friends list
-  - Remove connections
-- **Direct Messaging**: Chat system between connected users
-  - Real-time messages
-  - Read receipts
-  - Unread counters
-  - Date separators
-- **User Search**: Find users with filters
-  - Filter by role (producer/worker)
-  - Filter by verification status
-  - Filter by online presence (5-min threshold)
-- **Presence System**: Track user activity
-  - Active/inactive status
-  - Statistics by role
-  - Online indicators
+### Technical Implementations
+- **Authentication**: Three user profiles (Producer, Worker, Admin) with identity verification. Users can switch between Producer and Worker roles.
+- **Service & Proposal System**: Producers post jobs, workers submit proposals.
+- **GPS Tracking**: Check-in/check-out for work orders and property management.
+- **Bilateral Evaluation**: 5-criterion rating system.
+- **Gamification**: Worker leveling system (N1-N5) based on experience and evaluations.
+- **Social Features**:
+    - **Amigos do Campo**: Friend connection system ("Dar a Mao").
+    - **Direct Messaging**: Real-time chat with read receipts and unread counters.
+    - **User Search**: Filterable search for users by role, verification, and online status.
+    - **Presence System**: Tracks user activity and online status.
+- **Esquadrao da Lida (Work Teams)**: Create or propose work squads (up to 4 members) with leader selection and friend invitations.
+- **Rural Property Management**:
+    - `PropertyDetail` with polygon boundaries (GeoJSON-compatible).
+    - `Talhao` system for field plot management (crop types, service tags, priority).
+    - `PropertyDocument` upload (e.g., CAR) with verification workflow.
+    - `MapPropertyEditor` for interactive polygon drawing and area calculation.
+- **Education System**: Training platform with XP, quizzes, and skill progression.
+- **Legal Contract System ("Empreitada")**: Automatic, legally compliant contracts with digital signing.
+- **Referral Program**: Unique referral codes for XP rewards.
+- **Profile System**: Comprehensive profile building with personal history, work photos, and certificates.
+- **Real-Time Cocoa Price Tracking**: Integration of global and local cocoa prices with a stale-while-revalidate cache.
+- **Persistency**: AsyncStorage for offline-first data persistence, using `@lidacacau_` prefix for all keys.
+- **Navigation**: React Navigation 7+ with a 5-tab structure (Home, Conversas, +, Explorar, Perfil).
+- **Analytics**: Event tracking with a 1000-event buffer for AI analysis.
+- **Payment System**: OpenPix integration for PIX QR code generation, with 90% worker / 10% platform fee split.
 
-### Quick Actions ("+" Button)
-- **Unified Action Hub**: Single "+" button opens modal with work-focused actions
-- **Options**:
-  - "Quero pegar uma lida" (offer services)
-  - "Preciso de gente pra lida" (post demand)
-  - "Buscar Gente da Lida" (search users)
-  - "Montar Esquadrao" (create work team)
-
-### Esquadrao da Lida (Work Teams)
-- **Team Formation**: Create or propose work squads with up to 4 members
-- **Leader Selection**: Choose yourself as leader or propose someone else
-- **Invite Friends**: Select from connected friends to join the squad
-- **Service Types**: Optionally specify team specialties
-- **Status Tracking**: proposed, recruiting, active, working, completed, disbanded
-- **Storage Keys**: SQUADS, SQUAD_INVITES, SQUAD_PROPOSALS
-
-### Gente da Lida Section
-- **New User Showcase**: Horizontal scroll showing recent users in home feed
-- **Visual Elements**: Avatar, name, role tag, level badge, "NOVO" badge for users < 7 days
-- **Navigation**: Click to view user profile
-
-### Notification System
-- **New User Notifications**: Auto-generated when users register with "Lida" phrases
-- **Storage**: @lidacacau_notifications key, max 100 notifications
-- **Functions**: createNotification, getNotifications, markNotificationAsRead
-
-### Rural Property Management System (Nov 2025)
-- **PropertyDetail Type**: Extended property model with polygon boundaries, talhões, documents, verification status
-- **PolygonGeometry**: GeoJSON-compatible format for CAR integration readiness
-- **Talhao System**: Field plot management with crop types, service tags, and priority levels
-- **PropertyDocument**: CAR document upload with verification workflow (pending/verified/rejected)
-- **PropertyVerifiedBadge**: Green shield badge for verified properties
-- **MapPropertyEditor**: Interactive polygon drawing with touch gestures, area calculation in hectares
-- **Property Screens**:
-  - PropertyListScreen: List producer properties with stats, verification badges
-  - PropertyFormScreen: Create/edit with GPS, address, cover photo
-  - PropertyDetailScreen: Full property view with talhões preview, documents summary
-  - TalhaoManagementScreen: Manage talhões with service tags and priorities
-  - PropertyDocumentsScreen: Upload CAR, land titles, environmental licenses
-- **Storage Functions**: createProperty, getPropertiesByOwner, addTalhao, addServiceTag, addPropertyDocument
-- **Data Migration**: Legacy Property to PropertyDetail automatic migration
-
-### Technical Implementation
-- **UI/UX**: iOS 26 Liquid Glass style with LidaCacau color palette
-- **Persistency**: AsyncStorage for offline-first data persistence (all keys use `@lidacacau_` prefix)
-- **Navigation**: React Navigation 7+
-- **Theming**: Support for dark/light mode
-- **Analytics**: Event tracking with 1000-event buffer for AI analysis
-
-### Directory Structure
-- `/App.tsx`: Entry point with ErrorBoundary, Rubik fonts, and ConfigProvider
-- `/config/`: Environment configuration and feature flags
-  - `app.config.ts`: Environment-specific configuration (dev/staging/prod)
-  - `ConfigContext.tsx`: React context for runtime configuration
-  - `index.ts`: Centralized exports
-- `/services/`: Service abstraction layer for production migration
-  - `/interfaces/`: Service contracts (IAuthService, IJobService, etc.)
-  - `/mock/`: AsyncStorage-based mock implementations
-  - `/api/`: Real API implementations (future)
-  - `ServiceFactory.ts`: Factory pattern for service instantiation
-- `/data/`: Data providers and mock data
-  - `MockDataProvider.ts`: Demo data initialization (dev only)
-- `/screens/`: Organized by authentication, producer, worker, admin, and shared
-  - `/screens/shared/UnifiedHomeScreen.tsx`: Main home with animated swipeable job cards
-  - `/screens/shared/UnifiedProfileScreen.tsx`: User profile with Comunidade section
-  - `/screens/shared/FriendsScreen.tsx`: Amigos do Campo system
-  - `/screens/shared/ChatListScreen.tsx`: Conversation list
-  - `/screens/shared/ChatRoomScreen.tsx`: Individual chat
-  - `/screens/shared/UserSearchScreen.tsx`: User search with filters
-  - `/screens/shared/TutorialScreen.tsx`: Interactive 6-card tutorial carousel
-  - `/screens/shared/QuickActionsScreen.tsx`: Unified action modal (create, search, chat)
-- `/navigation/`: Navigation flows
-  - `routes.ts`: Centralized route definitions with TypeScript types
-  - `UnifiedTabNavigator.tsx`: 5-tab structure (Home, Conversas, +, Explorar, Perfil)
-  - `RootNavigator.tsx`: Root navigation with auth handling
-- `/contexts/`: Contains `AuthContext.tsx`
-- `/types/`: TypeScript definitions including FriendConnection, ChatRoom, DirectMessage, UserPresence, PersonalBackground, Certificate, PortfolioItem
-- `/utils/`: 
-  - `storage.ts`: 19 storage keys, friend/chat/presence functions, cleanup utilities
-  - `analytics.ts`: Event tracking with trackEvent, startSession, endSession
-  - `format.ts`, `contract.ts`, `receipt.ts`, `payment.ts`
-- `/constants/`: Theme definitions with LidaCacau colors
-- `/docs/`: Documentacao detalhada para exportacao
-  - `development-playbook.md`: Guia passo-a-passo com modelos de dados e APIs
-  - `export-strategy.md`: Como exportar para Node/Express, Django, Go
-  - `web-publishing.md`: Como publicar na web e compartilhar link
-- `ARCHITECTURE.md`: Documentation for production migration
-
-### Storage Keys (@lidacacau_ prefix)
-- CURRENT_USER, USERS, JOBS, BIDS, WORK_ORDERS, REVIEWS
-- SERVICE_OFFERS, CARD_PRESETS, USER_PREFERENCES
-- FRIENDS, CHAT_ROOMS, MESSAGES_{roomId}, PRESENCE
-- ANALYTICS, CONTRACT_HISTORY, PORTFOLIO, NOTIFICATIONS
-- PROPERTIES (PropertyDetail storage for rural property management)
-- COCOA_PRICES (Real-time price data with stale-while-revalidate cache)
-
-### Custom Hooks
-- `useScreenInsets`: Screen padding calculations (tab bar, header, web differences)
-- `useSimpleScreenInsets`: Simplified version for basic calculations
-- `useFetch`: Generic data fetching with loading states
-- `useLoadingState`: Loading/refreshing state management
-
-### Analytics System
-- `trackEvent(eventType, eventData?, screen?)`: Record user events
-- `startSession(userId?)`: Initialize analytics session
-- `endSession()`: Finalize session
-- Event types: app_open, screen_view, card_create, friend_request, chat_send, etc.
-- Storage limit: 1000 events (FIFO)
-
-## Payment System (OpenPix Integration)
-- **Screens**: PaymentScreen, PaymentHistoryScreen, PixSettingsScreen
-- **Split**: 90% worker, 10% platform fee
-- **Features**: PIX QR Code generation, status tracking, payment history
-
-## Navigation Routes
-### RootStackParamList
-- Auth: Login, Register, Tutorial
-- Main: MainTabs, Profile screens
-- Social: Friends, ChatList, ChatRoom, UserSearch, OtherUserProfile
-- Jobs: JobDetail, CreateCard, Proposals
-- Teams: CreateSquad
-- Payments: Payment, PaymentHistory, PixSettings
-- Settings: IdentityVerification, SocialLinks, Portfolio, FAQSupport
-- Properties: PropertyList, PropertyDetail, PropertyForm, TalhaoManagement, PropertyDocuments
+### System Design Choices
+- **Dual-Role Architecture**: Seamless switching between Producer and Worker roles.
+- **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA".
+- **Service Layer**: Designed for production migration with interfaces (`IAuthService`, `IJobService`, etc.), mock implementations, and a `ServiceFactory` for dependency injection.
+- **Development Mode Features**: Auto-login for demo users (Maria/Joao), session persistence, and tutorial skipping for streamlined testing.
 
 ## External Dependencies
-- **Expo**: Core framework with expo-location, expo-image-picker, expo-haptics
-- **Navigation**: @react-navigation/native, @react-navigation/bottom-tabs
-- **Maps**: react-native-maps (mobile), web fallback placeholder
-- **OpenPix**: Payment gateway (requires OPENPIX_APP_ID secret)
-
-## Recent Changes (Nov 2025)
-1. Complete rebranding from Empleitapp to LidaCacau
-2. New color palette and Rubik font implementation
-3. Social features: Amigos do Campo, Chat, User Search
-4. Analytics system for AI analysis
-5. Interactive tutorial with 6-card carousel
-6. Comunidade section in profile
-7. Fake data removed for MVP readiness
-8. Storage cleanup utilities added
-9. Dev data seeding: MockDataProvider creates demo users (Maria/Joao) when enableMockData=true
-10. All touch targets verified at 48dp minimum
-11. trackEvent calls added to all key user actions
-12. **Quick Actions Hub**: Unified "+" button with modal for work-focused actions only
-13. **New Logo**: Handshake with cocoa fruit design applied across app
-14. **Gente da Lida Section**: Horizontal scroll in home feed showing recent users
-15. **Notification System**: Auto-notifications when new users register
-16. **Lida Terminology**: Updated UI texts with regional phrases ("pegar lida", "gente da lida", "firme na lida")
-17. **Esquadrao da Lida**: Work team system with 4-member squads, leader selection, and invite management
-18. **Tab Navigation Update**: "Conversas" tab replaced "Aprender" for direct chat access
-19. **Enhanced Profile System**: Complete profile-building with personal history, work photos, and certificates
-    - EditProfileScreen with ScreenKeyboardAwareScrollView for keyboard handling
-    - PersonalBackground type: birthPlace, yearsInRegion, familyConnections, personalStory
-    - Work photos gallery (max 6 items with cover-fit images)
-    - Certificates list with institution info
-    - Profile completion tracking (8 fields with progress bar)
-    - OtherUserProfileScreen displays "Minha Historia", photos, certificates
-20. **Rural Property Management System**: Full property lifecycle management
-    - PropertyDetail with polygon boundaries for precise land mapping
-    - Talhão system for field plot organization with crop types
-    - Service tags with priority levels (low/medium/high/urgent)
-    - CAR document upload with verification workflow
-    - MapPropertyEditor for interactive polygon drawing via touch gestures
-    - Property verification badge system (pending/verified/rejected)
-    - Legacy property data migration for backward compatibility
-    - Area calculation in hectares using GeoJSON-compatible coordinates
-21. **Real-Time Cocoa Price Tracking System**: Global and local cocoa price integration
-    - CocoaPriceService: Stale-while-revalidate cache pattern with 30-min TTL
-    - Mock data structure ready for ICCO/ICE Futures API integration
-    - PriceTicker component: Compact widget on home screen with price change indicators
-    - CacauPricesScreen: Full dashboard with historical chart, local quotes from moageiras
-    - Theme-aware colors (colors.success/error from current theme)
-    - LocalQuote system for regional price differentials (ágios/desagios)
-    - Storage key: @lidacacau_cocoa_prices
-    - Navigation route: CacauPrices
-
-## Development Mode Features
-- **Auto-Login**: In __DEV__ mode, the app automatically logs in using Maria (Producer) without showing the login screen
-- **devAutoLogin()**: Function in storage.ts that handles automatic authentication for development testing
-- **Session Persistence**: User data persists between app restarts via AsyncStorage (@lidacacau_current_user key)
-- **Skip Tutorial**: Demo users have `tutorialCompleted: true` to bypass the onboarding tutorial
-
-## Demo Credentials (Development Only)
-- **Maria da Silva** (Producer): maria@demo.lidacacau.com / demo123
-- **Joao Pereira** (Worker): joao@demo.lidacacau.com / demo123
-- Both accounts have verification status 'approved' with IdentityVerification object
-- These accounts are friends with an active chat room for testing
+- **Expo**: Core framework, including `expo-location`, `expo-image-picker`, `expo-haptics`.
+- **Navigation**: `@react-navigation/native`, `@react-navigation/bottom-tabs`.
+- **Maps**: `react-native-maps` (with web fallback placeholder).
+- **OpenPix**: Payment gateway (requires `OPENPIX_APP_ID`).
