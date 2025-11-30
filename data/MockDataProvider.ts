@@ -16,7 +16,7 @@ import { hashPassword } from '@/services/common/PasswordUtils';
 
 const STORAGE_PREFIX = AppConfiguration.storage.prefix;
 
-const SEEDING_VERSION = 'v2_hashed';
+const SEEDING_VERSION = 'v3_fixed_' + Date.now().toString().slice(-6);
 
 const KEYS = {
   USERS: `${STORAGE_PREFIX}users`,
