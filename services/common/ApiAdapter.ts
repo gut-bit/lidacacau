@@ -198,7 +198,12 @@ let apiAdapterInstance: ApiAdapter | null = null;
 
 export function getApiAdapter(): ApiAdapter {
   if (!apiAdapterInstance) {
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3001/api';
+    // Priority: environment variable > relative path (production default)
+    // EXPO_PUBLIC_ prefix makes it available to Expo client bundle
+    const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
+    const baseUrl = envBaseUrl || '/api';
+    
+    console.log('[ApiAdapter] Base URL:', baseUrl);
     apiAdapterInstance = new ApiAdapter({ baseUrl });
   }
   return apiAdapterInstance;
