@@ -135,7 +135,7 @@ const productionConfig: AppConfig = {
   env: 'production',
   
   api: {
-    baseUrl: '/api',
+    baseUrl: 'https://lidacacau.com/api',
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -154,6 +154,17 @@ const productionConfig: AppConfig = {
   storage: {
     prefix: '@lidacacau_',
     encryptSensitive: true,
+  },
+  
+  metadata: {
+    region: 'Uruara/PA',
+    defaultLocation: {
+      latitude: -3.7167,
+      longitude: -53.7333,
+    },
+    supportEmail: 'suporte@lidacacau.com',
+    termsUrl: 'https://lidacacau.com/termos',
+    privacyUrl: 'https://lidacacau.com/privacidade',
   },
 };
 
