@@ -17,7 +17,12 @@
       },
       "ios": {
         "simulator": true
-      }
+      },
+      "env": {
+        "APP_VARIANT": "development",
+        "CONFIG_ENV": "development"
+      },
+      "channel": "development"
     },
     "preview": {
       "extends": "base",
@@ -27,7 +32,12 @@
       },
       "ios": {
         "simulator": false
-      }
+      },
+      "env": {
+        "APP_VARIANT": "preview",
+        "CONFIG_ENV": "staging"
+      },
+      "channel": "preview"
     },
     "production": {
       "extends": "base",
@@ -39,7 +49,7 @@
       "env": {
         "APP_VARIANT": "production",
         "CONFIG_ENV": "production",
-        "API_BASE_URL": "https://lidacacau.com/api"
+        "API_BASE_URL": "/api"
       }
     }
   },

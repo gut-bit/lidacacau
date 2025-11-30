@@ -142,6 +142,44 @@ The application uses a unified Express.js server for production:
 - `GET /api/social/friends` - Friend connections
 - `GET /api/health` - Server health check
 
+## EAS Build Configuration
+
+### Build Profiles (eas.json)
+
+**Development Build:**
+- **Profile**: `development`
+- **Purpose**: Development client for testing native features
+- **Distribution**: Internal (APK for Android, Simulator for iOS)
+- **Channel**: `development`
+- **Command**: `npx eas build --profile development --platform android`
+
+**Preview Build:**
+- **Profile**: `preview`
+- **Purpose**: Internal testing before production
+- **Distribution**: Internal (APK for Android, Device for iOS)
+- **Channel**: `preview`
+- **Environment**: Staging configuration
+- **Command**: `npx eas build --profile preview --platform android`
+
+**Production Build:**
+- **Profile**: `production`
+- **Purpose**: App store distribution
+- **Distribution**: Store-ready (App Bundle for Android, App Store for iOS)
+- **Channel**: `production`
+- **Auto-increment**: Enabled for version management
+- **Command**: `npx eas build --profile production --platform android`
+
+### Expo Updates (OTA)
+- **Project ID**: `2bb9d9cb-38f9-4300-a038-64b30038b453`
+- **Updates URL**: `https://u.expo.dev/2bb9d9cb-38f9-4300-a038-64b30038b453`
+- **Check Strategy**: `ON_ERROR_RECOVERY`
+- **Publish Command**: `npx eas update --branch production --message "Update description"`
+
+### Expo Dashboard
+- **Organization**: gut2s-organization
+- **Project**: lidacacau
+- **Dashboard URL**: https://expo.dev/accounts/gut2s-organization/projects/lidacacau
+
 ## External Dependencies
 - **Expo**: Core framework, including `expo-location`, `expo-image-picker`, `expo-haptics`, `expo-crypto`.
 - **Navigation**: `@react-navigation/native`, `@react-navigation/bottom-tabs`.
