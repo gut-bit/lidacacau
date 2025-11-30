@@ -141,7 +141,9 @@ const productionConfig: AppConfig = {
   },
   
   features: {
-    enableMockData: false,
+    // MVP: Using mock data until backend API is deployed
+    // Set to false and deploy backend when ready for real database
+    enableMockData: true,
     enableAnalytics: true,
     enableDevTools: false,
     enableAutoLogin: false,
