@@ -191,13 +191,13 @@ The application uses a unified Express.js server for production:
 
 ## Development Notes
 
-### Expo Go vs Development Build Mode
-**IMPORTANT**: The project has `expo-dev-client` installed which causes the dev server to default to "development build" mode. This produces a QR code URL like `exp+lidacacau://expo-development-client/...` which CANNOT be opened by Expo Go.
+### Expo Go Mode
+The project is configured for **Expo Go** compatibility. The dev server produces a QR code URL like `exp://...` which can be opened directly with the Expo Go app.
 
-**To use Expo Go on your phone:**
-- Run: `EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start --go`
-- The `--go` flag forces Expo Go mode
-- The QR code will show `exp://...` which CAN be opened by Expo Go
+**To test on your phone:**
+1. Open Expo Go app on your Android/iOS device
+2. Click the QR code icon in Replit's URL bar menu
+3. Scan the QR code with Expo Go
 
 **Demo Credentials:**
 - Producer: `maria@demo.lidacacau.com` / `demo123`
