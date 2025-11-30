@@ -9,10 +9,9 @@
     "userInterfaceStyle": "automatic",
     "sdkVersion": "54.0.0",
     "updates": {
-      "enabled": true,
-      "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/ad9d78c5-7369-40d1-9d34-81ed751c874a"
+      "enabled": false,
+      "checkAutomatically": "NEVER",
+      "fallbackToCacheTimeout": 30000
     },
     "extra": {
       "eas": {
