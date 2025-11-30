@@ -168,11 +168,14 @@ export class ApiAdapter {
 
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
-      const json: ApiResponse<T> = await response.json();
+      const json = await response.json();
       if (json.success === false) {
         return createError<T>(json.error || 'Erro desconhecido', json.code);
       }
-      return createSuccess<T>(json.data as T);
+      // Handle both formats: {success, data: {...}} and {success, user, token, ...}
+      // If 'data' field exists, use it; otherwise use the entire response as data
+      const responseData = json.data !== undefined ? json.data : json;
+      return createSuccess<T>(responseData as T);
     }
 
     return createSuccess<T>(undefined as T);
