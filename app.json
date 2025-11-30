@@ -9,9 +9,10 @@
     "userInterfaceStyle": "automatic",
     "sdkVersion": "54.0.0",
     "updates": {
-      "enabled": false,
-      "checkAutomatically": "NEVER",
-      "fallbackToCacheTimeout": 30000
+      "enabled": true,
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 30000,
+      "url": "https://u.expo.dev/2bb9d9cb-38f9-4300-a038-64b30038b453"
     },
     "extra": {
       "eas": {
@@ -37,6 +38,12 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.CAMERA",
