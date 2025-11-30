@@ -135,7 +135,7 @@ const productionConfig: AppConfig = {
   env: 'production',
   
   api: {
-    baseUrl: 'https://lidacacau.com/api',
+    baseUrl: '/api',
     timeout: 30000,
     retryAttempts: 3,
   },
