@@ -70,13 +70,17 @@ if (isProduction) {
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
     
-    app.get('*', (_req: Request, res: Response) => {
+    app.get('/{*splat}', (_req: Request, res: Response) => {
       const indexPath = path.join(distPath, 'index.html');
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
         res.status(404).send('App not found');
       }
+    });
+    
+    app.use((_req: Request, res: Response) => {
+      res.status(404).json({ error: 'Endpoint nao encontrado' });
     });
     
     console.log('[LidaCacau] Servindo arquivos estaticos de:', distPath);

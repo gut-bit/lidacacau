@@ -109,9 +109,44 @@ The service layer is designed for easy migration from mock (AsyncStorage) to pro
 3. Update `ServiceFactory` to return API services in production mode
 4. Set `API_BASE_URL` environment variable
 
+## Deployment Architecture
+
+### Production Server (Unified)
+The application uses a unified Express.js server for production:
+- **Port**: 5000 (configurable via PORT env var)
+- **API Routes**: `/api/*` - RESTful endpoints for auth, users, jobs, properties, social
+- **Static Files**: Expo web export served from `/dist` folder
+- **Health Check**: `/api/health` - Returns server status and version
+
+### Build & Deploy Process
+1. **Build**: `npx expo export --platform web --output-dir dist`
+2. **Run**: `NODE_ENV=production npx tsx server/index.ts`
+3. **Environment Variables**:
+   - `DATABASE_URL`: PostgreSQL connection string
+   - `SESSION_SECRET`: JWT signing secret
+   - `NODE_ENV`: Set to "production"
+   - `PORT`: Server port (default 5000)
+
+### Server Components
+- **Express.js** with Helmet, CORS, rate limiting
+- **Drizzle ORM** for PostgreSQL operations
+- **JWT authentication** with secure session tokens
+- **Static file serving** for Expo web bundle
+
+### API Endpoints
+- `POST /api/auth/login` - User authentication
+- `POST /api/auth/register` - New user registration
+- `GET /api/users` - List/search users
+- `GET /api/jobs` - List work demands
+- `GET /api/properties` - Rural properties
+- `GET /api/social/friends` - Friend connections
+- `GET /api/health` - Server health check
+
 ## External Dependencies
 - **Expo**: Core framework, including `expo-location`, `expo-image-picker`, `expo-haptics`, `expo-crypto`.
 - **Navigation**: `@react-navigation/native`, `@react-navigation/bottom-tabs`.
 - **Maps**: `react-native-maps` (with web fallback placeholder).
 - **OpenPix**: Payment gateway (requires `OPENPIX_APP_ID`).
 - **PostgreSQL**: Neon-backed database (DATABASE_URL in secrets).
+- **Express.js**: Backend API server with security middleware.
+- **Drizzle ORM**: Type-safe database operations.
