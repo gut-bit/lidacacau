@@ -136,6 +136,10 @@ LidaCacau is a mobile marketplace application (Expo React Native) designed to co
   - `analytics.ts`: Event tracking with trackEvent, startSession, endSession
   - `format.ts`, `contract.ts`, `receipt.ts`, `payment.ts`
 - `/constants/`: Theme definitions with LidaCacau colors
+- `/docs/`: Documentacao detalhada para exportacao
+  - `development-playbook.md`: Guia passo-a-passo com modelos de dados e APIs
+  - `export-strategy.md`: Como exportar para Node/Express, Django, Go
+  - `web-publishing.md`: Como publicar na web e compartilhar link
 - `ARCHITECTURE.md`: Documentation for production migration
 
 ### Storage Keys (@lidacacau_ prefix)
