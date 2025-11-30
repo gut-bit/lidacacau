@@ -1,11 +1,10 @@
 /**
  * LidaCacau - Implementação Mock do Serviço de Autenticação
  * 
- * Usa AsyncStorage para simular autenticação.
+ * Usa AsyncStorageAdapter para simular autenticação.
  * Para produção, substitua por ApiAuthService.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@/types';
 import { 
   IAuthService, 
@@ -13,13 +12,7 @@ import {
   RegisterData, 
   AuthResult 
 } from '../interfaces/IAuthService';
-import { AppConfiguration } from '@/config';
-
-const STORAGE_PREFIX = AppConfiguration.storage.prefix;
-const KEYS = {
-  CURRENT_USER: `${STORAGE_PREFIX}current_user`,
-  USERS: `${STORAGE_PREFIX}users`,
-};
+import { storageAdapter, StorageKeys } from '../common/AsyncStorageAdapter';
 
 export class MockAuthService implements IAuthService {
   private generateId(): string {
@@ -40,7 +33,7 @@ export class MockAuthService implements IAuthService {
         };
       }
 
-      await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
+      await storageAdapter.setItem(StorageKeys.CURRENT_USER, user);
       
       return {
         success: true,
@@ -82,8 +75,8 @@ export class MockAuthService implements IAuthService {
         averageRating: data.role === 'worker' ? 0 : undefined,
       };
 
-      await AsyncStorage.setItem(KEYS.USERS, JSON.stringify([...users, newUser]));
-      await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(newUser));
+      await storageAdapter.setItem(StorageKeys.USERS, [...users, newUser]);
+      await storageAdapter.setItem(StorageKeys.CURRENT_USER, newUser);
 
       return {
         success: true,
@@ -99,13 +92,12 @@ export class MockAuthService implements IAuthService {
   }
 
   async logout(): Promise<void> {
-    await AsyncStorage.removeItem(KEYS.CURRENT_USER);
+    await storageAdapter.removeItem(StorageKeys.CURRENT_USER);
   }
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      const data = await AsyncStorage.getItem(KEYS.CURRENT_USER);
-      return data ? JSON.parse(data) : null;
+      return await storageAdapter.getItem<User>(StorageKeys.CURRENT_USER);
     } catch {
       return null;
     }
@@ -124,11 +116,11 @@ export class MockAuthService implements IAuthService {
       if (index === -1) return null;
 
       users[index] = { ...users[index], ...updates };
-      await AsyncStorage.setItem(KEYS.USERS, JSON.stringify(users));
+      await storageAdapter.setItem(StorageKeys.USERS, users);
 
       const currentUser = await this.getCurrentUser();
       if (currentUser && currentUser.id === userId) {
-        await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(users[index]));
+        await storageAdapter.setItem(StorageKeys.CURRENT_USER, users[index]);
       }
 
       return users[index];
@@ -148,8 +140,7 @@ export class MockAuthService implements IAuthService {
 
   async getUsers(filters?: { role?: string; verified?: boolean }): Promise<User[]> {
     try {
-      const data = await AsyncStorage.getItem(KEYS.USERS);
-      let users: User[] = data ? JSON.parse(data) : [];
+      let users = await storageAdapter.getList<User>(StorageKeys.USERS);
 
       if (filters) {
         if (filters.role) {
