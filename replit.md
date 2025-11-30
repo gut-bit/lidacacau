@@ -84,10 +84,24 @@ The service layer is designed for easy migration from mock (AsyncStorage) to pro
 1. **Interfaces** (`services/interfaces/`): Define contracts for all domains
 2. **Mock Implementations** (`services/mock/`): AsyncStorage-based for MVP
 3. **Common Utilities** (`services/common/`):
-   - `AsyncStorageAdapter` - Local storage abstraction
+   - `AsyncStorageAdapter` - Local storage abstraction with error logging
    - `ApiAdapter` - HTTP client for backend API
-   - `PasswordUtils` - Secure password hashing (expo-crypto)
+   - `PasswordUtils` - Secure password hashing (SHA-256 with salt, 10k iterations)
+   - `SecureStorageAdapter` - expo-secure-store wrapper with web fallback
+   - `SessionManager` - Secure session token and user ID management
+   - `ValidationUtils` - Input validation (email, password, phone, CPF, name)
+   - `ErrorHandler` - Structured error logging with Portuguese user messages
+   - `RateLimiter` - Request throttling (auth: 5/min, api: 30/min)
 4. **ServiceFactory**: Dependency injection with mode switching
+
+### Security Features
+- **Password Security**: SHA-256 hashing with random salt and 10,000 PBKDF2-style iterations
+- **Secure Storage**: expo-secure-store for tokens on native, AsyncStorage fallback on web
+- **Input Validation**: Email, password strength, Brazilian phone/CPF validation
+- **Rate Limiting**: Brute force protection on auth (5 attempts/minute)
+- **Error Handling**: Structured logging with 100-error buffer for debugging
+- **Session Management**: Secure token storage, proper logout cleanup
+- **See**: `SECURITY.md` for full security documentation
 
 **Migration Path:**
 1. Deploy backend API server using `server/db/schema.sql`
