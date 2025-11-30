@@ -53,6 +53,11 @@ import { MockWorkOrderService } from './mock/MockWorkOrderService';
 import { MockPropertyService } from './mock/MockPropertyService';
 import { MockSocialService } from './mock/MockSocialService';
 
+import { ApiAuthService } from './api/ApiAuthService';
+import { ApiJobService } from './api/ApiJobService';
+import { ApiPropertyService } from './api/ApiPropertyService';
+import { ApiSocialService } from './api/ApiSocialService';
+
 export type ServiceProvider = 'mock' | 'api';
 
 interface ServiceInstances {
@@ -96,30 +101,32 @@ class ServiceFactory {
   }
 
   /**
-   * Serviço de Autenticação
-   * TODO: Criar ApiAuthService e trocar quando provider === 'api'
+   * Servico de Autenticacao
    */
   getAuthService(): IAuthService {
     if (!this.instances.auth) {
-      this.instances.auth = new MockAuthService();
+      this.instances.auth = this.provider === 'api' 
+        ? new ApiAuthService() 
+        : new MockAuthService();
     }
     return this.instances.auth;
   }
 
   /**
-   * Serviço de Demandas (Jobs)
-   * TODO: Criar ApiJobService e trocar quando provider === 'api'
+   * Servico de Demandas (Jobs)
    */
   getJobService(): IJobService {
     if (!this.instances.job) {
-      this.instances.job = new MockJobService();
+      this.instances.job = this.provider === 'api'
+        ? new ApiJobService()
+        : new MockJobService();
     }
     return this.instances.job;
   }
 
   /**
-   * Serviço de Ordens de Trabalho
-   * TODO: Criar ApiWorkOrderService e trocar quando provider === 'api'
+   * Servico de Ordens de Trabalho
+   * Nota: WorkOrderService ainda usa Mock (API nao implementada)
    */
   getWorkOrderService(): IWorkOrderService {
     if (!this.instances.workOrder) {
@@ -129,23 +136,25 @@ class ServiceFactory {
   }
 
   /**
-   * Serviço de Propriedades Rurais
-   * TODO: Criar ApiPropertyService e trocar quando provider === 'api'
+   * Servico de Propriedades Rurais
    */
   getPropertyService(): IPropertyService {
     if (!this.instances.property) {
-      this.instances.property = new MockPropertyService();
+      this.instances.property = this.provider === 'api'
+        ? new ApiPropertyService()
+        : new MockPropertyService();
     }
     return this.instances.property;
   }
 
   /**
-   * Serviço Social (Amigos, Chat, Presença)
-   * TODO: Criar ApiSocialService e trocar quando provider === 'api'
+   * Servico Social (Amigos, Chat, Presenca)
    */
   getSocialService(): ISocialService {
     if (!this.instances.social) {
-      this.instances.social = new MockSocialService();
+      this.instances.social = this.provider === 'api'
+        ? new ApiSocialService()
+        : new MockSocialService();
     }
     return this.instances.social;
   }

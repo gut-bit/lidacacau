@@ -68,7 +68,7 @@ const developmentConfig: AppConfig = {
   appVersion: '1.0.0',
   
   api: {
-    baseUrl: 'http://localhost:3000/api',
+    baseUrl: 'http://localhost:3001/api',
     timeout: 30000,
     retryAttempts: 3,
   },
