@@ -50,40 +50,13 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
 }
 
 // DEMO MODE: Enable this flag for investor presentation
+// When enabled, auto-logs in as Helton with REAL database authentication
 const DEMO_MODE = true;
 
-// Demo user for investor presentation
-const DEMO_USER: User = {
-  id: 'demo-user-001',
-  email: 'helton@lidacacau.com',
-  name: 'Helton Gutzeit Calasans',
-  role: 'producer',
-  roles: ['producer', 'worker'],
-  activeRole: 'producer',
-  avatar: undefined,
-  phone: '(93) 99999-8888',
-  location: 'Fazenda Panorama Cacau - Uruara, PA',
-  createdAt: new Date().toISOString(),
-  level: 5,
-  totalReviews: 15,
-  averageRating: 5.0,
-  searchRadius: 100,
-  badges: [],
-  goals: DEFAULT_GOALS.map(g => ({ ...g })),
-  workerProfile: {
-    bio: 'Fundador da Qualitheo Agro Industria e Vibe Dev do LidaCacau',
-    skills: ['gestao', 'cacau', 'tecnologia', 'agroindustria'],
-    equipment: [],
-    availability: 'full_time',
-    totalJobs: 50,
-    totalEarnings: 100000,
-  },
-  producerProfile: {
-    bio: 'Fundador da Qualitheo Agro Industria | Fazenda Panorama Cacau | Vibe Dev LidaCacau',
-    totalSpent: 250000,
-    pixKey: 'helton@qualitheo.com',
-    pixKeyType: 'email',
-  },
+// Demo credentials for auto-login
+const DEMO_CREDENTIALS = {
+  email: 'helton@fazendapanorama.com',
+  password: 'demo123',
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -99,35 +72,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await initializeStorage();
         console.log('[AuthContext] Storage initialized');
         
-        // DEMO MODE: Skip auth check and use demo user directly
-        if (DEMO_MODE) {
-          console.log('[AuthContext] DEMO MODE ACTIVE - Using demo user');
-          const demoUser = ensureUserHasNewFields(DEMO_USER);
-          setUser(demoUser);
-          setIsLoading(false);
-          console.log('[AuthContext] Demo user loaded:', demoUser.name);
-          return;
-        }
-        
+        // First try to restore existing session
         const currentUser = await authService.getCurrentUser();
         console.log('[AuthContext] getCurrentUser result:', currentUser ? `User: ${currentUser.email}` : 'null');
+        
         if (currentUser) {
           const restoredUser = ensureUserHasNewFields(currentUser);
           setUser(restoredUser);
           console.log('[AuthContext] User restored:', restoredUser.email);
+          setIsLoading(false);
+          return;
+        }
+        
+        // DEMO MODE: Auto-login with real credentials if no session exists
+        if (DEMO_MODE) {
+          console.log('[AuthContext] DEMO MODE - Auto-login with real credentials');
+          try {
+            const result = await authService.login({
+              email: DEMO_CREDENTIALS.email,
+              password: DEMO_CREDENTIALS.password,
+            });
+            
+            if (result.success && result.user) {
+              const demoUser = ensureUserHasNewFields(result.user);
+              setUser(demoUser);
+              console.log('[AuthContext] Demo user logged in:', demoUser.name);
+            } else {
+              console.warn('[AuthContext] Demo login failed:', result.error);
+              setUser(null);
+            }
+          } catch (loginError) {
+            console.error('[AuthContext] Demo login error:', loginError);
+            setUser(null);
+          }
         } else {
           setUser(null);
           console.log('[AuthContext] No user to restore');
         }
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);
-        // In demo mode, still load demo user even on error
-        if (DEMO_MODE) {
-          const demoUser = ensureUserHasNewFields(DEMO_USER);
-          setUser(demoUser);
-        } else {
-          setUser(null);
-        }
+        setUser(null);
       } finally {
         setIsLoading(false);
         console.log('[AuthContext] Initialization complete, isLoading=false');

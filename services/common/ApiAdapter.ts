@@ -27,9 +27,10 @@ function getBaseUrl(): string {
     
     if (typeof window !== 'undefined' && window.location) {
       if (isDev) {
+        // In Replit development, Express runs on port 5000
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
-        const devApiUrl = `${protocol}//${hostname}:8000/api`;
+        const devApiUrl = `${protocol}//${hostname}:5000/api`;
         console.log('[ApiAdapter] Development mode - API URL:', devApiUrl);
         return devApiUrl;
       }
