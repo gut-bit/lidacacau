@@ -78,7 +78,7 @@ export async function getBidsByJob(jobId: string): Promise<Bid[]> {
  */
 export async function getBidsByWorker(workerId: string): Promise<Bid[]> {
   try {
-    const result = await api.get<BidsResponse>('/jobs/bids', { workerId });
+    const result = await api.get<BidsResponse>('/jobs/bids/worker');
     if (result.success && result.data) {
       return result.data.bids || [];
     }

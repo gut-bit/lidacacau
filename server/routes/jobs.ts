@@ -28,7 +28,17 @@ const createBidSchema = z.object({
 
 router.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { status = 'open', limit = '20', offset = '0' } = req.query;
+    const { status = 'open', producerId, limit = '20', offset = '0' } = req.query;
+
+    const conditions = [];
+    
+    if (status) {
+      conditions.push(eq(jobs.status, status as string));
+    }
+    
+    if (producerId && typeof producerId === 'string') {
+      conditions.push(eq(jobs.producerId, producerId));
+    }
 
     const jobList = await db
       .select({
@@ -54,7 +64,7 @@ router.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Response) =
       .from(jobs)
       .leftJoin(users, eq(jobs.producerId, users.id))
       .leftJoin(serviceTypes, eq(jobs.serviceTypeId, serviceTypes.id))
-      .where(eq(jobs.status, status as string))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(jobs.createdAt))
       .limit(parseInt(limit as string))
       .offset(parseInt(offset as string));
