@@ -2,11 +2,7 @@
  * LidaCacau - API Adapter
  * 
  * Adaptador HTTP para conexao com backend PostgreSQL.
- * Substitui AsyncStorageAdapter em ambiente de producao.
- * 
- * Configuracao:
- * - Defina API_BASE_URL no ambiente
- * - Use ServiceFactory.setMode('production') para ativar
+ * Funciona tanto em desenvolvimento quanto em producao.
  */
 
 import { ServiceResult, createSuccess, createError } from './types';
@@ -22,6 +18,17 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   code?: string;
+}
+
+function getBaseUrl(): string {
+  try {
+    if (typeof window !== 'undefined' && window.location) {
+      return '/api';
+    }
+    return '/api';
+  } catch {
+    return '/api';
+  }
 }
 
 export class ApiAdapter {
@@ -57,29 +64,40 @@ export class ApiAdapter {
 
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<ServiceResult<T>> {
     try {
-      const url = new URL(`${this.baseUrl}${endpoint}`);
+      let url = `${this.baseUrl}${endpoint}`;
+      
       if (params) {
+        const searchParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            url.searchParams.append(key, String(value));
+            searchParams.append(key, String(value));
           }
         });
+        const queryString = searchParams.toString();
+        if (queryString) {
+          url += `?${queryString}`;
+        }
       }
 
-      const response = await this.fetchWithTimeout(url.toString(), {
+      console.log('[ApiAdapter] GET', url);
+      const response = await this.fetchWithTimeout(url, {
         method: 'GET',
         headers: this.getHeaders(),
       });
 
       return this.handleResponse<T>(response);
     } catch (error) {
+      console.error('[ApiAdapter] GET error:', error);
       return this.handleError<T>(error);
     }
   }
 
   async post<T>(endpoint: string, data?: any): Promise<ServiceResult<T>> {
     try {
-      const response = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log('[ApiAdapter] POST', url);
+      
+      const response = await this.fetchWithTimeout(url, {
         method: 'POST',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined,
@@ -87,13 +105,17 @@ export class ApiAdapter {
 
       return this.handleResponse<T>(response);
     } catch (error) {
+      console.error('[ApiAdapter] POST error:', error);
       return this.handleError<T>(error);
     }
   }
 
   async put<T>(endpoint: string, data?: any): Promise<ServiceResult<T>> {
     try {
-      const response = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log('[ApiAdapter] PUT', url);
+      
+      const response = await this.fetchWithTimeout(url, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined,
@@ -101,13 +123,17 @@ export class ApiAdapter {
 
       return this.handleResponse<T>(response);
     } catch (error) {
+      console.error('[ApiAdapter] PUT error:', error);
       return this.handleError<T>(error);
     }
   }
 
   async patch<T>(endpoint: string, data?: any): Promise<ServiceResult<T>> {
     try {
-      const response = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log('[ApiAdapter] PATCH', url);
+      
+      const response = await this.fetchWithTimeout(url, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined,
@@ -115,19 +141,24 @@ export class ApiAdapter {
 
       return this.handleResponse<T>(response);
     } catch (error) {
+      console.error('[ApiAdapter] PATCH error:', error);
       return this.handleError<T>(error);
     }
   }
 
   async delete<T>(endpoint: string): Promise<ServiceResult<T>> {
     try {
-      const response = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log('[ApiAdapter] DELETE', url);
+      
+      const response = await this.fetchWithTimeout(url, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
       return this.handleResponse<T>(response);
     } catch (error) {
+      console.error('[ApiAdapter] DELETE error:', error);
       return this.handleError<T>(error);
     }
   }
@@ -148,6 +179,8 @@ export class ApiAdapter {
   }
 
   private async handleResponse<T>(response: Response): Promise<ServiceResult<T>> {
+    console.log('[ApiAdapter] Response status:', response.status);
+    
     if (!response.ok) {
       const errorBody = await response.text();
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -163,17 +196,19 @@ export class ApiAdapter {
         }
       }
 
+      console.error('[ApiAdapter] Error response:', errorMessage);
       return createError<T>(errorMessage, errorCode);
     }
 
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
       const json = await response.json();
+      console.log('[ApiAdapter] JSON response received');
+      
       if (json.success === false) {
         return createError<T>(json.error || 'Erro desconhecido', json.code);
       }
-      // Handle both formats: {success, data: {...}} and {success, user, token, ...}
-      // If 'data' field exists, use it; otherwise use the entire response as data
+      
       const responseData = json.data !== undefined ? json.data : json;
       return createSuccess<T>(responseData as T);
     }
@@ -182,18 +217,20 @@ export class ApiAdapter {
   }
 
   private handleError<T>(error: any): ServiceResult<T> {
-    if (error.name === 'AbortError') {
+    const errorMessage = error?.message || 'Erro de conexao';
+    const errorName = error?.name || 'Error';
+    
+    console.error('[ApiAdapter] Handle error:', errorName, errorMessage);
+    
+    if (errorName === 'AbortError') {
       return createError<T>('Tempo limite da requisicao excedido', 'TIMEOUT');
     }
 
-    if (error instanceof TypeError && error.message.includes('Network')) {
+    if (error instanceof TypeError && errorMessage.includes('Network')) {
       return createError<T>('Sem conexao com a internet', 'NETWORK_ERROR');
     }
 
-    return createError<T>(
-      error.message || 'Erro de conexao com o servidor',
-      'CONNECTION_ERROR'
-    );
+    return createError<T>(errorMessage, 'CONNECTION_ERROR');
   }
 }
 
@@ -201,12 +238,8 @@ let apiAdapterInstance: ApiAdapter | null = null;
 
 export function getApiAdapter(): ApiAdapter {
   if (!apiAdapterInstance) {
-    // Priority: environment variable > relative path (production default)
-    // EXPO_PUBLIC_ prefix makes it available to Expo client bundle
-    const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
-    const baseUrl = envBaseUrl || '/api';
-    
-    console.log('[ApiAdapter] Base URL:', baseUrl);
+    const baseUrl = getBaseUrl();
+    console.log('[ApiAdapter] Initializing with base URL:', baseUrl);
     apiAdapterInstance = new ApiAdapter({ baseUrl });
   }
   return apiAdapterInstance;

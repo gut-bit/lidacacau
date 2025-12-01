@@ -1,13 +1,8 @@
 /**
- * LidaCacau - Configuração de Ambiente
+ * LidaCacau - Configuracao de Ambiente
  * 
- * Este arquivo centraliza todas as configurações do app por ambiente.
- * Facilita a migração para produção alterando apenas o valor de CONFIG_ENV.
- * 
- * Para servidor próprio:
- * 1. Defina CONFIG_ENV = 'production'
- * 2. Configure API_BASE_URL com seu backend
- * 3. Ajuste as feature flags conforme necessário
+ * Este arquivo centraliza todas as configuracoes do app por ambiente.
+ * Detecta automaticamente o ambiente baseado em __DEV__.
  */
 
 export type Environment = 'development' | 'staging' | 'production';
@@ -17,14 +12,12 @@ export interface AppConfig {
   appName: string;
   appVersion: string;
   
-  // API Configuration
   api: {
     baseUrl: string;
     timeout: number;
     retryAttempts: number;
   };
   
-  // Feature Flags
   features: {
     enableMockData: boolean;
     enableAnalytics: boolean;
@@ -36,20 +29,17 @@ export interface AppConfig {
     enableMaps: boolean;
   };
   
-  // Storage Configuration
   storage: {
     prefix: string;
     encryptSensitive: boolean;
   };
   
-  // External Services
   services: {
     openPixAppId: string;
     mapsApiKey: string;
     analyticsId: string;
   };
   
-  // App Metadata
   metadata: {
     region: string;
     defaultLocation: {
@@ -107,32 +97,10 @@ const developmentConfig: AppConfig = {
   },
 };
 
-const stagingConfig: AppConfig = {
-  ...developmentConfig,
-  env: 'staging',
-  
-  api: {
-    baseUrl: 'https://staging-api.lidacacau.com.br/api',
-    timeout: 30000,
-    retryAttempts: 3,
-  },
-  
-  features: {
-    ...developmentConfig.features,
-    enableMockData: false,
-    enableDevTools: true,
-    enablePayments: true,
-  },
-  
-  storage: {
-    prefix: '@lidacacau_staging_',
-    encryptSensitive: true,
-  },
-};
-
 const productionConfig: AppConfig = {
-  ...developmentConfig,
   env: 'production',
+  appName: 'LidaCacau',
+  appVersion: '1.0.0',
   
   api: {
     baseUrl: '/api',
@@ -156,6 +124,12 @@ const productionConfig: AppConfig = {
     encryptSensitive: true,
   },
   
+  services: {
+    openPixAppId: '',
+    mapsApiKey: '',
+    analyticsId: '',
+  },
+  
   metadata: {
     region: 'Uruara/PA',
     defaultLocation: {
@@ -170,26 +144,17 @@ const productionConfig: AppConfig = {
 
 const configs: Record<Environment, AppConfig> = {
   development: developmentConfig,
-  staging: stagingConfig,
+  staging: productionConfig,
   production: productionConfig,
 };
 
-/**
- * Determina o ambiente atual baseado em variáveis de ambiente ou __DEV__
- * Para alterar o ambiente, modifique esta função ou defina process.env.CONFIG_ENV
- */
 function getCurrentEnvironment(): Environment {
-  // Verifica variável de ambiente primeiro (para builds customizados)
-  const envFromProcess = (typeof process !== 'undefined' && process.env?.CONFIG_ENV) as Environment | undefined;
-  if (envFromProcess && configs[envFromProcess]) {
-    return envFromProcess;
+  try {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      return 'development';
+    }
+  } catch {
   }
-  
-  // Fallback para __DEV__ do React Native
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return 'development';
-  }
-  
   return 'production';
 }
 
