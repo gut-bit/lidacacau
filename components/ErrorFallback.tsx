@@ -29,6 +29,10 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         <Text style={[styles.message, { color: colors.textSecondary }]}>
           O LidaCacau encontrou um problema. Por favor, reinicie.
         </Text>
+        
+        <Text style={[styles.errorDetail, { color: colors.error || '#FF0000' }]}>
+          Erro: {error.message}
+        </Text>
 
         <Pressable
           onPress={handleRestart}
@@ -85,5 +89,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     fontSize: 16,
+  },
+  errorDetail: {
+    fontSize: 12,
+    textAlign: "center",
+    fontFamily: "monospace",
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: "rgba(255,0,0,0.1)",
+    borderRadius: 4,
   },
 });
