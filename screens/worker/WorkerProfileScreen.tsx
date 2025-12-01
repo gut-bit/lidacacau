@@ -160,7 +160,7 @@ export default function WorkerProfileScreen() {
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }, Shadows.card]}>
             <Feather name="star" size={32} color={colors.accent} />
-            <ThemedText type="h2">{user?.averageRating?.toFixed(1) || '0.0'}</ThemedText>
+            <ThemedText type="h2">{Number(user?.averageRating || 0).toFixed(1)}</ThemedText>
             <ThemedText type="body" style={{ color: colors.textSecondary }}>
               Nota
             </ThemedText>

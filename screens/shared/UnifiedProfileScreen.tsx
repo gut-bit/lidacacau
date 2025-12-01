@@ -190,7 +190,7 @@ export default function UnifiedProfileScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card }, Shadows.card]}>
             <Feather name="star" size={24} color={colors.accent} />
             <ThemedText type="h3" style={{ marginTop: 4 }}>
-              {user?.averageRating?.toFixed(1) || '5.0'}
+              {Number(user?.averageRating || 5).toFixed(1)}
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary }}>
               Avaliacao

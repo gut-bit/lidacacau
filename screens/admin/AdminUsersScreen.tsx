@@ -87,7 +87,7 @@ export default function AdminUsersScreen() {
                   </ThemedText>
                 </View>
                 <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                  {item.totalReviews || 0} avaliações | Média: {item.averageRating?.toFixed(1) || '0.0'}
+                  {item.totalReviews || 0} avaliações | Média: {Number(item.averageRating || 0).toFixed(1)}
                 </ThemedText>
               </View>
             </>

@@ -743,7 +743,7 @@ export default function UnifiedHomeScreen() {
           <Feather name="star" size={20} color="#FFFFFF" />
         </View>
         <ThemedText type="h3" style={{ color: colors.accent }}>
-          {user?.averageRating?.toFixed(1) || '5.0'}
+          {Number(user?.averageRating || 5).toFixed(1)}
         </ThemedText>
         <ThemedText type="small" style={{ color: colors.textSecondary }}>
           Avaliacao
