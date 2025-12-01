@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, UserRole, ProfileCompletion, DEFAULT_GOALS } from '@/types';
 import { serviceFactory } from '@/services';
 import { initializeStorage, updateUser } from '@/utils/storage';
+import { AppConfiguration } from '@/config';
 
 interface AuthContextType {
   user: User | null;
@@ -49,16 +50,9 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
   };
 }
 
-// Environment detection: true in production (deployed), false in development
-const IS_PRODUCTION = typeof window !== 'undefined' && 
-  (window.location.hostname === 'lidacacau.com' || 
-   window.location.hostname === 'www.lidacacau.com' ||
-   window.location.hostname.includes('.replit.app'));
-
-// DEV_DEMO_MODE: Only enable in development for testing without API
-// This allows the app to work in development even when Express server is not running
-// In production, users must authenticate via the login screen
-const DEV_DEMO_MODE = !IS_PRODUCTION;
+// Use centralized config for environment detection
+// This works correctly on both web and native builds
+const ENABLE_DEV_FALLBACK = AppConfiguration.features.enableDevFallback;
 
 // Fallback demo user ONLY for development when API is unavailable
 // This user has NO token and cannot make authenticated API calls
@@ -115,17 +109,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
         
-        // In production: User must login via login screen
-        // In development: Use fallback user for UI testing (no real API calls)
-        if (DEV_DEMO_MODE && !IS_PRODUCTION) {
+        // SECURITY: Only use fallback demo user when enableDevFallback is true (development only)
+        // In production, this flag is false and users MUST authenticate via login screen
+        if (ENABLE_DEV_FALLBACK) {
           console.log('[AuthContext] DEV MODE - Using fallback demo user for UI testing');
-          console.log('[AuthContext] Note: API calls will fail. Use login screen for real authentication.');
+          console.log('[AuthContext] Note: enableDevFallback=true. API calls may fail.');
           const fallbackUser = ensureUserHasNewFields(DEV_FALLBACK_USER);
           setUser(fallbackUser);
         } else {
-          // Production or dev with real auth: no session, show login screen
+          // Production: no session, show login screen (user must authenticate)
           setUser(null);
-          console.log('[AuthContext] No session found - showing login screen');
+          console.log('[AuthContext] No session found - showing login screen (production mode)');
         }
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);

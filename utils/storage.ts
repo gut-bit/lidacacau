@@ -9,6 +9,7 @@ import {
   Store, Product, CartItem, Order, StoreSignup
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
+import { AppConfiguration } from '@/config';
 
 const STORAGE_KEYS = {
   CURRENT_USER: '@lidacacau_current_user',
@@ -110,13 +111,16 @@ export const initializeStorage = async (): Promise<void> => {
   try {
     const initialized = await AsyncStorage.getItem(STORAGE_KEYS.INITIALIZED);
     if (!initialized) {
-      await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(DEV_DEMO_USERS));
+      // Only seed demo users in development mode (enableMockData: true)
+      // In production, storage starts empty and users must register/login via API
+      const initialUsers = AppConfiguration.features.enableMockData ? DEV_DEMO_USERS : [];
+      await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(initialUsers));
       await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.BIDS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.WORK_ORDERS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
-      console.log('[Storage] Initialized with demo users');
+      console.log(`[Storage] Initialized (enableMockData: ${AppConfiguration.features.enableMockData})`);
     }
   } catch (error) {
     console.error('Error initializing storage:', error);
