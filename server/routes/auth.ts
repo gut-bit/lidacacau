@@ -50,7 +50,23 @@ router.post('/login', async (req: Request, res: Response) => {
     }
     console.log('[Auth] User found:', user.id);
 
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    console.log('[Auth] Password hash exists:', !!user.passwordHash);
+    console.log('[Auth] Password hash length:', user.passwordHash?.length || 0);
+    console.log('[Auth] Hash prefix:', user.passwordHash?.substring(0, 7) || 'none');
+    
+    let isValidPassword = false;
+    try {
+      isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      console.log('[Auth] bcrypt.compare result:', isValidPassword);
+    } catch (bcryptError: any) {
+      console.error('[Auth] bcrypt.compare error:', bcryptError.message);
+      res.status(500).json({ 
+        error: `Erro na validacao de senha: ${bcryptError.message}`,
+        hashPrefix: user.passwordHash?.substring(0, 10)
+      });
+      return;
+    }
+    
     if (!isValidPassword) {
       console.log('[Auth] Invalid password');
       res.status(401).json({ error: 'Email ou senha incorretos' });
