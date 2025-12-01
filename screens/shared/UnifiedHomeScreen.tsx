@@ -11,7 +11,7 @@ import { Image } from 'expo-image';
 const cacaoCanopyHeader = require('@/assets/decorative/cacao_tree_canopy_header_decoration.png');
 const grassFooter = require('@/assets/decorative/grass_and_dead_leaves_footer.png');
 const cornerBranch = require('@/assets/decorative/corner_cacao_branch_decoration.png');
-const botanicalMockup = require('@/assets/decorative/lidacacau_botanical_mockup.png');
+const branchDivider = require('@/assets/decorative/horizontal_branch_divider_element.png');
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Linking from 'expo-linking';
@@ -1169,8 +1169,27 @@ export default function UnifiedHomeScreen() {
         {/* Cocoa Price Ticker */}
         <PriceTicker compact showLocalQuotes={false} />
         
+        {/* Decorative branch divider */}
+        <View style={styles.branchDividerContainer}>
+          <Image
+            source={branchDivider}
+            style={styles.branchDivider}
+            contentFit="contain"
+          />
+        </View>
+        
         {renderGenteDaLida()}
         {renderFeedFilters()}
+        
+        {/* Decorative branch divider before jobs */}
+        <View style={styles.branchDividerContainer}>
+          <Image
+            source={branchDivider}
+            style={styles.branchDivider}
+            contentFit="contain"
+          />
+        </View>
+        
         {renderMyJobsSection()}
         {renderAvailableJobs()}
         {renderAvailableOffers()}
@@ -1228,6 +1247,16 @@ const styles = StyleSheet.create({
     height: 100,
     zIndex: 0,
     opacity: 0.9,
+  },
+  branchDividerContainer: {
+    alignItems: 'center',
+    marginVertical: Spacing.sm,
+    overflow: 'hidden',
+  },
+  branchDivider: {
+    width: 200,
+    height: 30,
+    opacity: 0.5,
   },
   header: {
     paddingHorizontal: Spacing.xl,
