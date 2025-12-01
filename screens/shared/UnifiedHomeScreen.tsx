@@ -91,15 +91,15 @@ const calculateRelevanceScore = (
 ): { score: number; distance: number | null } => {
   let score = 0;
   
-  if (preferences?.preferredServiceTypeIds?.includes(job.serviceTypeId)) {
+  if (preferences?.preferredServiceTypes?.includes(job.serviceTypeId)) {
     score += 100;
   }
   
   const serviceType = getServiceTypeById(job.serviceTypeId);
   if (serviceType) {
     const category = serviceType.id.split('_')[0];
-    const hasPreferredCategory = preferences?.preferredServiceTypeIds?.some(
-      id => id.startsWith(category)
+    const hasPreferredCategory = preferences?.preferredServiceTypes?.some(
+      (id: string) => id.startsWith(category)
     );
     if (hasPreferredCategory) {
       score += 30;
@@ -137,9 +137,9 @@ const calculateOfferRelevanceScore = (
 ): { score: number; distance: number | null } => {
   let score = 0;
   
-  if (preferences?.preferredServiceTypeIds) {
+  if (preferences?.preferredServiceTypes) {
     const matchingServices = offer.serviceTypeIds.filter(
-      id => preferences.preferredServiceTypeIds?.includes(id)
+      (id: string) => preferences.preferredServiceTypes?.includes(id)
     );
     score += matchingServices.length * 50;
   }
@@ -977,7 +977,7 @@ export default function UnifiedHomeScreen() {
         <View style={styles.offerHeader}>
           <View style={[styles.offerTypeTag, { backgroundColor: CARD_COLORS.offer.background }]}>
             <Feather name="briefcase" size={14} color={CARD_COLORS.offer.primary} />
-            <ThemedText type="caption" style={{ color: CARD_COLORS.offer.primary, fontWeight: '600' }}>
+            <ThemedText type="small" style={{ color: CARD_COLORS.offer.primary, fontWeight: '600' }}>
               OFERTA
             </ThemedText>
           </View>
@@ -985,16 +985,16 @@ export default function UnifiedHomeScreen() {
             {offer.calculatedDistance !== null && offer.calculatedDistance !== undefined ? (
               <>
                 <Feather name="navigation" size={12} color={colors.primary} />
-                <ThemedText type="caption" style={{ color: colors.primary, fontWeight: '600' }}>
+                <ThemedText type="small" style={{ color: colors.primary, fontWeight: '600' }}>
                   {formatDistance(offer.calculatedDistance)}
                 </ThemedText>
-                <ThemedText type="caption" style={{ color: colors.textSecondary, marginHorizontal: 4 }}>
+                <ThemedText type="small" style={{ color: colors.textSecondary, marginHorizontal: 4 }}>
                   |
                 </ThemedText>
               </>
             ) : null}
             <Feather name="map-pin" size={12} color={colors.textSecondary} />
-            <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>
               {offer.availableRadius}km
             </ThemedText>
           </View>
@@ -1002,7 +1002,7 @@ export default function UnifiedHomeScreen() {
         <ThemedText type="body" style={{ fontWeight: '600', marginTop: Spacing.sm }}>
           {serviceNames}
         </ThemedText>
-        <ThemedText type="caption" style={{ color: colors.textSecondary, marginTop: Spacing.xs }} numberOfLines={2}>
+        <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.xs }} numberOfLines={2}>
           {offer.description}
         </ThemedText>
         <View style={styles.offerFooter}>
@@ -1011,7 +1011,7 @@ export default function UnifiedHomeScreen() {
           </ThemedText>
           {offer.priceNegotiable ? (
             <View style={[styles.negotiableBadge, { backgroundColor: colors.accent + '20' }]}>
-              <ThemedText type="caption" style={{ color: colors.accent }}>Negociavel</ThemedText>
+              <ThemedText type="small" style={{ color: colors.accent }}>Negociavel</ThemedText>
             </View>
           ) : null}
         </View>
