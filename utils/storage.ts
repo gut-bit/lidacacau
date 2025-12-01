@@ -46,16 +46,77 @@ export const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+const DEV_DEMO_USERS: User[] = [
+  {
+    id: 'dev-demo-user',
+    name: 'Usuario Demo (Dev)',
+    email: 'demo@dev.local',
+    role: 'producer',
+    roles: ['producer', 'worker'],
+    activeRole: 'producer',
+    phone: '(00) 00000-0000',
+    location: 'Desenvolvimento Local',
+    level: 1,
+    averageRating: 0,
+    totalReviews: 0,
+    createdAt: new Date().toISOString(),
+    searchRadius: 50,
+    verification: { status: 'none' },
+    producerProfile: { bio: 'Usuario de demonstracao para desenvolvimento.' },
+    workerProfile: { bio: 'Usuario de demonstracao.', skills: [], equipment: [] },
+  },
+  {
+    id: 'demo-producer-maria',
+    name: 'Maria Silva',
+    email: 'maria@demo.lidacacau.com',
+    role: 'producer',
+    roles: ['producer'],
+    activeRole: 'producer',
+    phone: '(93) 99999-1111',
+    location: 'Fazenda Boa Vista - Uruara/PA',
+    level: 3,
+    producerLevel: 3,
+    averageRating: 4.8,
+    totalReviews: 15,
+    createdAt: '2024-01-15T10:00:00Z',
+    searchRadius: 30,
+    verification: { status: 'approved' },
+    producerProfile: { bio: 'Produtora de cacau desde 2010. Fazenda com 50 hectares.' },
+  },
+  {
+    id: 'demo-worker-joao',
+    name: 'Joao Santos',
+    email: 'joao@demo.lidacacau.com',
+    role: 'worker',
+    roles: ['worker'],
+    activeRole: 'worker',
+    phone: '(93) 99999-2222',
+    location: 'Vila Alvorada - Uruara/PA',
+    level: 4,
+    averageRating: 4.9,
+    totalReviews: 32,
+    createdAt: '2024-02-01T08:00:00Z',
+    searchRadius: 50,
+    verification: { status: 'approved' },
+    workerProfile: { 
+      bio: 'Trabalhador rural experiente. Especialista em colheita de cacau.',
+      skills: ['colheita', 'poda', 'aplicacao'],
+      equipment: ['facão', 'escada', 'cesto'],
+    },
+  },
+];
+
 export const initializeStorage = async (): Promise<void> => {
   try {
     const initialized = await AsyncStorage.getItem(STORAGE_KEYS.INITIALIZED);
     if (!initialized) {
-      await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+      await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(DEV_DEMO_USERS));
       await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.BIDS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.WORK_ORDERS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
       await AsyncStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
+      console.log('[Storage] Initialized with demo users');
     }
   } catch (error) {
     console.error('Error initializing storage:', error);

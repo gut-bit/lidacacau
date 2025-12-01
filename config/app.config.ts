@@ -73,7 +73,7 @@ const developmentConfig: AppConfig = {
   },
   
   features: {
-    enableMockData: false,
+    enableMockData: true,
     enableAnalytics: true,
     enableDevTools: true,
     enableAutoLogin: false,
