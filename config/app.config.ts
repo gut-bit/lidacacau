@@ -55,11 +55,36 @@ export interface AppConfig {
 }
 
 /**
+ * Check if we're running in a native environment (iOS/Android via Expo)
+ */
+function isNativeRuntime(): boolean {
+  return typeof window === 'undefined' || !window.location?.hostname;
+}
+
+/**
+ * Check if we're in development mode (__DEV__ is set by Expo/Metro)
+ */
+function isDevMode(): boolean {
+  try {
+    return typeof __DEV__ !== 'undefined' && __DEV__ === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * RUNTIME detection of production host
  * Called each time to ensure correct detection in static builds
+ * 
+ * For native builds: returns !__DEV__ (production builds have __DEV__ = false)
+ * For web: checks hostname against production domains
  */
 export function isProductionHost(): boolean {
-  if (typeof window === 'undefined') return false;
+  // Native runtime (iOS/Android): production is when __DEV__ is false
+  if (isNativeRuntime()) {
+    return !isDevMode();
+  }
+  
   const hostname = window.location?.hostname || '';
   // Production hosts: lidacacau.com, www.lidacacau.com, *.replit.app
   return hostname === 'lidacacau.com' || 
@@ -69,11 +94,21 @@ export function isProductionHost(): boolean {
 
 /**
  * RUNTIME check if mock data should be used
- * Returns false for production hosts (lidacacau.com, *.replit.app)
- * Returns true for development (localhost, *.replit.dev, *.janeway.replit.dev)
+ * 
+ * For native builds:
+ *   - __DEV__ true (development) -> use mock data
+ *   - __DEV__ false (production) -> use real API
+ * 
+ * For web builds:
+ *   - Production hosts (lidacacau.com, *.replit.app) -> use real API
+ *   - Development hosts (localhost, *.replit.dev) -> use mock data
  */
 export function shouldUseMockData(): boolean {
-  if (typeof window === 'undefined') return true; // SSR/build time
+  // Native runtime: use mock only in dev mode
+  if (isNativeRuntime()) {
+    return isDevMode();
+  }
+  
   const hostname = window.location?.hostname || '';
   
   // Production hosts - use real API
@@ -90,21 +125,23 @@ export function shouldUseMockData(): boolean {
 
 /**
  * RUNTIME check if dev fallback user should be used
- * Only for development environments, NEVER in production
+ * Only for localhost development, NEVER in production or native builds
  */
 export function shouldUseDevFallback(): boolean {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location?.hostname || '';
-  
-  // Production hosts - NEVER use dev fallback
-  if (hostname === 'lidacacau.com' || 
-      hostname === 'www.lidacacau.com' ||
-      hostname.endsWith('.replit.app')) {
-    return false;
+  // Native runtime: NEVER use dev fallback in production builds
+  if (isNativeRuntime()) {
+    return isDevMode(); // Only allow in Expo Go / dev client
   }
   
-  // Development hosts - allow dev fallback
-  return true;
+  const hostname = window.location?.hostname || '';
+  
+  // Only allow dev fallback on localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return true;
+  }
+  
+  // Everywhere else (including replit.dev, replit.app, lidacacau.com) - no fallback
+  return false;
 }
 
 const developmentConfig: AppConfig = {
