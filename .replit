@@ -46,6 +46,10 @@ localPort = 39195
 externalPort = 8008
 
 [[ports]]
+localPort = 40675
+externalPort = 8099
+
+[[ports]]
 localPort = 42791
 externalPort = 3003
 
@@ -142,3 +146,4 @@ defaultBucketID = "replit-objstore-de99b782-37a1-4217-a63e-b4d544930d8a"
 
 [userenv.development]
 EXPO_NO_DEV_CLIENT = "1"
+EXPO_PUBLIC_API_BASE_URL = "http://localhost:5000/api"
