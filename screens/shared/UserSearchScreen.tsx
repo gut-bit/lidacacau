@@ -235,7 +235,7 @@ export default function UserSearchScreen() {
           />
         ))}
         <ThemedText type="small" style={{ color: colors.textSecondary, marginLeft: Spacing.xs }}>
-          {displayRating.toFixed(1)} ({totalReviews || 0})
+          {Number(displayRating || 0).toFixed(1)} ({totalReviews || 0})
         </ThemedText>
       </View>
     );

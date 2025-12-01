@@ -113,7 +113,7 @@ export default function OtherUserProfileScreen() {
           </View>
         </View>
         <ThemedText type="h3" style={{ color: '#FFB800' }}>
-          {item.averageRating.toFixed(1)}
+          {Number(item.averageRating || 0).toFixed(1)}
         </ThemedText>
       </View>
       {item.comment ? (

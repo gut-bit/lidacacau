@@ -135,7 +135,7 @@ export default function ReviewScreen() {
               Média
             </ThemedText>
             <ThemedText type="h2" style={{ color: colors.accent }}>
-              {averageRating.toFixed(1)}
+              {Number(averageRating || 0).toFixed(1)}
             </ThemedText>
           </View>
         )}

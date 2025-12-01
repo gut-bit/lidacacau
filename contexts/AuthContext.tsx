@@ -49,6 +49,43 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
   };
 }
 
+// DEMO MODE: Enable this flag for investor presentation
+const DEMO_MODE = true;
+
+// Demo user for investor presentation
+const DEMO_USER: User = {
+  id: 'demo-user-001',
+  email: 'demo@lidacacau.com',
+  name: 'Helton Gutierres',
+  role: 'producer',
+  roles: ['producer', 'worker'],
+  activeRole: 'producer',
+  avatar: undefined,
+  phone: '(93) 99999-8888',
+  location: 'Uruara, PA',
+  createdAt: new Date().toISOString(),
+  level: 3,
+  totalReviews: 8,
+  averageRating: 4.8,
+  searchRadius: 50,
+  badges: [],
+  goals: DEFAULT_GOALS.map(g => ({ ...g })),
+  workerProfile: {
+    bio: 'Trabalhador rural experiente com mais de 10 anos na regiao',
+    skills: ['colheita', 'plantio', 'manejo'],
+    equipment: ['motosserra', 'roçadeira'],
+    availability: 'full_time',
+    totalJobs: 12,
+    totalEarnings: 15000,
+  },
+  producerProfile: {
+    bio: 'Produtor de cacau com fazenda em Uruara',
+    totalSpent: 25000,
+    pixKey: '93999998888',
+    pixKeyType: 'phone',
+  },
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +98,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         await initializeStorage();
         console.log('[AuthContext] Storage initialized');
+        
+        // DEMO MODE: Skip auth check and use demo user directly
+        if (DEMO_MODE) {
+          console.log('[AuthContext] DEMO MODE ACTIVE - Using demo user');
+          const demoUser = ensureUserHasNewFields(DEMO_USER);
+          setUser(demoUser);
+          setIsLoading(false);
+          console.log('[AuthContext] Demo user loaded:', demoUser.name);
+          return;
+        }
+        
         const currentUser = await authService.getCurrentUser();
         console.log('[AuthContext] getCurrentUser result:', currentUser ? `User: ${currentUser.email}` : 'null');
         if (currentUser) {
@@ -73,7 +121,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);
-        setUser(null);
+        // In demo mode, still load demo user even on error
+        if (DEMO_MODE) {
+          const demoUser = ensureUserHasNewFields(DEMO_USER);
+          setUser(demoUser);
+        } else {
+          setUser(null);
+        }
       } finally {
         setIsLoading(false);
         console.log('[AuthContext] Initialization complete, isLoading=false');
