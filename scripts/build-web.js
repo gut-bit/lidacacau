@@ -165,6 +165,23 @@ function addMobileMetaTags() {
   
   html = html.replace('</head>', loadingStyles + '\n  </head>');
   
+  const processEnvPolyfill = `
+    <script>
+      // Polyfill for process.env (required for Metro bundler compatibility)
+      if (typeof process === 'undefined') {
+        window.process = { env: {} };
+      } else if (typeof process.env === 'undefined') {
+        process.env = {};
+      }
+      // Set common environment flags
+      process.env.NODE_ENV = 'production';
+      process.env.JEST_WORKER_ID = undefined;
+      process.env.NODE_DEBUG = '';
+    </script>
+  `;
+  
+  html = html.replace('<head>', '<head>' + processEnvPolyfill);
+  
   const loadingScreen = `
     <div id="app-loading-screen" class="app-loading-screen">
       <img src="/favicon.ico" alt="LidaCacau" class="app-loading-logo">

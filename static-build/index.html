@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // Polyfill for process.env (required for Metro bundler compatibility)
+      if (typeof process === 'undefined') {
+        window.process = { env: {} };
+      } else if (typeof process.env === 'undefined') {
+        process.env = {};
+      }
+      // Set common environment flags
+      process.env.NODE_ENV = 'production';
+      process.env.JEST_WORKER_ID = undefined;
+      process.env.NODE_DEBUG = '';
+    </script>
+  
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
