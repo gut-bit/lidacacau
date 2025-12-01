@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable, ScrollView, Dimensions, Alert } from 'react-native';
+import { StyleSheet, View, Pressable, ScrollView, Dimensions, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -15,6 +15,7 @@ import Animated, {
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
+import { MapHub } from '@/components/MapHub';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -101,6 +102,8 @@ export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const colors = isDark ? Colors.dark : Colors.light;
+  const [searchRadius, setSearchRadius] = useState(50);
+  const [showMap, setShowMap] = useState(Platform.OS === 'web');
 
   const isWorker = activeRole === 'worker';
 
@@ -186,6 +189,37 @@ export default function ExploreScreen() {
             Descubra oportunidades e recursos
           </ThemedText>
         </View>
+
+        {showMap ? (
+          <View style={styles.mapSection}>
+            <View style={styles.sectionHeader}>
+              <Feather name="map" size={20} color={colors.primary} />
+              <ThemedText type="h4" style={{ color: colors.primary }}>
+                Mapa da Regiao
+              </ThemedText>
+              <View style={[styles.experimentalBadge, { backgroundColor: '#FFA500' }]}>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 9, fontWeight: '700' }}>
+                  EXPERIMENTAL
+                </ThemedText>
+              </View>
+            </View>
+            <View style={{ paddingHorizontal: Spacing.xl }}>
+              <MapHub
+                activities={[]}
+                searchRadius={searchRadius}
+                onRadiusChange={setSearchRadius}
+                onActivityPress={() => {}}
+                height={200}
+              />
+            </View>
+            <View style={[styles.mapDisclaimer, { backgroundColor: colors.warning + '20' }]}>
+              <Feather name="alert-circle" size={14} color={colors.warning} />
+              <ThemedText type="small" style={{ color: colors.warning, flex: 1, marginLeft: 6 }}>
+                Mapa web em desenvolvimento. Use o Expo Go no celular para melhor experiencia.
+              </ThemedText>
+            </View>
+          </View>
+        ) : null}
 
         {isWorker ? (
           <View style={styles.categoriesSection}>
@@ -311,6 +345,23 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.lg,
+  },
+  mapSection: {
+    marginBottom: Spacing.xl,
+  },
+  experimentalBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  mapDisclaimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
   categoriesSection: {
     marginBottom: Spacing.xl,

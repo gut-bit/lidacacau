@@ -50,6 +50,7 @@ LidaCacau is a mobile marketplace application (Expo React Native) connecting pro
 ### System Design Choices
 - **Dual-Role Architecture**: Seamless switching between Producer and Worker roles.
 - **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA".
+- **Web Map (Experimental)**: OpenStreetMap iframe integration for web browsers with fallback UI. Shows "EXPERIMENTAL" badge and disclaimer. Available on Explorar tab.
 - **Service Layer**: Designed for production migration with interfaces (`IAuthService`, `IJobService`, etc.), mock implementations, and a `ServiceFactory` for dependency injection.
 - **Development Mode Features**: Auto-login for demo users (Maria/Joao), session persistence, and tutorial skipping for streamlined testing.
 
