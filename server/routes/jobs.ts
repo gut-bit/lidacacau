@@ -336,6 +336,38 @@ router.post('/:jobId/bids/:bidId/accept', authMiddleware, async (req: Authentica
   }
 });
 
+router.get('/bids/worker', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+
+    const workerBids = await db
+      .select({
+        id: bids.id,
+        jobId: bids.jobId,
+        workerId: bids.workerId,
+        price: bids.price,
+        message: bids.message,
+        status: bids.status,
+        proposedTerms: bids.proposedTerms,
+        createdAt: bids.createdAt,
+        jobTitle: serviceTypes.name,
+        jobLocation: jobs.locationText,
+        producerName: users.name,
+      })
+      .from(bids)
+      .leftJoin(jobs, eq(bids.jobId, jobs.id))
+      .leftJoin(serviceTypes, eq(jobs.serviceTypeId, serviceTypes.id))
+      .leftJoin(users, eq(jobs.producerId, users.id))
+      .where(eq(bids.workerId, userId))
+      .orderBy(desc(bids.createdAt));
+
+    res.json({ bids: workerBids });
+  } catch (error) {
+    console.error('[Jobs] Worker bids error:', error);
+    res.status(500).json({ error: 'Erro ao listar propostas' });
+  }
+});
+
 router.get('/service-types/list', async (_req, res: Response) => {
   try {
     const types = await db.select().from(serviceTypes);
