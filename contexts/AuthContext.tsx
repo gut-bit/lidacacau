@@ -49,14 +49,52 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
   };
 }
 
-// DEMO MODE: Enable this flag for investor presentation
-// When enabled, auto-logs in as Helton with REAL database authentication
-const DEMO_MODE = true;
+// Environment detection: true in production (deployed), false in development
+const IS_PRODUCTION = typeof window !== 'undefined' && 
+  (window.location.hostname === 'lidacacau.com' || 
+   window.location.hostname === 'www.lidacacau.com' ||
+   window.location.hostname.includes('.replit.app'));
 
-// Demo credentials for auto-login
-const DEMO_CREDENTIALS = {
-  email: 'helton@fazendapanorama.com',
-  password: 'demo123',
+// DEV_DEMO_MODE: Only enable in development for testing without API
+// This allows the app to work in development even when Express server is not running
+// In production, users must authenticate via the login screen
+const DEV_DEMO_MODE = !IS_PRODUCTION;
+
+// Fallback demo user ONLY for development when API is unavailable
+// This user has NO token and cannot make authenticated API calls
+// It's only used to allow UI testing in development
+const DEV_FALLBACK_USER: User = {
+  id: 'dev-demo-user',
+  name: 'Usuario Demo (Dev)',
+  email: 'demo@dev.local',
+  role: 'producer',
+  roles: ['producer', 'worker'],
+  activeRole: 'producer',
+  phone: '(00) 00000-0000',
+  location: 'Desenvolvimento',
+  isVerified: false,
+  level: 1,
+  experience: 0,
+  rating: 0,
+  reviewCount: 0,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  lastActive: new Date().toISOString(),
+  searchRadius: 50,
+  badges: [],
+  goals: DEFAULT_GOALS.map(g => ({ ...g })),
+  producerProfile: {
+    bio: 'Usuario de demonstracao para desenvolvimento local.',
+    farmSize: 'small',
+  },
+  workerProfile: {
+    bio: 'Usuario de demonstracao.',
+    skills: [],
+    equipment: [],
+    availability: 'available',
+    hourlyRate: 0,
+    experience: 0,
+  },
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -86,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         // DEMO MODE: Auto-login with real credentials if no session exists
         if (DEMO_MODE) {
-          console.log('[AuthContext] DEMO MODE - Auto-login with real credentials');
+          console.log('[AuthContext] DEMO MODE - Attempting real API login');
           try {
             const result = await authService.login({
               email: DEMO_CREDENTIALS.email,
@@ -96,14 +134,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (result.success && result.user) {
               const demoUser = ensureUserHasNewFields(result.user);
               setUser(demoUser);
-              console.log('[AuthContext] Demo user logged in:', demoUser.name);
+              console.log('[AuthContext] Demo user logged in via API:', demoUser.name);
             } else {
-              console.warn('[AuthContext] Demo login failed:', result.error);
-              setUser(null);
+              // API available but login failed - use fallback in development
+              console.warn('[AuthContext] API login failed, using fallback demo user');
+              const fallbackUser = ensureUserHasNewFields(FALLBACK_DEMO_USER);
+              setUser(fallbackUser);
+              console.log('[AuthContext] Fallback demo user set:', fallbackUser.name);
             }
           } catch (loginError) {
-            console.error('[AuthContext] Demo login error:', loginError);
-            setUser(null);
+            // API unavailable (development mode) - use fallback demo user
+            console.warn('[AuthContext] API unavailable, using fallback demo user');
+            const fallbackUser = ensureUserHasNewFields(FALLBACK_DEMO_USER);
+            setUser(fallbackUser);
+            console.log('[AuthContext] Fallback demo user set:', fallbackUser.name);
           }
         } else {
           setUser(null);
