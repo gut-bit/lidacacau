@@ -52,8 +52,13 @@ export default function App() {
     );
   }
 
+  const handleError = (error: Error, stackTrace: string) => {
+    console.error('[ErrorBoundary] App crashed:', error.message);
+    console.error('[ErrorBoundary] Stack:', stackTrace);
+  };
+
   return (
-    <ErrorBoundary>
+    <ErrorBoundary onError={handleError}>
       <ConfigProvider>
         <SafeAreaProvider>
           <GestureHandlerRootView style={styles.root}>
