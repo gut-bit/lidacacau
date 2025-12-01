@@ -52,6 +52,10 @@ LidaCacau is a mobile marketplace application (Expo React Native) connecting pro
 - **MapHub Component**: Interactive map centered on "Km 140 Vila Alvorada - Uruara/PA".
 - **Web Map (Experimental)**: OpenStreetMap iframe integration for web browsers with fallback UI. Shows "EXPERIMENTAL" badge and disclaimer. Available on Explorar tab.
 - **Service Layer**: Designed for production migration with interfaces (`IAuthService`, `IJobService`, etc.), mock implementations, and a `ServiceFactory` for dependency injection.
+- **Runtime Environment Detection** (config/app.config.ts):
+    - Production hosts (lidacacau.com, www.lidacacau.com, *.replit.app) → Use real API, no dev fallback
+    - Development hosts (localhost, *.replit.dev) → Use mock data, allow dev fallback user
+    - All detection happens at runtime (not build-time) to support static builds
 - **Development Mode Features**: Auto-login for demo users (Maria/Joao), session persistence, and tutorial skipping for streamlined testing.
 
 ## Database Architecture

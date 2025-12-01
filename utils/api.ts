@@ -1,38 +1,21 @@
 /**
  * LidaCacau - API Utilities
  * 
- * Funções utilitárias para chamar a API do backend.
- * Substitui as funções de storage.ts que usavam AsyncStorage local.
+ * Funções utilitárias para obter dados via ServiceFactory.
+ * Usa mock ou API real dependendo do ambiente.
  */
 
 import { Job, Bid, ServiceOffer, UserPreferences, User } from '@/types';
-import { getApiAdapter } from '@/services/common/ApiAdapter';
-
-const api = getApiAdapter();
-
-interface JobsResponse {
-  jobs: Job[];
-}
-
-interface BidsResponse {
-  bids: Bid[];
-}
-
-interface UsersResponse {
-  users: User[];
-}
+import { serviceFactory } from '@/services/ServiceFactory';
 
 /**
  * Busca demandas abertas para trabalhadores
  */
 export async function getOpenJobs(workerLevel: number = 1): Promise<Job[]> {
   try {
-    const result = await api.get<JobsResponse>('/jobs', { status: 'open', limit: 50 });
-    if (result.success && result.data) {
-      return result.data.jobs || [];
-    }
-    console.error('[API] getOpenJobs error:', result.error);
-    return [];
+    const jobService = serviceFactory.getJobService();
+    const result = await jobService.getJobs({ status: 'open' });
+    return result.success && result.data ? result.data : [];
   } catch (error) {
     console.error('[API] getOpenJobs exception:', error);
     return [];
@@ -44,12 +27,9 @@ export async function getOpenJobs(workerLevel: number = 1): Promise<Job[]> {
  */
 export async function getJobsByProducer(producerId: string): Promise<Job[]> {
   try {
-    const result = await api.get<JobsResponse>('/jobs', { producerId, limit: 50 });
-    if (result.success && result.data) {
-      return result.data.jobs || [];
-    }
-    console.error('[API] getJobsByProducer error:', result.error);
-    return [];
+    const jobService = serviceFactory.getJobService();
+    const result = await jobService.getJobsByProducer(producerId);
+    return result.success && result.data ? result.data : [];
   } catch (error) {
     console.error('[API] getJobsByProducer exception:', error);
     return [];
@@ -61,12 +41,9 @@ export async function getJobsByProducer(producerId: string): Promise<Job[]> {
  */
 export async function getBidsByJob(jobId: string): Promise<Bid[]> {
   try {
-    const result = await api.get<{ job: any; bids: Bid[] }>(`/jobs/${jobId}`);
-    if (result.success && result.data) {
-      return result.data.bids || [];
-    }
-    console.error('[API] getBidsByJob error:', result.error);
-    return [];
+    const jobService = serviceFactory.getJobService();
+    const result = await jobService.getBidsForJob(jobId);
+    return result.success && result.data ? result.data : [];
   } catch (error) {
     console.error('[API] getBidsByJob exception:', error);
     return [];
@@ -78,11 +55,9 @@ export async function getBidsByJob(jobId: string): Promise<Bid[]> {
  */
 export async function getBidsByWorker(workerId: string): Promise<Bid[]> {
   try {
-    const result = await api.get<BidsResponse>('/jobs/bids/worker');
-    if (result.success && result.data) {
-      return result.data.bids || [];
-    }
-    return [];
+    const jobService = serviceFactory.getJobService();
+    const result = await jobService.getBidsByWorker(workerId);
+    return result.success && result.data ? result.data : [];
   } catch (error) {
     console.error('[API] getBidsByWorker exception:', error);
     return [];
@@ -118,14 +93,13 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
  */
 export async function getRecentNewUsers(limit: number = 10): Promise<User[]> {
   try {
-    const result = await api.get<UsersResponse>('/users', { limit: limit.toString() });
+    const socialService = serviceFactory.getSocialService();
+    const result = await socialService.searchUsers({ pageSize: limit });
     if (result.success && result.data) {
-      const users = result.data.users || [];
-      return users.sort((a, b) => 
+      return result.data.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ).slice(0, limit);
     }
-    console.error('[API] getRecentNewUsers error:', result.error);
     return [];
   } catch (error) {
     console.error('[API] getRecentNewUsers exception:', error);

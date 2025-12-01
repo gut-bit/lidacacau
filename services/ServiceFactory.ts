@@ -39,7 +39,7 @@
  * ```
  */
 
-import { AppConfiguration } from '@/config';
+import { shouldUseMockData, isProductionHost, AppConfiguration } from '@/config';
 
 import { IAuthService } from './interfaces/IAuthService';
 import { IJobService } from './interfaces/IJobService';
@@ -77,13 +77,19 @@ class ServiceFactory {
     social: null,
   };
 
-  private provider: ServiceProvider = 'mock';
+  private provider: ServiceProvider = 'api'; // Default to API
 
   constructor() {
-    // Use mock services only when explicitly enabled (development)
-    // In production, enableMockData is false, so we use real API
-    this.provider = AppConfiguration.features.enableMockData ? 'mock' : 'api';
-    console.log(`[ServiceFactory] Provider: ${this.provider} (enableMockData: ${AppConfiguration.features.enableMockData})`);
+    // RUNTIME detection - use mock only for localhost, API for everything else
+    this.initializeProvider();
+  }
+  
+  private initializeProvider(): void {
+    // Check at runtime which provider to use
+    const useMock = shouldUseMockData();
+    const isProd = isProductionHost();
+    this.provider = useMock ? 'mock' : 'api';
+    console.log(`[ServiceFactory] Provider: ${this.provider} (isProduction: ${isProd}, useMock: ${useMock})`);
   }
 
   /**

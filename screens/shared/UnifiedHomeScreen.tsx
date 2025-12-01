@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Decorative cacao-themed assets
 const cacaoCanopyHeader = require('@/assets/decorative/cacao_tree_canopy_header_decoration.png');
@@ -48,6 +49,8 @@ const DEFAULT_LOCATION: UserLocation = {
   latitude: URUARA_CENTER.latitude,
   longitude: URUARA_CENTER.longitude,
 };
+
+const DISMISSED_JOBS_KEY = '@lidacacau_dismissed_jobs';
 
 const calculateHaversineDistance = (
   lat1: number,
@@ -444,6 +447,21 @@ export default function UnifiedHomeScreen() {
     fetchUserLocation();
   }, []);
 
+  useEffect(() => {
+    const loadDismissedJobs = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DISMISSED_JOBS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setDismissedJobs(new Set(parsed));
+        }
+      } catch (error) {
+        console.log('Error loading dismissed jobs:', error);
+      }
+    };
+    loadDismissedJobs();
+  }, []);
+
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
@@ -544,13 +562,24 @@ export default function UnifiedHomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     setDismissedJobs(new Set());
+    try {
+      await AsyncStorage.removeItem(DISMISSED_JOBS_KEY);
+    } catch (error) {
+      console.log('Error clearing dismissed jobs:', error);
+    }
     await loadData();
     setRefreshing(false);
   };
 
-  const handleDismissJob = (jobId: string) => {
-    setDismissedJobs(prev => new Set([...prev, jobId]));
+  const handleDismissJob = async (jobId: string) => {
+    const newDismissed = new Set([...dismissedJobs, jobId]);
+    setDismissedJobs(newDismissed);
     setAllJobs(prev => prev.filter(j => j.id !== jobId));
+    try {
+      await AsyncStorage.setItem(DISMISSED_JOBS_KEY, JSON.stringify([...newDismissed]));
+    } catch (error) {
+      console.log('Error saving dismissed jobs:', error);
+    }
   };
 
   const handleActivateGPS = async () => {

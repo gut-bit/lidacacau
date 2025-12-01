@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, UserRole, ProfileCompletion, DEFAULT_GOALS } from '@/types';
 import { serviceFactory } from '@/services';
 import { initializeStorage, updateUser } from '@/utils/storage';
-import { AppConfiguration } from '@/config';
+import { shouldUseDevFallback } from '@/config';
 
 interface AuthContextType {
   user: User | null;
@@ -49,10 +49,6 @@ export function calculateProfileCompletion(user: User): ProfileCompletion {
     percentage,
   };
 }
-
-// Use centralized config for environment detection
-// This works correctly on both web and native builds
-const ENABLE_DEV_FALLBACK = AppConfiguration.features.enableDevFallback;
 
 // Fallback demo user ONLY for development when API is unavailable
 // This user has NO token and cannot make authenticated API calls
@@ -109,11 +105,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
         
-        // SECURITY: Only use fallback demo user when enableDevFallback is true (development only)
-        // In production, this flag is false and users MUST authenticate via login screen
-        if (ENABLE_DEV_FALLBACK) {
-          console.log('[AuthContext] DEV MODE - Using fallback demo user for UI testing');
-          console.log('[AuthContext] Note: enableDevFallback=true. API calls may fail.');
+        // SECURITY: Only use fallback demo user for localhost development
+        // In production (replit.app, lidacacau.com), users MUST authenticate via login screen
+        const useDevFallback = shouldUseDevFallback();
+        console.log('[AuthContext] shouldUseDevFallback:', useDevFallback);
+        
+        if (useDevFallback) {
+          console.log('[AuthContext] LOCALHOST DEV MODE - Using fallback demo user for UI testing');
           const fallbackUser = ensureUserHasNewFields(DEV_FALLBACK_USER);
           setUser(fallbackUser);
         } else {

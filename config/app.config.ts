@@ -2,7 +2,8 @@
  * LidaCacau - Configuracao de Ambiente
  * 
  * Este arquivo centraliza todas as configuracoes do app por ambiente.
- * Detecta automaticamente o ambiente baseado em __DEV__ e window.location.
+ * IMPORTANTE: A detecção de ambiente acontece em RUNTIME para funcionar
+ * corretamente em builds estáticos servidos de diferentes domínios.
  */
 
 export type Environment = 'development' | 'staging' | 'production';
@@ -53,12 +54,57 @@ export interface AppConfig {
   };
 }
 
-function isProductionHost(): boolean {
+/**
+ * RUNTIME detection of production host
+ * Called each time to ensure correct detection in static builds
+ */
+export function isProductionHost(): boolean {
   if (typeof window === 'undefined') return false;
   const hostname = window.location?.hostname || '';
+  // Production hosts: lidacacau.com, www.lidacacau.com, *.replit.app
   return hostname === 'lidacacau.com' || 
          hostname === 'www.lidacacau.com' ||
          hostname.endsWith('.replit.app');
+}
+
+/**
+ * RUNTIME check if mock data should be used
+ * Returns false for production hosts (lidacacau.com, *.replit.app)
+ * Returns true for development (localhost, *.replit.dev, *.janeway.replit.dev)
+ */
+export function shouldUseMockData(): boolean {
+  if (typeof window === 'undefined') return true; // SSR/build time
+  const hostname = window.location?.hostname || '';
+  
+  // Production hosts - use real API
+  if (hostname === 'lidacacau.com' || 
+      hostname === 'www.lidacacau.com' ||
+      hostname.endsWith('.replit.app')) {
+    return false;
+  }
+  
+  // Development hosts - use mock data
+  // Includes localhost, *.replit.dev (development preview)
+  return true;
+}
+
+/**
+ * RUNTIME check if dev fallback user should be used
+ * Only for development environments, NEVER in production
+ */
+export function shouldUseDevFallback(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location?.hostname || '';
+  
+  // Production hosts - NEVER use dev fallback
+  if (hostname === 'lidacacau.com' || 
+      hostname === 'www.lidacacau.com' ||
+      hostname.endsWith('.replit.app')) {
+    return false;
+  }
+  
+  // Development hosts - allow dev fallback
+  return true;
 }
 
 const developmentConfig: AppConfig = {
