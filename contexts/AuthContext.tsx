@@ -72,28 +72,21 @@ const DEV_FALLBACK_USER: User = {
   activeRole: 'producer',
   phone: '(00) 00000-0000',
   location: 'Desenvolvimento',
-  isVerified: false,
   level: 1,
-  experience: 0,
-  rating: 0,
-  reviewCount: 0,
+  averageRating: 0,
+  totalReviews: 0,
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  lastActive: new Date().toISOString(),
   searchRadius: 50,
   badges: [],
   goals: DEFAULT_GOALS.map(g => ({ ...g })),
+  verification: { status: 'none' },
   producerProfile: {
     bio: 'Usuario de demonstracao para desenvolvimento local.',
-    farmSize: 'small',
   },
   workerProfile: {
     bio: 'Usuario de demonstracao.',
     skills: [],
     equipment: [],
-    availability: 'available',
-    hourlyRate: 0,
-    experience: 0,
   },
 };
 
@@ -122,36 +115,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
         
-        // DEMO MODE: Auto-login with real credentials if no session exists
-        if (DEMO_MODE) {
-          console.log('[AuthContext] DEMO MODE - Attempting real API login');
-          try {
-            const result = await authService.login({
-              email: DEMO_CREDENTIALS.email,
-              password: DEMO_CREDENTIALS.password,
-            });
-            
-            if (result.success && result.user) {
-              const demoUser = ensureUserHasNewFields(result.user);
-              setUser(demoUser);
-              console.log('[AuthContext] Demo user logged in via API:', demoUser.name);
-            } else {
-              // API available but login failed - use fallback in development
-              console.warn('[AuthContext] API login failed, using fallback demo user');
-              const fallbackUser = ensureUserHasNewFields(FALLBACK_DEMO_USER);
-              setUser(fallbackUser);
-              console.log('[AuthContext] Fallback demo user set:', fallbackUser.name);
-            }
-          } catch (loginError) {
-            // API unavailable (development mode) - use fallback demo user
-            console.warn('[AuthContext] API unavailable, using fallback demo user');
-            const fallbackUser = ensureUserHasNewFields(FALLBACK_DEMO_USER);
-            setUser(fallbackUser);
-            console.log('[AuthContext] Fallback demo user set:', fallbackUser.name);
-          }
+        // In production: User must login via login screen
+        // In development: Use fallback user for UI testing (no real API calls)
+        if (DEV_DEMO_MODE && !IS_PRODUCTION) {
+          console.log('[AuthContext] DEV MODE - Using fallback demo user for UI testing');
+          console.log('[AuthContext] Note: API calls will fail. Use login screen for real authentication.');
+          const fallbackUser = ensureUserHasNewFields(DEV_FALLBACK_USER);
+          setUser(fallbackUser);
         } else {
+          // Production or dev with real auth: no session, show login screen
           setUser(null);
-          console.log('[AuthContext] No user to restore');
+          console.log('[AuthContext] No session found - showing login screen');
         }
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);

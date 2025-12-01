@@ -2,7 +2,7 @@
  * LidaCacau - Configuracao de Ambiente
  * 
  * Este arquivo centraliza todas as configuracoes do app por ambiente.
- * Detecta automaticamente o ambiente baseado em __DEV__.
+ * Detecta automaticamente o ambiente baseado em __DEV__ e window.location.
  */
 
 export type Environment = 'development' | 'staging' | 'production';
@@ -27,6 +27,7 @@ export interface AppConfig {
     enableOfflineMode: boolean;
     enablePayments: boolean;
     enableMaps: boolean;
+    enableDevFallback: boolean;
   };
   
   storage: {
@@ -52,6 +53,14 @@ export interface AppConfig {
   };
 }
 
+function isProductionHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location?.hostname || '';
+  return hostname === 'lidacacau.com' || 
+         hostname === 'www.lidacacau.com' ||
+         hostname.endsWith('.replit.app');
+}
+
 const developmentConfig: AppConfig = {
   env: 'development',
   appName: 'LidaCacau',
@@ -72,6 +81,7 @@ const developmentConfig: AppConfig = {
     enableOfflineMode: true,
     enablePayments: false,
     enableMaps: true,
+    enableDevFallback: true,
   },
   
   storage: {
@@ -117,6 +127,7 @@ const productionConfig: AppConfig = {
     enableOfflineMode: true,
     enablePayments: true,
     enableMaps: true,
+    enableDevFallback: false,
   },
   
   storage: {
@@ -150,6 +161,9 @@ const configs: Record<Environment, AppConfig> = {
 
 function getCurrentEnvironment(): Environment {
   try {
+    if (isProductionHost()) {
+      return 'production';
+    }
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       return 'development';
     }
@@ -160,5 +174,7 @@ function getCurrentEnvironment(): Environment {
 
 export const CONFIG_ENV: Environment = getCurrentEnvironment();
 export const AppConfiguration: AppConfig = configs[CONFIG_ENV];
+export const IS_PRODUCTION = isProductionHost();
+export const IS_DEVELOPMENT = !IS_PRODUCTION;
 
 export default AppConfiguration;
