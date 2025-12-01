@@ -6,6 +6,8 @@ import path from 'path';
 import fs from 'fs';
 
 import { testConnection, db } from './db/drizzle';
+import { jobs, serviceTypes, users } from './db/schema';
+import { eq } from 'drizzle-orm';
 import authRoutes from './routes/auth';
 import usersRoutes from './routes/users';
 import jobsRoutes from './routes/jobs';
@@ -66,6 +68,136 @@ app.get('/api/health', async (_req: Request, res: Response) => {
       nodeEnv: process.env.NODE_ENV || 'not set'
     }
   });
+});
+
+// Share route for WhatsApp/Social Media preview with Open Graph meta tags
+app.get('/share/demand/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const baseUrl = isProduction ? 'https://lidacacau.com' : `https://${process.env.REPLIT_DEV_DOMAIN || 'localhost:5000'}`;
+    
+    let title = 'Demanda de Trabalho';
+    let description = 'Confira esta oportunidade de trabalho no LidaCacau';
+    let imageUrl = `${baseUrl}/favicon.ico`;
+    let offer = '';
+    let location = '';
+    
+    if (dbConnected) {
+      try {
+        const [job] = await db
+          .select({
+            serviceTypeName: serviceTypes.name,
+            locationText: jobs.locationText,
+            offer: jobs.offer,
+            quantity: jobs.quantity,
+            producerName: users.name,
+          })
+          .from(jobs)
+          .leftJoin(users, eq(jobs.producerId, users.id))
+          .leftJoin(serviceTypes, eq(jobs.serviceTypeId, serviceTypes.id))
+          .where(eq(jobs.id, id))
+          .limit(1);
+        
+        if (job) {
+          title = `${job.serviceTypeName || 'Trabalho'} - LidaCacau`;
+          location = job.locationText || 'Uruara, PA';
+          offer = job.offer ? `R$ ${parseFloat(job.offer).toFixed(2)}` : '';
+          description = `${job.quantity || 1}x ${job.serviceTypeName || 'servico'} em ${location}${offer ? ` - ${offer}` : ''}. Publicado por ${job.producerName || 'Produtor'}`;
+        }
+      } catch (dbError) {
+        console.error('[Share] DB query error:', dbError);
+      }
+    }
+    
+    const shareHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+  
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${baseUrl}/demand/${id}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:site_name" content="LidaCacau">
+  <meta property="og:locale" content="pt_BR">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:image" content="${imageUrl}">
+  
+  <!-- Theme -->
+  <meta name="theme-color" content="#F15A29">
+  
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #F15A29 0%, #d14d22 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      margin: 20px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .logo { width: 64px; height: 64px; margin-bottom: 16px; }
+    h1 { color: #333; margin: 0 0 8px; font-size: 24px; }
+    p { color: #666; margin: 0 0 24px; line-height: 1.5; }
+    .offer { color: #7ED957; font-size: 28px; font-weight: 700; margin: 16px 0; }
+    .location { color: #888; font-size: 14px; margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      background: #F15A29;
+      color: white;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .brand { color: #F15A29; font-weight: 700; }
+  </style>
+  
+  <script>
+    // Auto-redirect to app after 2 seconds
+    setTimeout(function() {
+      window.location.href = '${baseUrl}/demand/${id}';
+    }, 2000);
+  </script>
+</head>
+<body>
+  <div class="card">
+    <img src="${imageUrl}" alt="LidaCacau" class="logo">
+    <h1>${title.replace(' - LidaCacau', '')}</h1>
+    ${offer ? `<div class="offer">${offer}</div>` : ''}
+    ${location ? `<div class="location">${location}</div>` : ''}
+    <p>${description}</p>
+    <a href="${baseUrl}/demand/${id}" class="btn">Abrir no <span class="brand">LidaCacau</span></a>
+  </div>
+</body>
+</html>`;
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(shareHtml);
+  } catch (error) {
+    console.error('[Share] Error:', error);
+    res.redirect('/');
+  }
 });
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

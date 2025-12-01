@@ -11,33 +11,55 @@ type CardShareType = 'demand' | 'offer';
 interface ShareContent {
   title: string;
   message: string;
-  url?: string;
+  url: string;
 }
+
+const getBaseUrl = (): string => {
+  if (__DEV__) {
+    return process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+      : 'https://lidacacau.replit.app';
+  }
+  return 'https://lidacacau.com';
+};
+
+export const generateShareUrl = (type: CardShareType, id: string, forSocialPreview: boolean = false): string => {
+  const baseUrl = getBaseUrl();
+  const path = type === 'demand' ? 'demand' : 'offer';
+  
+  if (forSocialPreview) {
+    return `${baseUrl}/share/${path}/${id}`;
+  }
+  return `${baseUrl}/${path}/${id}`;
+};
 
 export const generateJobShareText = (job: Job, producerName?: string): ShareContent => {
   const serviceType = getServiceTypeById(job.serviceTypeId);
   const serviceName = serviceType?.name || 'Servico';
   const unit = serviceType?.unit || 'un';
+  const shareUrl = generateShareUrl('demand', job.id, true);
   
   const lines = [
-    `DEMANDA DE TRABALHO`,
+    `OPORTUNIDADE DE TRABALHO`,
     ``,
-    `Servico: ${serviceName}`,
-    `Valor: ${formatCurrency(job.offer)}`,
-    `Local: ${job.locationText}`,
-    job.quantity ? `Quantidade: ${job.quantity} ${unit}` : '',
-    job.notes ? `Detalhes: ${job.notes}` : '',
+    `${serviceName}`,
+    `${formatCurrency(job.offer)}`,
+    `${job.locationText}`,
+    job.quantity ? `${job.quantity} ${unit}` : '',
+    job.notes ? `${job.notes}` : '',
     ``,
-    producerName ? `Publicado por: ${producerName}` : '',
+    producerName ? `Por: ${producerName}` : '',
     ``,
-    `Interessado? Baixe o LidaCacau e envie sua proposta!`,
+    `Acesse agora:`,
+    shareUrl,
     ``,
-    `#LidaCacau #TrabalhoRural #${serviceName.replace(/\s+/g, '')}`,
+    `#LidaCacau`,
   ].filter(Boolean);
   
   return {
-    title: `Demanda: ${serviceName}`,
+    title: `${serviceName} - ${formatCurrency(job.offer)}`,
     message: lines.join('\n'),
+    url: shareUrl,
   };
 };
 
@@ -55,32 +77,28 @@ export const generateOfferShareText = (offer: ServiceOffer, workerName?: string)
     ? `${formatCurrency(offer.pricePerUnit)}/unidade`
     : 'A combinar';
   
-  const extras: string[] = [];
-  if (offer.extras?.providesFood) extras.push('Alimentacao');
-  if (offer.extras?.providesAccommodation) extras.push('Estadia');
-  if (offer.extras?.providesTransport) extras.push('Transporte');
-  if (offer.extras?.toolsProvided) extras.push('Ferramentas');
+  const shareUrl = generateShareUrl('offer', offer.id, true);
   
   const lines = [
     `TRABALHADOR DISPONIVEL`,
     ``,
-    `Servicos: ${serviceNames}`,
-    `Valor: ${price}`,
-    offer.priceNegotiable ? `(Valor negociavel)` : '',
-    `Raio de atendimento: ${offer.availableRadius}km`,
-    offer.description ? `Sobre: ${offer.description}` : '',
-    extras.length > 0 ? `Oferece: ${extras.join(', ')}` : '',
+    `${serviceNames}`,
+    `${price}`,
+    `Raio: ${offer.availableRadius}km`,
+    offer.description ? `${offer.description}` : '',
     ``,
-    workerName ? `Trabalhador: ${workerName}` : '',
+    workerName ? `${workerName}` : '',
     ``,
-    `Precisa de ajuda? Baixe o LidaCacau e entre em contato!`,
+    `Acesse agora:`,
+    shareUrl,
     ``,
-    `#LidaCacau #TrabalhoRural #${serviceNames.replace(/\s+/g, '').replace(/,/g, ' #')}`,
+    `#LidaCacau`,
   ].filter(Boolean);
   
   return {
-    title: `Oferta: ${serviceNames}`,
+    title: `${serviceNames} - ${price}`,
     message: lines.join('\n'),
+    url: shareUrl,
   };
 };
 
@@ -109,6 +127,7 @@ export const shareViaSystem = async (content: ShareContent): Promise<boolean> =>
     const result = await Share.share({
       message: content.message,
       title: content.title,
+      url: Platform.OS === 'ios' ? content.url : undefined,
     });
     
     return result.action === Share.sharedAction;
@@ -137,10 +156,7 @@ export const shareCard = async (
 
 export const copyCardLink = async (type: CardShareType, id: string): Promise<boolean> => {
   try {
-    const baseUrl = 'https://lidacacau.app';
-    const path = type === 'demand' ? 'demanda' : 'oferta';
-    const url = `${baseUrl}/${path}/${id}`;
-    
+    const url = generateShareUrl(type, id, true);
     await Clipboard.setStringAsync(url);
     return true;
   } catch (error) {
@@ -150,7 +166,32 @@ export const copyCardLink = async (type: CardShareType, id: string): Promise<boo
 };
 
 export const generateCardLink = (type: CardShareType, id: string): string => {
-  const baseUrl = 'https://lidacacau.app';
-  const path = type === 'demand' ? 'demanda' : 'oferta';
-  return `${baseUrl}/${path}/${id}`;
+  return generateShareUrl(type, id, true);
+};
+
+export const shareUserProfile = async (user: User): Promise<boolean> => {
+  try {
+    const baseUrl = getBaseUrl();
+    const shareUrl = `${baseUrl}/user/${user.id}`;
+    
+    const content = {
+      title: `${user.name} - LidaCacau`,
+      message: [
+        `${user.name}`,
+        ``,
+        user.location || 'Uruara, PA',
+        ``,
+        `Veja o perfil:`,
+        shareUrl,
+        ``,
+        `#LidaCacau`,
+      ].join('\n'),
+      url: shareUrl,
+    };
+    
+    return shareViaSystem(content);
+  } catch (error) {
+    console.error('Error sharing user profile:', error);
+    return false;
+  }
 };

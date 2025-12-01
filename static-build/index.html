@@ -2,13 +2,11 @@
 <html lang="en">
   <head>
     <script>
-      // Polyfill for process.env (required for Metro bundler compatibility)
       if (typeof process === 'undefined') {
         window.process = { env: {} };
       } else if (typeof process.env === 'undefined') {
         process.env = {};
       }
-      // Set common environment flags
       process.env.NODE_ENV = 'production';
       process.env.JEST_WORKER_ID = undefined;
       process.env.NODE_DEBUG = '';
@@ -17,34 +15,28 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>LidaCacau</title>
-    <style id="expo-reset">
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        overflow: hidden;
-      }
-      #root {
-        display: flex;
-        height: 100%;
-        flex: 1;
-      }
-    </style>
-    <link rel="icon" href="/favicon.ico" />
+    <meta name="description" content="Marketplace rural conectando produtores e trabalhadores em Uruara/PA. Confianca de quem e da Lida.">
+    <meta property="og:title" content="LidaCacau - Marketplace Rural">
+    <meta property="og:description" content="Conectando produtores e trabalhadores rurais em Uruara/PA">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lidacacau.com">
+    <meta property="og:site_name" content="LidaCacau">
+    <meta name="theme-color" content="#F15A29">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#F15A29">
     <meta name="apple-mobile-web-app-title" content="LidaCacau">
+    <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/favicon.ico">
+    <style id="expo-reset">
+      html, body { height: 100%; }
+      body { overflow: hidden; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
     <style id="app-loading">
       .app-loading-screen {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         background: linear-gradient(135deg, #F15A29 0%, #d14d22 100%);
         display: flex;
         flex-direction: column;
@@ -59,8 +51,7 @@
         transition: opacity 0.3s ease;
       }
       .app-loading-logo {
-        width: 80px;
-        height: 80px;
+        width: 80px; height: 80px;
         border-radius: 16px;
         margin-bottom: 24px;
         animation: pulse 1.5s ease-in-out infinite;
@@ -76,24 +67,17 @@
         font-size: 14px;
       }
       .app-loading-spinner {
-        width: 32px;
-        height: 32px;
+        width: 32px; height: 32px;
         border: 3px solid rgba(255,255,255,0.3);
         border-top-color: white;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-top: 24px;
       }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-      @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
   </head>
-
   <body>
     <div id="app-loading-screen" class="app-loading-screen">
       <img src="/favicon.ico" alt="LidaCacau" class="app-loading-logo">
@@ -104,17 +88,15 @@
     <script>
       window.addEventListener('load', function() {
         setTimeout(function() {
-          var loadingScreen = document.getElementById('app-loading-screen');
-          if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            setTimeout(function() {
-              loadingScreen.remove();
-            }, 300);
+          var el = document.getElementById('app-loading-screen');
+          if (el) {
+            el.classList.add('hidden');
+            setTimeout(function() { el.remove(); }, 300);
           }
         }, 500);
       });
     </script>
     <div id="root"></div>
-    <script src="/_expo/static/js/web/index-aa544a2e690301df5b46e345ff8505cd.js" defer></script>
+    <script src="/_expo/static/js/web/index-89db3a06516c6918973291365689f74f.js" defer></script>
   </body>
 </html>

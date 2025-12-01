@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { StyleSheet, View, Text, Platform } from "react-native";
+import { NavigationContainer, LinkingOptions } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import * as Linking from "expo-linking";
 import {
   useFonts,
   Rubik_400Regular,
@@ -14,7 +15,7 @@ import {
   Rubik_700Bold,
 } from "@expo-google-fonts/rubik";
 
-import RootNavigator from "@/navigation/RootNavigator";
+import RootNavigator, { RootStackParamList } from "@/navigation/RootNavigator";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ConfigProvider, AppConfiguration } from "@/config";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -22,6 +23,24 @@ import { Colors } from "@/constants/theme";
 import { startSession } from "@/utils/analytics";
 import { initializeMockData } from "@/data/MockDataProvider";
 import { AppInitializer } from "@/components/AppInitializer";
+
+// Deep linking configuration for sharing cards via WhatsApp/social media
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [
+    Linking.createURL('/'),
+    'https://lidacacau.com',
+    'https://lidacacau.replit.app',
+    'lidacacau://',
+  ],
+  config: {
+    screens: {
+      MainTabs: '',
+      JobDetail: 'demand/:jobId',
+      OtherUserProfile: 'user/:userId',
+      ChatRoom: 'chat/:roomId',
+    },
+  },
+};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,7 +84,7 @@ export default function App() {
             <KeyboardProvider>
               <AuthProvider>
                 <AppInitializer>
-                  <NavigationContainer>
+                  <NavigationContainer linking={linking}>
                     <RootNavigator />
                   </NavigationContainer>
                 </AppInitializer>
