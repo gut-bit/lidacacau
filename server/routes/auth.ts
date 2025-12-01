@@ -25,13 +25,17 @@ const registerSchema = z.object({
 
 router.post('/login', async (req: Request, res: Response) => {
   try {
+    console.log('[Auth] Login attempt started');
+    
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
+      console.log('[Auth] Validation failed:', result.error.issues[0].message);
       res.status(400).json({ error: result.error.issues[0].message });
       return;
     }
 
     const { email, password } = result.data;
+    console.log('[Auth] Looking up user:', email.toLowerCase());
 
     const [user] = await db
       .select()
@@ -40,25 +44,34 @@ router.post('/login', async (req: Request, res: Response) => {
       .limit(1);
 
     if (!user) {
+      console.log('[Auth] User not found');
       res.status(401).json({ error: 'Email ou senha incorretos' });
       return;
     }
+    console.log('[Auth] User found:', user.id);
 
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
+      console.log('[Auth] Invalid password');
       res.status(401).json({ error: 'Email ou senha incorretos' });
       return;
     }
+    console.log('[Auth] Password valid');
 
     const token = generateToken(user.id);
+    console.log('[Auth] Token generated');
+    
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
+    console.log('[Auth] Creating session...');
     await db.insert(sessions).values({
       userId: user.id,
       token,
       expiresAt,
     });
+    console.log('[Auth] Session created');
 
+    console.log('[Auth] Updating user presence...');
     await db
       .insert(userPresence)
       .values({ userId: user.id, isOnline: true, lastSeenAt: new Date() })
@@ -66,17 +79,20 @@ router.post('/login', async (req: Request, res: Response) => {
         target: userPresence.userId,
         set: { isOnline: true, lastSeenAt: new Date() },
       });
+    console.log('[Auth] User presence updated');
 
     const { passwordHash, ...userWithoutPassword } = user;
 
+    console.log('[Auth] Login successful for:', user.email);
     res.json({
       success: true,
       user: userWithoutPassword,
       token,
     });
-  } catch (error) {
-    console.error('[Auth] Login error:', error);
-    res.status(500).json({ error: 'Erro ao fazer login' });
+  } catch (error: any) {
+    console.error('[Auth] Login error:', error.message);
+    console.error('[Auth] Error stack:', error.stack);
+    res.status(500).json({ error: 'Erro ao fazer login', details: error.message });
   }
 });
 
