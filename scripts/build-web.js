@@ -23,6 +23,13 @@ function clearBuildDirectories() {
 async function runExpoExport() {
   console.log("Building web version with Expo...");
   
+  const buildEnv = { ...process.env };
+  delete buildEnv.EXPO_PUBLIC_API_BASE_URL;
+  delete buildEnv.API_BASE_URL;
+  buildEnv.NODE_ENV = "production";
+  
+  console.log("API Base URL for production: /api (relative path)");
+  
   return new Promise((resolve, reject) => {
     const exportProcess = spawn("npx", [
       "expo", "export", 
@@ -31,10 +38,7 @@ async function runExpoExport() {
     ], {
       stdio: "inherit",
       shell: true,
-      env: {
-        ...process.env,
-        NODE_ENV: "production"
-      }
+      env: buildEnv
     });
     
     exportProcess.on("close", (code) => {

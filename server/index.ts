@@ -18,11 +18,14 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 let dbConnected = false;
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://www.lidacacau.com', 'https://lidacacau.com']
+    ? ['https://www.lidacacau.com', 'https://lidacacau.com', 'https://lidacacau.replit.app']
     : '*',
   credentials: true,
 }));
@@ -71,23 +74,35 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 const staticPath = path.join(__dirname, '..', 'static-build');
 
 if (fs.existsSync(staticPath)) {
-  app.use(express.static(staticPath));
+  console.log('[LidaCacau] Servindo arquivos estaticos de:', staticPath);
   
-  app.get('/{*path}', (_req: Request, res: Response) => {
+  app.use(express.static(staticPath, {
+    maxAge: isProduction ? '1d' : 0,
+    etag: true,
+  }));
+  
+  app.use((req: Request, res: Response) => {
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ error: 'API endpoint nao encontrado' });
+      return;
+    }
+    
     const indexPath = path.join(staticPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
-      res.status(404).send('App not found');
+      res.status(404).send('App not found - index.html missing');
     }
   });
-  
-  console.log('[LidaCacau] Servindo arquivos estaticos de:', staticPath);
 } else {
-  console.warn('[LidaCacau] Pasta static-build nao encontrada. Execute: node scripts/build-web.js');
+  console.warn('[LidaCacau] AVISO: Pasta static-build nao encontrada!');
+  console.warn('[LidaCacau] Execute: node scripts/build-web.js');
   
   app.use((_req: Request, res: Response) => {
-    res.status(404).json({ error: 'Endpoint nao encontrado' });
+    res.status(503).json({ 
+      error: 'App em manutencao',
+      message: 'Arquivos estaticos nao encontrados. Tente novamente em alguns minutos.'
+    });
   });
 }
 
