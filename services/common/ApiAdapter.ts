@@ -2,7 +2,8 @@
  * LidaCacau - API Adapter
  * 
  * Adaptador HTTP para conexao com backend PostgreSQL.
- * Funciona tanto em desenvolvimento quanto em producao.
+ * Em desenvolvimento no Replit, usa porta 8000 (mapeada da 5000).
+ * Em producao, usa caminhos relativos.
  */
 
 import { ServiceResult, createSuccess, createError } from './types';
@@ -22,9 +23,19 @@ export interface ApiResponse<T> {
 
 function getBaseUrl(): string {
   try {
+    const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+    
     if (typeof window !== 'undefined' && window.location) {
+      if (isDev) {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        const devApiUrl = `${protocol}//${hostname}:8000/api`;
+        console.log('[ApiAdapter] Development mode - API URL:', devApiUrl);
+        return devApiUrl;
+      }
       return '/api';
     }
+    
     return '/api';
   } catch {
     return '/api';
@@ -44,6 +55,7 @@ export class ApiAdapter {
       'Content-Type': 'application/json',
       ...config.headers,
     };
+    console.log('[ApiAdapter] Initialized with base URL:', this.baseUrl);
   }
 
   setAuthToken(token: string | null): void {
@@ -230,6 +242,10 @@ export class ApiAdapter {
       return createError<T>('Sem conexao com a internet', 'NETWORK_ERROR');
     }
 
+    if (errorMessage.includes('Failed to fetch')) {
+      return createError<T>('Servidor indisponivel. Verifique sua conexao.', 'CONNECTION_ERROR');
+    }
+
     return createError<T>(errorMessage, 'CONNECTION_ERROR');
   }
 }
@@ -239,7 +255,6 @@ let apiAdapterInstance: ApiAdapter | null = null;
 export function getApiAdapter(): ApiAdapter {
   if (!apiAdapterInstance) {
     const baseUrl = getBaseUrl();
-    console.log('[ApiAdapter] Initializing with base URL:', baseUrl);
     apiAdapterInstance = new ApiAdapter({ baseUrl });
   }
   return apiAdapterInstance;
