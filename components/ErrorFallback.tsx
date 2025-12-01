@@ -30,9 +30,17 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           O LidaCacau encontrou um problema. Por favor, reinicie.
         </Text>
         
-        <Text style={[styles.errorDetail, { color: colors.error || '#FF0000' }]}>
-          Erro: {error.message}
-        </Text>
+        <View style={styles.errorBox}>
+          <Text style={[styles.errorLabel, { color: colors.error || '#CC0000' }]}>
+            ERRO TECNICO:
+          </Text>
+          <Text style={[styles.errorDetail, { color: colors.error || '#CC0000' }]}>
+            {error.message || 'Erro desconhecido'}
+          </Text>
+          <Text style={[styles.errorStack, { color: colors.textSecondary }]}>
+            {error.stack ? error.stack.slice(0, 500) : 'Sem stack trace'}
+          </Text>
+        </View>
 
         <Pressable
           onPress={handleRestart}
@@ -90,13 +98,26 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
   },
-  errorDetail: {
-    fontSize: 12,
-    textAlign: "center",
-    fontFamily: "monospace",
-    marginTop: Spacing.md,
+  errorBox: {
+    width: "100%",
     padding: Spacing.md,
     backgroundColor: "rgba(255,0,0,0.1)",
-    borderRadius: 4,
+    borderRadius: 8,
+    marginTop: Spacing.lg,
+  },
+  errorLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+  },
+  errorDetail: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  errorStack: {
+    fontSize: 10,
+    fontFamily: "monospace",
+    opacity: 0.7,
   },
 });
