@@ -32,7 +32,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, MapActivity, UserRole, ServiceOffer, CARD_COLORS, CardType, UserPreferences, URUARA_CENTER, User, LIDA_PHRASES } from '@/types';
-import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences, getRecentNewUsers } from '@/utils/storage';
+import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences, getRecentNewUsers } from '@/utils/api';
 import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
