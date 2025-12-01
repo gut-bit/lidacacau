@@ -59,7 +59,12 @@ app.get('/api/health', async (_req: Request, res: Response) => {
     status: dbConnected ? 'ok' : 'degraded',
     database: dbConnected ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
+    env: {
+      hasDbUrl: !!process.env.DATABASE_URL,
+      hasSessionSecret: !!process.env.SESSION_SECRET,
+      nodeEnv: process.env.NODE_ENV || 'not set'
+    }
   });
 });
 
@@ -108,6 +113,9 @@ if (fs.existsSync(staticPath)) {
 
 async function startServer() {
   console.log('[LidaCacau] Iniciando servidor...');
+  console.log('[LidaCacau] DATABASE_URL presente:', !!process.env.DATABASE_URL);
+  console.log('[LidaCacau] SESSION_SECRET presente:', !!process.env.SESSION_SECRET);
+  console.log('[LidaCacau] NODE_ENV:', process.env.NODE_ENV);
   
   try {
     dbConnected = await testConnection();

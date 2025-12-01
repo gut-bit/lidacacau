@@ -92,7 +92,11 @@ router.post('/login', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Auth] Login error:', error.message);
     console.error('[Auth] Error stack:', error.stack);
-    res.status(500).json({ error: 'Erro ao fazer login', details: error.message });
+    res.status(500).json({ 
+      error: `Erro ao fazer login: ${error.message}`,
+      errorType: error.name || 'UnknownError',
+      errorStack: error.stack?.split('\n').slice(0, 3).join(' | ')
+    });
   }
 });
 
