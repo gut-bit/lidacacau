@@ -141,12 +141,6 @@ export default function RootNavigator() {
           component={LoginScreen}
           options={{ headerShown: false }}
         />
-      ) : !user?.tutorialCompleted && user?.role !== 'admin' ? (
-        <Stack.Screen
-          name="Tutorial"
-          component={TutorialScreen}
-          options={{ headerShown: false }}
-        />
       ) : user?.role === 'admin' ? (
         <Stack.Screen
           name="AdminStack"
@@ -380,6 +374,11 @@ export default function RootNavigator() {
             name="CacauPrices"
             component={CacauPricesScreen}
             options={{ title: 'Precos do Cacau' }}
+          />
+          <Stack.Screen
+            name="Tutorial"
+            component={TutorialScreen}
+            options={{ title: 'Introducao', presentation: 'modal' }}
           />
         </>
       )}
