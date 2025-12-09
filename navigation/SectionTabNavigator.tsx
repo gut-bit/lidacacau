@@ -1,72 +1,70 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable, Platform } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
 import ShopListScreen from '@/screens/shared/ShopListScreen';
+import CacauPricesScreen from '@/screens/shared/CacauPricesScreen';
 
-type Section = 'marketplace' | 'shop';
+type Section = 'marketplace' | 'prices' | 'shop';
 
 export default function SectionTabNavigator() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const [activeSection, setActiveSection] = useState<Section>('marketplace');
 
+  const sections: { id: Section; label: string }[] = [
+    { id: 'marketplace', label: 'Lida Cacau' },
+    { id: 'prices', label: 'Cacau Para' },
+    { id: 'shop', label: 'LidaShop' },
+  ];
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'marketplace':
+        return <UnifiedTabNavigator />;
+      case 'prices':
+        return <CacauPricesScreen />;
+      case 'shop':
+        return <ShopListScreen />;
+      default:
+        return <UnifiedTabNavigator />;
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={[styles.sectionTabs, { backgroundColor: colors.backgroundDefault, borderBottomColor: colors.border }]}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.sectionTab,
-            {
-              borderBottomWidth: activeSection === 'marketplace' ? 3 : 0,
-              borderBottomColor: colors.primary,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-          onPress={() => setActiveSection('marketplace')}
-        >
-          <ThemedText
-            type="h5"
-            style={{
-              color: activeSection === 'marketplace' ? colors.primary : colors.textSecondary,
-              fontWeight: activeSection === 'marketplace' ? '700' : '500',
-            }}
+        {sections.map((section) => (
+          <Pressable
+            key={section.id}
+            style={({ pressed }) => [
+              styles.sectionTab,
+              {
+                borderBottomWidth: activeSection === section.id ? 3 : 0,
+                borderBottomColor: colors.primary,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+            onPress={() => setActiveSection(section.id)}
           >
-            Lida Cacau
-          </ThemedText>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.sectionTab,
-            {
-              borderBottomWidth: activeSection === 'shop' ? 3 : 0,
-              borderBottomColor: colors.primary,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-          onPress={() => setActiveSection('shop')}
-        >
-          <ThemedText
-            type="h5"
-            style={{
-              color: activeSection === 'shop' ? colors.primary : colors.textSecondary,
-              fontWeight: activeSection === 'shop' ? '700' : '500',
-            }}
-          >
-            LidaShop
-          </ThemedText>
-        </Pressable>
+            <ThemedText
+              type="h5"
+              style={{
+                color: activeSection === section.id ? colors.primary : colors.textSecondary,
+                fontWeight: activeSection === section.id ? '700' : '500',
+                fontSize: 14,
+              }}
+            >
+              {section.label}
+            </ThemedText>
+          </Pressable>
+        ))}
       </View>
 
       <View style={{ flex: 1 }}>
-        {activeSection === 'marketplace' ? (
-          <UnifiedTabNavigator />
-        ) : (
-          <ShopListScreen />
-        )}
+        {renderContent()}
       </View>
     </View>
   );
@@ -77,11 +75,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     borderBottomWidth: 1,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
   },
   sectionTab: {
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
