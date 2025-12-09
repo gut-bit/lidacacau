@@ -50,7 +50,7 @@ export default function SectionTabNavigator() {
             onPress={() => setActiveSection(section.id)}
           >
             <ThemedText
-              type="h5"
+              type="body"
               style={{
                 color: activeSection === section.id ? colors.primary : colors.textSecondary,
                 fontWeight: activeSection === section.id ? '700' : '500',
