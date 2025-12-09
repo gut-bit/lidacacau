@@ -56,6 +56,24 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/social', socialRoutes);
 
+// Serve generated videos for download
+app.use('/videos', express.static(path.join(__dirname, '../attached_assets/generated_videos'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.mp4')) {
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+    }
+  }
+}));
+
+// Serve public pages (downloads, etc)
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Downloads page route
+app.get('/downloads', (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, 'public/downloads.html'));
+});
+
 app.get('/api/health', async (_req: Request, res: Response) => {
   res.json({ 
     status: dbConnected ? 'ok' : 'degraded',

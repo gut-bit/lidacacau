@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LidaCacau - Downloads de Vídeos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #2D1810 0%, #4A2C2A 50%, #1a0f0a 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      margin-bottom: 30px;
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #F15A29;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #7ED957;
+      font-size: 1.2rem;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      padding: 20px 0;
+    }
+    .video-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .video-preview {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #1a0f0a;
+    }
+    .video-info {
+      padding: 20px;
+    }
+    .video-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #FFD100;
+    }
+    .video-desc {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #F15A29;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      width: 100%;
+      justify-content: center;
+    }
+    .download-btn:hover {
+      background: #d94a1d;
+    }
+    .download-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.9rem;
+    }
+    .footer-brand {
+      color: #7ED957;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="/assets/images/icon.png" alt="LidaCacau" class="logo" onerror="this.style.display='none'">
+      <h1>LidaCacau</h1>
+      <p class="subtitle">Videos Promocionais - Download Gratuito</p>
+    </header>
+
+    <div class="video-grid">
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/lidacacau_app_intro_promo_video.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">Video Intro Promocional</h3>
+          <p class="video-desc">Video de introducao do app LidaCacau com cenas da floresta e maos abrindo cacau.</p>
+          <a href="/videos/lidacacau_app_intro_promo_video.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/hands_opening_cacao_pod_forest.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">Maos Abrindo Cacau</h3>
+          <p class="video-desc">Cena cinematografica de maos abrindo vagem de cacau na floresta amazonica.</p>
+          <a href="/videos/hands_opening_cacao_pod_forest.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/phone_app_floating_over_jungle.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">App Flutuando sobre Floresta</h3>
+          <p class="video-desc">Smartphone moderno flutuando sobre a selva amazonica exibindo interface do app.</p>
+          <a href="/videos/phone_app_floating_over_jungle.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/producer_worker_app_match_connection.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">Conexao Produtor-Trabalhador</h3>
+          <p class="video-desc">Animacao mostrando a conexao entre produtores e trabalhadores pelo app.</p>
+          <a href="/videos/producer_worker_app_match_connection.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/lidacacau_app_interface_demo.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">Demo da Interface</h3>
+          <p class="video-desc">Demonstracao da interface do aplicativo LidaCacau em acao.</p>
+          <a href="/videos/lidacacau_app_interface_demo.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <video class="video-preview" controls preload="metadata">
+          <source src="/videos/training_school_modular_infrastructure.mp4" type="video/mp4">
+        </video>
+        <div class="video-info">
+          <h3 class="video-title">Escola de Treinamento</h3>
+          <p class="video-desc">Infraestrutura modular da escola de treinamento para trabalhadores rurais.</p>
+          <a href="/videos/training_school_modular_infrastructure.mp4" download class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Video
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p><span class="footer-brand">LidaCacau</span> - Confianca de quem e da Lida</p>
+      <p style="margin-top: 8px;">Uruara/PA - Brasil</p>
+    </footer>
+  </div>
+</body>
+</html>
