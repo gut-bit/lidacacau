@@ -230,3 +230,39 @@ export const jobsRelations = relations(jobs, ({ one, many }) => ({
   serviceType: one(serviceTypes, { fields: [jobs.serviceTypeId], references: [serviceTypes.id] }),
   bids: many(bids),
 }));
+
+export const cocoaPriceSubmissions = pgTable('cocoa_price_submissions', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  buyerName: varchar('buyer_name', { length: 255 }).notNull(),
+  city: varchar('city', { length: 100 }).notNull(),
+  region: varchar('region', { length: 100 }).default('Para'),
+  pricePerKg: decimal('price_per_kg', { precision: 10, scale: 2 }).notNull(),
+  conditions: text('conditions'),
+  proofPhotoUri: text('proof_photo_uri'),
+  source: varchar('source', { length: 50 }).default('lidacacau'),
+  submittedBy: uuid('submitted_by').references(() => users.id, { onDelete: 'set null' }),
+  submitterName: varchar('submitter_name', { length: 255 }),
+  submitterPhone: varchar('submitter_phone', { length: 50 }),
+  status: varchar('status', { length: 20 }).default('pending'),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  verifiedBy: uuid('verified_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const cocoaPriceMetrics = pgTable('cocoa_price_metrics', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  city: varchar('city', { length: 100 }).notNull(),
+  date: timestamp('date', { mode: 'date' }).notNull(),
+  avgPrice: decimal('avg_price', { precision: 10, scale: 2 }).notNull(),
+  minPrice: decimal('min_price', { precision: 10, scale: 2 }).notNull(),
+  maxPrice: decimal('max_price', { precision: 10, scale: 2 }).notNull(),
+  submissionCount: integer('submission_count').default(0),
+  dataSource: varchar('data_source', { length: 50 }).default('mixed'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const cocoaPriceSubmissionsRelations = relations(cocoaPriceSubmissions, ({ one }) => ({
+  submitter: one(users, { fields: [cocoaPriceSubmissions.submittedBy], references: [users.id] }),
+  verifier: one(users, { fields: [cocoaPriceSubmissions.verifiedBy], references: [users.id] }),
+}));

@@ -1,20 +1,26 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Pressable, RefreshControl, ActivityIndicator, Linking, Share, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { cacauParaClient, PriceSubmission, SUPPORTED_CITIES } from '@/services/sdk/CacauParaSDK';
+import type { CacauParaStackParamList } from '@/navigation/CacauParaStackNavigator';
 
 const CACHE_KEY = '@lidacacau_cacau_prices_cache';
 const CACHE_TIMESTAMP_KEY = '@lidacacau_cacau_prices_timestamp';
 
 type FilterCity = 'all' | typeof SUPPORTED_CITIES[number];
 
+type CacauNavigation = NativeStackNavigationProp<CacauParaStackParamList>;
+
 export default function CacauPricesScreen() {
   const { theme: colors } = useTheme();
+  const navigation = useNavigation<CacauNavigation>();
   const [prices, setPrices] = useState<PriceSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -177,6 +183,23 @@ export default function CacauPricesScreen() {
             </ThemedText>
           </View>
         ) : null}
+
+        <View style={styles.actionsRow}>
+          <Pressable
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('CacauPriceSubmit')}
+          >
+            <Feather name="plus" size={18} color="#FFFFFF" />
+            <ThemedText style={styles.actionButtonText}>Informar Preco</ThemedText>
+          </Pressable>
+          <Pressable
+            style={[styles.actionButtonSecondary, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('CacauPriceHistory')}
+          >
+            <Feather name="bar-chart-2" size={18} color={colors.primary} />
+            <ThemedText style={[styles.actionButtonSecondaryText, { color: colors.primary }]}>Historico</ThemedText>
+          </Pressable>
+        </View>
 
         {error && prices.length === 0 ? (
           <View style={[styles.errorCard, { backgroundColor: colors.error + '20' }]}>
@@ -617,5 +640,39 @@ const styles = StyleSheet.create({
   externalLinkText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  actionButtonSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+  },
+  actionButtonSecondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

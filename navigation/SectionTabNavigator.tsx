@@ -5,7 +5,7 @@ import { Colors, Spacing } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
 import ShopListScreen from '@/screens/shared/ShopListScreen';
-import CacauPricesScreen from '@/screens/shared/CacauPricesScreen';
+import CacauParaStackNavigator from '@/navigation/CacauParaStackNavigator';
 
 type Section = 'marketplace' | 'prices' | 'shop';
 
@@ -25,7 +25,7 @@ export default function SectionTabNavigator() {
       case 'marketplace':
         return <UnifiedTabNavigator />;
       case 'prices':
-        return <CacauPricesScreen />;
+        return <CacauParaStackNavigator />;
       case 'shop':
         return <ShopListScreen />;
       default:

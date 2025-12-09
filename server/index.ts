@@ -13,6 +13,7 @@ import usersRoutes from './routes/users';
 import jobsRoutes from './routes/jobs';
 import propertiesRoutes from './routes/properties';
 import socialRoutes from './routes/social';
+import cacauPrecosRoutes from './routes/cacauPrecos';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
@@ -55,6 +56,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/social', socialRoutes);
+app.use('/api/cacau-precos', cacauPrecosRoutes);
 
 // Serve generated videos for download
 app.use('/videos', express.static(path.join(__dirname, '../attached_assets/generated_videos'), {

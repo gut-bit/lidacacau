@@ -260,4 +260,11 @@ export const AppConfiguration: AppConfig = configs[CONFIG_ENV];
 export const IS_PRODUCTION = isProductionHost();
 export const IS_DEVELOPMENT = !IS_PRODUCTION;
 
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return '';
+}
+
 export default AppConfiguration;

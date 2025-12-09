@@ -97,3 +97,48 @@ export function optionalAuth(
   
   next();
 }
+
+export async function optionalAuthMiddleware(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authHeader = req.headers.authorization;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+    
+    if (decoded) {
+      try {
+        const [session] = await db
+          .select()
+          .from(sessions)
+          .where(
+            and(
+              eq(sessions.token, token),
+              gt(sessions.expiresAt, new Date())
+            )
+          )
+          .limit(1);
+
+        if (session) {
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, decoded.userId))
+            .limit(1);
+
+          if (user) {
+            req.userId = decoded.userId;
+            req.user = user;
+          }
+        }
+      } catch (error) {
+        console.error('[OptionalAuth] Error:', error);
+      }
+    }
+  }
+  
+  next();
+}
