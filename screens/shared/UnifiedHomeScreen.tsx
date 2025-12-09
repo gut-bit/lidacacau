@@ -39,6 +39,7 @@ import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel 
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { PriceTicker } from '@/components/PriceTicker';
+import { IntroVideoModal } from '@/components/IntroVideoModal';
 
 interface UserLocation {
   latitude: number;
@@ -1153,6 +1154,9 @@ export default function UnifiedHomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Intro Video Modal - shows on first visit */}
+      <IntroVideoModal />
+      
       {/* Decorative cacao canopy header - positioned behind content */}
       <Image
         source={cacaoCanopyHeader}
