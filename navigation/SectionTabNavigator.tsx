@@ -16,7 +16,7 @@ export default function SectionTabNavigator() {
 
   const sections: { id: Section; label: string }[] = [
     { id: 'marketplace', label: 'Lida Cacau' },
-    { id: 'prices', label: 'Cacau Para' },
+    { id: 'prices', label: 'Preços cacau' },
     { id: 'shop', label: 'LidaShop' },
   ];
 
