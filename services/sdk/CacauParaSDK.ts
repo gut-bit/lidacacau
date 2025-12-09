@@ -1,9 +1,8 @@
 /**
- * Cacau Para SDK
+ * Cacau Para SDK - Modulo Nativo LidaCacau
  * 
- * Modulo de integracao para consultar e enviar precos de cacau
- * Integra o Lidacacau com a plataforma Cacau Para (https://cacaupara.replit.app)
- * e com a API local do LidaCacau para persistencia
+ * Sistema de precos de cacau integrado nativamente ao LidaCacau.
+ * Funciona offline-first com sincronizacao automatica.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,6 +11,20 @@ const CACHE_KEY = '@lidacacau_cacau_prices_cache';
 const CACHE_TIMESTAMP_KEY = '@lidacacau_cacau_prices_timestamp';
 const PENDING_SUBMISSIONS_KEY = '@lidacacau_cacau_pending_submissions';
 const METRICS_CACHE_KEY = '@lidacacau_cacau_metrics_cache';
+
+// Cidades suportadas para precos de cacau na regiao
+export const SUPPORTED_CITIES = [
+  'Uruará',
+  'Medicilândia',
+  'Brasil Novo',
+  'Altamira',
+  'Placas',
+  'Rurópolis',
+  'Vitória do Xingu',
+  'Senador José Porfírio',
+  'Porto de Moz',
+  'Anapu',
+] as const;
 
 export interface PriceSubmission {
   id: string;
@@ -26,17 +39,6 @@ export interface PriceSubmission {
   source?: string;
   status?: string;
   submitterName?: string | null;
-  createdAt: string;
-}
-
-export interface CommunityNote {
-  id: string;
-  priceSubmissionId: string;
-  userId: string;
-  noteType: 'correction' | 'context' | 'concern';
-  content: string;
-  helpfulCount: number;
-  unhelpfulCount: number;
   createdAt: string;
 }
 
@@ -65,23 +67,21 @@ export interface CityMetric {
   count?: number;
 }
 
+export interface CommunityNote {
+  id: string;
+  priceSubmissionId: string;
+  userId: string;
+  noteType: 'correction' | 'context' | 'concern';
+  content: string;
+  helpfulCount: number;
+  unhelpfulCount: number;
+  createdAt: string;
+}
+
 export interface AddNoteInput {
   userId: string;
   noteType: 'correction' | 'context' | 'concern';
   content: string;
-}
-
-export interface SDKConfig {
-  baseUrl: string;
-  localApiUrl?: string;
-  authToken?: string;
-  timeout?: number;
-}
-
-export interface CachedData<T> {
-  data: T;
-  timestamp: string;
-  source: 'api' | 'cache';
 }
 
 interface PendingSubmission {
@@ -102,7 +102,7 @@ export class CacauParaError extends Error {
   }
 }
 
-function getLocalApiUrl(): string {
+function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
   }
@@ -110,22 +110,13 @@ function getLocalApiUrl(): string {
 }
 
 export class CacauParaClient {
-  private externalBaseUrl: string;
-  private localApiUrl: string;
+  private apiUrl: string;
   private authToken?: string;
   private timeout: number;
 
-  constructor(config: string | SDKConfig) {
-    if (typeof config === 'string') {
-      this.externalBaseUrl = config.replace(/\/$/, '');
-      this.localApiUrl = getLocalApiUrl();
-      this.timeout = 10000;
-    } else {
-      this.externalBaseUrl = config.baseUrl.replace(/\/$/, '');
-      this.localApiUrl = config.localApiUrl || getLocalApiUrl();
-      this.authToken = config.authToken;
-      this.timeout = config.timeout || 10000;
-    }
+  constructor() {
+    this.apiUrl = getApiBaseUrl();
+    this.timeout = 10000;
   }
 
   setAuthToken(token: string | undefined) {
@@ -135,11 +126,9 @@ export class CacauParaClient {
   private async request<T>(
     method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     endpoint: string,
-    body?: unknown,
-    useLocalApi = false
+    body?: unknown
   ): Promise<T> {
-    const baseUrl = useLocalApi ? this.localApiUrl : this.externalBaseUrl;
-    const url = `${baseUrl}${endpoint}`;
+    const url = `${this.apiUrl}${endpoint}`;
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -187,52 +176,32 @@ export class CacauParaClient {
 
   async listPrices(): Promise<PriceSubmission[]> {
     try {
-      const data = await this.request<PriceSubmission[]>('GET', '/api/prices');
-      await this.cachePrices(data);
-      return data;
-    } catch (error) {
-      console.log('[CacauParaSDK] External API failed, trying local API...');
-      try {
-        const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
-          'GET', '/api/cacau-precos', undefined, true
-        );
-        if (response.success && response.data.length > 0) {
-          await this.cachePrices(response.data);
-          return response.data;
-        }
-      } catch (localError) {
-        console.log('[CacauParaSDK] Local API also failed');
+      const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
+        'GET', '/api/cacau-precos'
+      );
+      if (response.success && response.data) {
+        await this.cachePrices(response.data);
+        return response.data;
       }
-      
+      return [];
+    } catch (error) {
+      console.log('[CacauPara] API failed, returning cached prices...');
       const cached = await this.getCachedPrices();
       if (cached.length > 0) {
-        console.log('[CacauParaSDK] Returning cached prices');
         return cached;
       }
       throw error;
     }
   }
 
-  async listLocalPrices(): Promise<PriceSubmission[]> {
-    try {
-      const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
-        'GET', '/api/cacau-precos', undefined, true
-      );
-      return response.data || [];
-    } catch (error) {
-      console.error('[CacauParaSDK] Error fetching local prices:', error);
-      return [];
-    }
-  }
-
   async submitPrice(input: SubmitPriceInput): Promise<{ success: boolean; data?: PriceSubmission; message?: string; pending?: boolean }> {
     try {
       const response = await this.request<{ success: boolean; data: PriceSubmission; message: string }>(
-        'POST', '/api/cacau-precos', input, true
+        'POST', '/api/cacau-precos', input
       );
       return response;
     } catch (error) {
-      console.log('[CacauParaSDK] Submit failed, saving offline...');
+      console.log('[CacauPara] Submit failed, saving offline...');
       await this.savePendingSubmission(input);
       return {
         success: true,
@@ -245,7 +214,7 @@ export class CacauParaClient {
   async getMetrics(): Promise<PriceMetrics | null> {
     try {
       const response = await this.request<{ success: boolean; data: PriceMetrics }>(
-        'GET', '/api/cacau-precos/metrics', undefined, true
+        'GET', '/api/cacau-precos/metrics'
       );
       if (response.success) {
         await this.cacheMetrics(response.data);
@@ -253,7 +222,7 @@ export class CacauParaClient {
       }
       return null;
     } catch (error) {
-      console.log('[CacauParaSDK] Metrics fetch failed, returning cached...');
+      console.log('[CacauPara] Metrics fetch failed, returning cached...');
       return this.getCachedMetrics();
     }
   }
@@ -261,21 +230,13 @@ export class CacauParaClient {
   async getMySubmissions(): Promise<PriceSubmission[]> {
     try {
       const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
-        'GET', '/api/cacau-precos/my-submissions', undefined, true
+        'GET', '/api/cacau-precos/my-submissions'
       );
       return response.data || [];
     } catch (error) {
-      console.error('[CacauParaSDK] Error fetching my submissions:', error);
+      console.error('[CacauPara] Error fetching my submissions:', error);
       return [];
     }
-  }
-
-  async getPriceNotes(priceId: string): Promise<CommunityNote[]> {
-    return this.request<CommunityNote[]>('GET', `/api/prices/${priceId}/notes`);
-  }
-
-  async addPriceNote(priceId: string, input: AddNoteInput): Promise<CommunityNote> {
-    return this.request<CommunityNote>('POST', `/api/prices/${priceId}/notes`, input);
   }
 
   private async cachePrices(prices: PriceSubmission[]): Promise<void> {
@@ -283,7 +244,7 @@ export class CacauParaClient {
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(prices));
       await AsyncStorage.setItem(CACHE_TIMESTAMP_KEY, new Date().toISOString());
     } catch (error) {
-      console.error('[CacauParaSDK] Cache write error:', error);
+      console.error('[CacauPara] Cache write error:', error);
     }
   }
 
@@ -292,7 +253,7 @@ export class CacauParaClient {
       const cached = await AsyncStorage.getItem(CACHE_KEY);
       return cached ? JSON.parse(cached) : [];
     } catch (error) {
-      console.error('[CacauParaSDK] Cache read error:', error);
+      console.error('[CacauPara] Cache read error:', error);
       return [];
     }
   }
@@ -312,7 +273,7 @@ export class CacauParaClient {
         timestamp: new Date().toISOString(),
       }));
     } catch (error) {
-      console.error('[CacauParaSDK] Metrics cache write error:', error);
+      console.error('[CacauPara] Metrics cache write error:', error);
     }
   }
 
@@ -324,26 +285,25 @@ export class CacauParaClient {
         return parsed.data;
       }
       return null;
-    } catch {
+    } catch (error) {
+      console.error('[CacauPara] Metrics cache read error:', error);
       return null;
     }
   }
 
   private async savePendingSubmission(input: SubmitPriceInput): Promise<void> {
     try {
-      const existing = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
-      const pending: PendingSubmission[] = existing ? JSON.parse(existing) : [];
-      
-      pending.push({
-        id: `pending_${Date.now()}`,
+      const pending = await this.getPendingSubmissions();
+      const newSubmission: PendingSubmission = {
+        id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         input,
         timestamp: new Date().toISOString(),
         retries: 0,
-      });
-
+      };
+      pending.push(newSubmission);
       await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(pending));
     } catch (error) {
-      console.error('[CacauParaSDK] Save pending error:', error);
+      console.error('[CacauPara] Error saving pending submission:', error);
     }
   }
 
@@ -351,64 +311,62 @@ export class CacauParaClient {
     try {
       const pending = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
       return pending ? JSON.parse(pending) : [];
-    } catch {
+    } catch (error) {
+      console.error('[CacauPara] Error reading pending submissions:', error);
       return [];
     }
   }
 
   async syncPendingSubmissions(): Promise<{ synced: number; failed: number }> {
+    const pending = await this.getPendingSubmissions();
     let synced = 0;
     let failed = 0;
+    const remaining: PendingSubmission[] = [];
 
-    try {
-      const pending = await this.getPendingSubmissions();
-      const remaining: PendingSubmission[] = [];
-
-      for (const submission of pending) {
-        try {
-          await this.request<{ success: boolean }>(
-            'POST', '/api/cacau-precos', submission.input, true
-          );
-          synced++;
-        } catch {
-          submission.retries++;
-          if (submission.retries < 5) {
-            remaining.push(submission);
-          }
-          failed++;
+    for (const submission of pending) {
+      try {
+        await this.request<{ success: boolean }>(
+          'POST', '/api/cacau-precos', submission.input
+        );
+        synced++;
+      } catch (error) {
+        submission.retries++;
+        if (submission.retries < 5) {
+          remaining.push(submission);
         }
+        failed++;
       }
-
-      await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(remaining));
-    } catch (error) {
-      console.error('[CacauParaSDK] Sync error:', error);
     }
 
+    await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(remaining));
+    
+    if (synced > 0) {
+      console.log(`[CacauPara] Synced ${synced} pending submissions`);
+    }
+    
     return { synced, failed };
   }
 
-  generateWhatsAppShareLink(price: PriceSubmission, phoneNumber?: string): string {
-    const message = [
-      'Preco de cacau atualizado no LidaCacau:',
-      `Comprador: ${price.buyerName}`,
-      `Cidade: ${price.city}`,
-      `Preco: R$ ${price.pricePerKg}/kg`,
-      price.conditions ? `Condicoes: ${price.conditions}` : '',
-      '',
-      'Via LidaCacau - Cacau Para',
-    ].filter(Boolean).join('\n');
-
-    const encodedMessage = encodeURIComponent(message);
-    
-    if (phoneNumber) {
-      return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    }
-    return `https://wa.me/?text=${encodedMessage}`;
+  async hasPendingSubmissions(): Promise<boolean> {
+    const pending = await this.getPendingSubmissions();
+    return pending.length > 0;
   }
 
+  async clearCache(): Promise<void> {
+    try {
+      await AsyncStorage.multiRemove([
+        CACHE_KEY,
+        CACHE_TIMESTAMP_KEY,
+        METRICS_CACHE_KEY,
+      ]);
+    } catch (error) {
+      console.error('[CacauPara] Error clearing cache:', error);
+    }
+  }
+
+  // Utility methods
   findBestPrice(prices: PriceSubmission[]): PriceSubmission | null {
     if (prices.length === 0) return null;
-    
     return prices.reduce((best, current) => {
       const bestPrice = parseFloat(best.pricePerKg);
       const currentPrice = parseFloat(current.pricePerKg);
@@ -417,55 +375,25 @@ export class CacauParaClient {
   }
 
   filterByCity(prices: PriceSubmission[], city: string): PriceSubmission[] {
-    return prices.filter(p => p.city.toLowerCase() === city.toLowerCase());
+    if (city === 'all') return prices;
+    return prices.filter(p => p.city === city);
   }
 
-  filterByBuyer(prices: PriceSubmission[], buyerName: string): PriceSubmission[] {
-    return prices.filter(p => 
-      p.buyerName.toLowerCase().includes(buyerName.toLowerCase())
+  generateWhatsAppShareLink(price: PriceSubmission): string {
+    const message = encodeURIComponent(
+      `Preco do Cacau em ${price.city}: R$ ${price.pricePerKg}/kg - ${price.buyerName}\n\nVia LidaCacau`
     );
-  }
-
-  calculateTrend(prices: PriceSubmission[], days: number = 7): { direction: 'up' | 'down' | 'stable'; percentage: number } {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    const midpoint = new Date(now.getTime() - (days / 2) * 24 * 60 * 60 * 1000);
-
-    const recent = prices.filter(p => new Date(p.createdAt) > midpoint);
-    const older = prices.filter(p => {
-      const date = new Date(p.createdAt);
-      return date <= midpoint && date > cutoff;
-    });
-
-    if (recent.length === 0 || older.length === 0) {
-      return { direction: 'stable', percentage: 0 };
-    }
-
-    const avgRecent = recent.reduce((sum, p) => sum + parseFloat(p.pricePerKg), 0) / recent.length;
-    const avgOlder = older.reduce((sum, p) => sum + parseFloat(p.pricePerKg), 0) / older.length;
-
-    const change = ((avgRecent - avgOlder) / avgOlder) * 100;
-
-    if (change > 2) return { direction: 'up', percentage: Math.round(change) };
-    if (change < -2) return { direction: 'down', percentage: Math.round(Math.abs(change)) };
-    return { direction: 'stable', percentage: 0 };
+    return `https://wa.me/?text=${message}`;
   }
 }
 
-export const SUPPORTED_CITIES = [
-  'Uruara',
-  'Medicilândia',
-  'Altamira',
-  'Brasil Novo',
-  'Vitoria do Xingu',
-  'Placas',
-  'Ruropolis',
-  'Pacaja',
-  'Anapu',
-] as const;
+// Instancia singleton do cliente
+export const cacauParaClient = new CacauParaClient();
 
-export type SupportedCity = typeof SUPPORTED_CITIES[number];
-
-export const cacauParaClient = new CacauParaClient('https://cacaupara.replit.app');
-
-export default CacauParaClient;
+// Funcao de inicializacao (para compatibilidade)
+export function initCacauParaClient(authToken?: string): CacauParaClient {
+  if (authToken) {
+    cacauParaClient.setAuthToken(authToken);
+  }
+  return cacauParaClient;
+}

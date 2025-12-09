@@ -42,12 +42,12 @@ LidaCacau is a mobile marketplace application (Expo React Native) connecting pro
 - **Referral Program**: Unique referral codes for XP rewards.
 - **Profile System**: Comprehensive profile building with personal history, work photos, and certificates.
 - **Real-Time Cocoa Price Tracking**: Integration of global and local cocoa prices with a stale-while-revalidate cache.
-- **Cacau Pará Integration**: Complete cocoa price submission and viewing system:
-    - `CacauPriceSubmitScreen`: Form for authenticated users to submit local cocoa prices (buyer, city, price/kg, conditions)
-    - `CacauPriceHistoryScreen`: View price trends, metrics by city, and personal submission history
-    - `CacauParaSDK`: Client SDK with offline queue for pending submissions and automatic sync
-    - API Endpoints: POST/GET `/api/cacau-precos` for submission and listing
-    - Offline Support: AsyncStorage-based queue with automatic sync when connectivity returns
+- **Sistema de Precos de Cacau (Nativo)**: Modulo integrado nativamente ao LidaCacau:
+    - `CacauPriceSubmitScreen`: Formulario para usuarios autenticados informarem precos locais (comprador, cidade, preco/kg, condicoes)
+    - `CacauPriceHistoryScreen`: Visualizacao de tendencias, metricas por cidade e historico pessoal
+    - `CacauParaSDK`: Modulo cliente com suporte offline e sincronizacao automatica
+    - Cidades suportadas: Uruara, Medicilandia, Brasil Novo, Altamira, Placas, Ruropolis, Vitoria do Xingu, Senador Jose Porfirio, Porto de Moz, Anapu
+    - Offline Support: Fila AsyncStorage com sincronizacao automatica quando ha conexao
 - **Persistency**: AsyncStorage for offline-first data persistence, using `@lidacacau_` prefix for all keys.
 - **Navigation**: React Navigation 7+ with a 5-tab structure (Home, Conversas, +, Explorar, Perfil).
 - **Analytics**: Event tracking with a 1000-event buffer for AI analysis.
