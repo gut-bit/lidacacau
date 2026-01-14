@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Pressable, Platform, Modal, Dimensions } from 'react-native';
+import { StyleSheet, View, Pressable, Platform, Modal, Dimensions, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -35,24 +35,39 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('hybrid');
   const [activeFilter, setActiveFilter] = useState<'all' | 'jobs' | 'workers' | 'roads' | 'vicinais'>('all');
+  const [showMapTypeMenu, setShowMapTypeMenu] = useState(false);
   const activities = getMapActivities();
   const mapRef = useRef<any>(null);
   const scale = useSharedValue(1);
+
+  const jobCount = activities.filter(a => a.type === 'job').length;
+  const workerCount = activities.filter(a => a.type === 'worker' || a.type === 'producer').length;
+  const roadCount = roadsKm140.length;
+  const vicinalCount = roadsKm140.filter(r => r.classification === 'ramal').length;
 
   const filteredActivities = activities.filter(a => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'jobs') return a.type === 'job';
     if (activeFilter === 'workers') return a.type === 'worker' || a.type === 'producer';
+    if (activeFilter === 'roads' || activeFilter === 'vicinais') return false;
     return true;
   });
 
   const filteredRoads = roadsKm140.filter(r => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'roads') return true;
+    if (activeFilter === 'vicinais') return r.classification === 'ramal';
     return false;
   });
+
+  const mapTypeLabels: Record<string, string> = {
+    standard: 'Padrao',
+    satellite: 'Satelite',
+    hybrid: 'Hibrido',
+    terrain: 'Terreno',
+  };
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -230,7 +245,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
           <View style={[styles.mapControls, { bottom: insets.bottom + Spacing.lg }]}>
             <Pressable
               style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
-              onPress={() => setMapType(prev => prev === 'standard' ? 'hybrid' : prev === 'hybrid' ? 'satellite' : 'standard')}
+              onPress={() => setShowMapTypeMenu(!showMapTypeMenu)}
             >
               <Feather name="layers" size={20} color={colors.text} />
             </Pressable>
@@ -242,14 +257,45 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             </Pressable>
           </View>
 
+          {showMapTypeMenu && (
+            <View style={[styles.mapTypeMenu, { backgroundColor: colors.backgroundSecondary, bottom: insets.bottom + Spacing.lg + 100 }]}>
+              <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.sm }}>Tipo de Mapa</ThemedText>
+              {(['standard', 'satellite', 'hybrid', 'terrain'] as const).map(type => (
+                <Pressable
+                  key={type}
+                  style={[
+                    styles.mapTypeOption,
+                    mapType === type && { backgroundColor: colors.primary + '20' }
+                  ]}
+                  onPress={() => {
+                    setMapType(type);
+                    setShowMapTypeMenu(false);
+                  }}
+                >
+                  <Feather 
+                    name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : type === 'hybrid' ? 'layers' : 'triangle'} 
+                    size={16} 
+                    color={mapType === type ? colors.primary : colors.textSecondary} 
+                  />
+                  <ThemedText type="small" style={{ marginLeft: Spacing.sm, color: mapType === type ? colors.primary : colors.text, fontWeight: mapType === type ? '600' : '400' }}>
+                    {mapTypeLabels[type]}
+                  </ThemedText>
+                  {mapType === type && (
+                    <Feather name="check" size={16} color={colors.primary} style={{ marginLeft: 'auto' }} />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
+
           <View style={[styles.filterBar, { top: insets.top + 60 }]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
               {[
-                { id: 'all', label: 'Tudo', icon: 'grid' },
-                { id: 'jobs', label: 'Vagas', icon: 'briefcase' },
-                { id: 'workers', label: 'Gente', icon: 'users' },
-                { id: 'roads', label: 'Estradas', icon: 'navigation' },
-                { id: 'vicinais', label: 'Vicinais', icon: 'map-pin' }
+                { id: 'all', label: 'Tudo', icon: 'grid', count: null },
+                { id: 'jobs', label: 'Vagas', icon: 'briefcase', count: jobCount },
+                { id: 'workers', label: 'Gente', icon: 'users', count: workerCount },
+                { id: 'roads', label: 'Estradas', icon: 'navigation', count: roadCount },
+                { id: 'vicinais', label: 'Vicinais', icon: 'git-branch', count: vicinalCount }
               ].map(filter => (
                 <Pressable
                   key={filter.id}
@@ -263,13 +309,25 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
                   <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary, marginLeft: 6 }}>
                     {filter.label}
                   </ThemedText>
+                  {filter.count !== null && (
+                    <View style={[styles.filterCount, { backgroundColor: activeFilter === filter.id ? 'rgba(255,255,255,0.3)' : colors.primary + '20' }]}>
+                      <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.primary, fontSize: 10, fontWeight: '700' }}>
+                        {filter.count}
+                      </ThemedText>
+                    </View>
+                  )}
                 </Pressable>
               ))}
             </ScrollView>
           </View>
 
           <View style={[styles.legend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
-            <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Legenda</ThemedText>
+            <View style={styles.legendHeader}>
+              <ThemedText type="small" style={{ fontWeight: '700' }}>Legenda</ThemedText>
+              <View style={[styles.mapTypeBadge, { backgroundColor: colors.primary + '20' }]}>
+                <ThemedText type="small" style={{ color: colors.primary, fontSize: 10 }}>{mapTypeLabels[mapType]}</ThemedText>
+              </View>
+            </View>
             <View style={styles.legendRow}>
               <View style={[styles.legendLine, { backgroundColor: '#ef4444' }]} />
               <ThemedText type="small">BR-230 Transamazonica</ThemedText>
@@ -277,6 +335,18 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             <View style={styles.legendRow}>
               <View style={[styles.legendLine, { backgroundColor: '#22c55e' }]} />
               <ThemedText type="small">Vicinais</ThemedText>
+            </View>
+            <View style={styles.legendRow}>
+              <View style={[styles.markerLegend, { backgroundColor: colors.primary }]}>
+                <Feather name="briefcase" size={10} color="#FFFFFF" />
+              </View>
+              <ThemedText type="small">Trabalhos</ThemedText>
+            </View>
+            <View style={styles.legendRow}>
+              <View style={[styles.markerLegend, { backgroundColor: colors.accent }]}>
+                <Feather name="user" size={10} color="#FFFFFF" />
+              </View>
+              <ThemedText type="small">Prestadores</ThemedText>
             </View>
           </View>
         </View>
@@ -381,6 +451,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
   },
+  legendHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -391,6 +467,19 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 1.5,
     marginRight: Spacing.sm,
+  },
+  markerLegend: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  mapTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   markerContainer: {
     width: 28,
@@ -422,5 +511,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  filterCount: {
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  mapTypeMenu: {
+    position: 'absolute',
+    right: Spacing.lg,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 160,
+  },
+  mapTypeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    marginTop: Spacing.xs,
   },
 });

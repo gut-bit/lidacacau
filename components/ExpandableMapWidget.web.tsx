@@ -105,6 +105,12 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
     </View>
   );
 
+  const mapModeLabels: Record<string, string> = {
+    mapnik: 'Padrao',
+    cycle: 'Ciclovias',
+    transport: 'Transporte',
+  };
+
   const renderMapTab = () => (
     <View style={styles.fullMapContainer}>
       <iframe
@@ -116,20 +122,31 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         }}
         title="Mapa Rural Connect - km 140"
       />
-      <View style={[styles.mapControls, { bottom: Spacing.lg }]}>
-        <Pressable
-          style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
-          onPress={() => setMapMode(prev => prev === 'mapnik' ? 'cycle' : prev === 'cycle' ? 'transport' : 'mapnik')}
-        >
-          <Feather name="layers" size={20} color={colors.text} />
-        </Pressable>
+      <View style={[styles.mapLayerSelector, { top: Spacing.md, backgroundColor: colors.backgroundSecondary }]}>
+        <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Camadas</ThemedText>
+        <View style={styles.layerButtons}>
+          {(['mapnik', 'cycle', 'transport'] as const).map(mode => (
+            <Pressable
+              key={mode}
+              style={[
+                styles.layerButton,
+                mapMode === mode && { backgroundColor: colors.primary }
+              ]}
+              onPress={() => setMapMode(mode)}
+            >
+              <ThemedText type="small" style={{ color: mapMode === mode ? '#FFFFFF' : colors.textSecondary, fontSize: 11 }}>
+                {mapModeLabels[mode]}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
       </View>
       <View style={[styles.mapLegend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
         <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.xs }}>
           km 140 - Vila Alvorada
         </ThemedText>
         <ThemedText type="small" style={{ color: colors.textSecondary }}>
-          Uruara, Para
+          Uruara, Para | {mapModeLabels[mapMode]}
         </ThemedText>
       </View>
     </View>
@@ -437,5 +454,24 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: Spacing['2xl'],
+  },
+  mapLayerSelector: {
+    position: 'absolute',
+    right: Spacing.lg,
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  layerButtons: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  layerButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
   },
 });
