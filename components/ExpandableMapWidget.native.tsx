@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { roadsKm140, km140Center } from '@/data/roads-km140';
+import { getMapActivities } from '@/data/sampleData';
 
 let MapView: any = null;
 let Polyline: any = null;
@@ -34,6 +35,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
+  const activities = getMapActivities();
   const mapRef = useRef<any>(null);
   const scale = useSharedValue(1);
 
@@ -149,6 +151,18 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             strokeWidth={3}
             lineDashPattern={road.classification === 'ramal' ? [5, 5] : undefined}
           />
+        ))}
+        {activities.map(activity => (
+          <Marker
+            key={activity.id}
+            coordinate={{ latitude: activity.latitude, longitude: activity.longitude }}
+            title={activity.title}
+            description={activity.description}
+          >
+            <View style={[styles.markerContainer, { backgroundColor: activity.type === 'demand' ? colors.primary : colors.accent }]}>
+              <Feather name={activity.type === 'demand' ? 'briefcase' : 'user'} size={14} color="#FFFFFF" />
+            </View>
+          </Marker>
         ))}
         <Marker
           coordinate={{ latitude: km140Center.latitude, longitude: km140Center.longitude }}
@@ -331,5 +345,14 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 1.5,
     marginRight: Spacing.sm,
+  },
+  markerContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
