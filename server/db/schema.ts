@@ -266,3 +266,146 @@ export const cocoaPriceSubmissionsRelations = relations(cocoaPriceSubmissions, (
   submitter: one(users, { fields: [cocoaPriceSubmissions.submittedBy], references: [users.id] }),
   verifier: one(users, { fields: [cocoaPriceSubmissions.verifiedBy], references: [users.id] }),
 }));
+
+// ============================================
+// RURAL CONNECT INTEGRATION - COMUNIDADE
+// ============================================
+
+// Types for Rural Connect entities
+export type OccurrenceType = 'electrical' | 'road' | 'bridge' | 'social' | 'theft' | 'other';
+export type OccurrenceStatus = 'open' | 'in_progress' | 'resolved';
+export type RoadClassification = 'principal' | 'ramal';
+export type TrafegabilidadeEstado = 'boa' | 'regular' | 'ruim' | 'intransitavel';
+export type AlertType = 'ibama' | 'icmbio' | 'policia_ambiental' | 'sema' | 'outro';
+export type AlertStatus = 'active' | 'expired' | 'cancelled';
+
+// Vicinais (Communities/Rural Roads)
+export const vicinais = pgTable('vicinais', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  nome: varchar('nome', { length: 255 }).notNull(),
+  descricao: text('descricao'),
+  whatsappLink: text('whatsapp_link'),
+  facebookLink: text('facebook_link'),
+  instagramLink: text('instagram_link'),
+  latitude: decimal('latitude', { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }).notNull(),
+  cidade: varchar('cidade', { length: 100 }).default('Uruara'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Roads (Estradas com coordenadas para mapa)
+export const roads = pgTable('roads', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  nome: varchar('nome', { length: 255 }).notNull(),
+  classification: varchar('classification', { length: 20 }).notNull().default('ramal'),
+  coordinates: jsonb('coordinates').notNull(), // Array of [lat, lng] pairs
+  color: varchar('color', { length: 20 }).default('#2563eb'),
+  vicinalId: uuid('vicinal_id').references(() => vicinais.id, { onDelete: 'set null' }),
+  trafegabilidade: varchar('trafegabilidade', { length: 20 }).default('regular'),
+  trafegabilidadeDetalhe: text('trafegabilidade_detalhe'),
+  agriculturaPrincipal: varchar('agricultura_principal', { length: 100 }),
+  comprimentoMetros: decimal('comprimento_metros', { precision: 12, scale: 2 }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Occurrences (Infrastructure Problems)
+export const occurrences = pgTable('occurrences', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  descricao: text('descricao').notNull(),
+  tipo: varchar('tipo', { length: 20 }).notNull(), // electrical, road, bridge, social, theft, other
+  status: varchar('status', { length: 20 }).default('open'), // open, in_progress, resolved
+  vicinalId: uuid('vicinal_id').references(() => vicinais.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  roadId: uuid('road_id').references(() => roads.id, { onDelete: 'set null' }),
+  latitude: decimal('latitude', { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }).notNull(),
+  fotos: text('fotos').array(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  resolvedBy: uuid('resolved_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Occurrence Comments
+export const occurrenceComments = pgTable('occurrence_comments', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  occurrenceId: uuid('occurrence_id').notNull().references(() => occurrences.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userName: varchar('user_name', { length: 255 }).notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Petitions (Abaixo-assinados)
+export const petitions = pgTable('petitions', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  descricao: text('descricao').notNull(),
+  occurrenceId: uuid('occurrence_id').references(() => occurrences.id, { onDelete: 'set null' }),
+  vicinalId: uuid('vicinal_id').references(() => vicinais.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  fotos: text('fotos').array(),
+  targetSignatures: integer('target_signatures').default(50),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Petition Signatures
+export const signatures = pgTable('signatures', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  petitionId: uuid('petition_id').notNull().references(() => petitions.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  signedAt: timestamp('signed_at', { withTimezone: true }).defaultNow(),
+});
+
+// Fiscalization Alerts
+export const fiscalizationAlerts = pgTable('fiscalization_alerts', {
+  id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
+  vicinalId: uuid('vicinal_id').references(() => vicinais.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  tipo: varchar('tipo', { length: 30 }).notNull(), // ibama, icmbio, policia_ambiental, sema, outro
+  descricao: text('descricao'),
+  direcao: varchar('direcao', { length: 100 }),
+  veiculos: varchar('veiculos', { length: 255 }),
+  status: varchar('status', { length: 20 }).default('active'), // active, expired, cancelled
+  latitude: decimal('latitude', { precision: 10, scale: 7 }),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  cancelledBy: uuid('cancelled_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Relations for Rural Connect entities
+export const vicinaisRelations = relations(vicinais, ({ many }) => ({
+  roads: many(roads),
+  occurrences: many(occurrences),
+  petitions: many(petitions),
+  alerts: many(fiscalizationAlerts),
+}));
+
+export const roadsRelations = relations(roads, ({ one, many }) => ({
+  vicinal: one(vicinais, { fields: [roads.vicinalId], references: [vicinais.id] }),
+  creator: one(users, { fields: [roads.createdBy], references: [users.id] }),
+  occurrences: many(occurrences),
+}));
+
+export const occurrencesRelations = relations(occurrences, ({ one, many }) => ({
+  vicinal: one(vicinais, { fields: [occurrences.vicinalId], references: [vicinais.id] }),
+  user: one(users, { fields: [occurrences.userId], references: [users.id] }),
+  road: one(roads, { fields: [occurrences.roadId], references: [roads.id] }),
+  resolver: one(users, { fields: [occurrences.resolvedBy], references: [users.id] }),
+  comments: many(occurrenceComments),
+}));
+
+export const petitionsRelations = relations(petitions, ({ one, many }) => ({
+  vicinal: one(vicinais, { fields: [petitions.vicinalId], references: [vicinais.id] }),
+  user: one(users, { fields: [petitions.userId], references: [users.id] }),
+  occurrence: one(occurrences, { fields: [petitions.occurrenceId], references: [occurrences.id] }),
+  signatures: many(signatures),
+}));
+
+export const signaturesRelations = relations(signatures, ({ one }) => ({
+  petition: one(petitions, { fields: [signatures.petitionId], references: [petitions.id] }),
+  user: one(users, { fields: [signatures.userId], references: [users.id] }),
+}));

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, ScrollView } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator';
 import ShopListScreen from '@/screens/shared/ShopListScreen';
 import CacauParaStackNavigator from '@/navigation/CacauParaStackNavigator';
+import CommunityHomeScreen from '@/screens/community/CommunityHomeScreen';
 
-type Section = 'marketplace' | 'prices' | 'shop';
+type Section = 'marketplace' | 'prices' | 'shop' | 'community';
 
 export default function SectionTabNavigator() {
   const { isDark } = useTheme();
@@ -16,7 +17,8 @@ export default function SectionTabNavigator() {
 
   const sections: { id: Section; label: string }[] = [
     { id: 'marketplace', label: 'Lida Cacau' },
-    { id: 'prices', label: 'Preços cacau' },
+    { id: 'prices', label: 'Precos' },
+    { id: 'community', label: 'Comunidade' },
     { id: 'shop', label: 'LidaShop' },
   ];
 
@@ -26,6 +28,8 @@ export default function SectionTabNavigator() {
         return <UnifiedTabNavigator />;
       case 'prices':
         return <CacauParaStackNavigator />;
+      case 'community':
+        return <CommunityHomeScreen />;
       case 'shop':
         return <ShopListScreen />;
       default:
@@ -35,7 +39,12 @@ export default function SectionTabNavigator() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={[styles.sectionTabs, { backgroundColor: colors.backgroundDefault, borderBottomColor: colors.border }]}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={[styles.sectionTabs, { backgroundColor: colors.backgroundDefault, borderBottomColor: colors.border }]}
+        contentContainerStyle={styles.sectionTabsContent}
+      >
         {sections.map((section) => (
           <Pressable
             key={section.id}
@@ -61,7 +70,7 @@ export default function SectionTabNavigator() {
             </ThemedText>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <View style={{ flex: 1 }}>
         {renderContent()}
@@ -72,14 +81,15 @@ export default function SectionTabNavigator() {
 
 const styles = StyleSheet.create({
   sectionTabs: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
     borderBottomWidth: 1,
+  },
+  sectionTabsContent: {
+    flexDirection: 'row',
     paddingHorizontal: Spacing.md,
   },
   sectionTab: {
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
