@@ -180,7 +180,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             <View style={styles.headerLeft}>
               <Feather name="map-pin" size={16} color={colors.primary} />
               <ThemedText type="small" style={{ marginLeft: Spacing.xs, fontWeight: '600' }}>
-                Mapa da Regiao
+                Rural Connect - km 140
               </ThemedText>
             </View>
             <View style={styles.headerRight}>
@@ -202,7 +202,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.backgroundDefault }]}>
           <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
-            <ThemedText type="h4">Mapa Rural - km 140</ThemedText>
+            <ThemedText type="h4">Rural Connect: Mapa de Integracao</ThemedText>
             <Pressable onPress={() => setIsExpanded(false)} style={styles.closeButton}>
               <Feather name="x" size={24} color={colors.text} />
             </Pressable>

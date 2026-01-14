@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { roadsKm140, km140Center } from '@/data/roads-km140';
+import { getMapActivities } from '@/data/sampleData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
+  const activities = getMapActivities();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -43,25 +45,55 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
 
   const renderFullMap = () => (
     <View style={[styles.fullMapFallback, { backgroundColor: colors.backgroundDefault }]}>
-      <Feather name="map" size={64} color={colors.primary} />
-      <ThemedText type="h3" style={{ marginTop: Spacing.lg }}>Mapa da Regiao</ThemedText>
-      <ThemedText type="body" style={{ color: colors.textSecondary, marginTop: Spacing.sm, textAlign: 'center' }}>
-        km 140 - Vila Alvorada, Uruara/PA
-      </ThemedText>
-      <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.md }}>
-        {roadsKm140.length} estradas mapeadas
-      </ThemedText>
-      <View style={styles.roadList}>
-        {roadsKm140.slice(0, 6).map(road => (
-          <View key={road.id} style={styles.roadItem}>
-            <View style={[styles.roadDot, { backgroundColor: road.color || colors.primary }]} />
-            <ThemedText type="small" numberOfLines={1}>{road.name}</ThemedText>
-          </View>
-        ))}
+      <View style={styles.webMapContainer}>
+        {/* Placeholder for Interactive Web Map */}
+        <View style={[styles.mapPlaceholder, { backgroundColor: colors.backgroundSecondary }]}>
+          <Feather name="map" size={48} color={colors.primary} />
+          <ThemedText type="h4" style={{ marginTop: Spacing.md }}>Visualizacao Rural Connect</ThemedText>
+          <ThemedText type="small" style={{ color: colors.textSecondary, textAlign: 'center', marginTop: Spacing.xs }}>
+            Visualizando regiao do km 140 Vila Alvorada
+          </ThemedText>
+        </View>
       </View>
-      <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.lg, fontStyle: 'italic' }}>
-        Mapa interativo disponivel no app mobile
-      </ThemedText>
+
+      <View style={styles.contentContainer}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <ThemedText type="h2">{roadsKm140.length}</ThemedText>
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>Estradas</ThemedText>
+          </View>
+          <View style={styles.statItem}>
+            <ThemedText type="h2">{activities.filter(a => a.type === 'job').length}</ThemedText>
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>Trabalhos</ThemedText>
+          </View>
+          <View style={styles.statItem}>
+            <ThemedText type="h2">{activities.filter(a => a.type === 'worker').length}</ThemedText>
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>Prestadores</ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.roadList}>
+          <ThemedText type="body" style={{ fontWeight: '700', marginBottom: Spacing.sm }}>Estradas Principais</ThemedText>
+          {roadsKm140.slice(0, 6).map(road => (
+            <View key={road.id} style={styles.roadItem}>
+              <View style={[styles.roadDot, { backgroundColor: road.color || colors.primary }]} />
+              <ThemedText type="small" numberOfLines={1}>{road.name}</ThemedText>
+            </View>
+          ))}
+        </View>
+        
+        <View style={styles.legend}>
+          <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Legenda de Atividades</ThemedText>
+          <View style={styles.legendRow}>
+            <View style={[styles.markerDot, { backgroundColor: colors.primary }]} />
+            <ThemedText type="small">Demandas de Trabalho</ThemedText>
+          </View>
+          <View style={styles.legendRow}>
+            <View style={[styles.markerDot, { backgroundColor: colors.accent }]} />
+            <ThemedText type="small">Prestadores Disponiveis</ThemedText>
+          </View>
+        </View>
+      </View>
     </View>
   );
 
@@ -73,12 +105,12 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             <View style={styles.headerLeft}>
               <Feather name="map-pin" size={16} color={colors.primary} />
               <ThemedText type="small" style={{ marginLeft: Spacing.xs, fontWeight: '600' }}>
-                Mapa da Regiao
+                Rural Connect - km 140
               </ThemedText>
             </View>
             <View style={styles.headerRight}>
               <ThemedText type="small" style={{ color: colors.textSecondary }}>
-                {roadsKm140.length} estradas
+                {activities.length} atividades
               </ThemedText>
               <Feather name="maximize-2" size={14} color={colors.textSecondary} style={{ marginLeft: Spacing.xs }} />
             </View>
@@ -95,7 +127,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.backgroundDefault }]}>
           <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
-            <ThemedText type="h4">Mapa Rural - km 140</ThemedText>
+            <ThemedText type="h4">Rural Connect: Mapa de Integracao</ThemedText>
             <Pressable onPress={() => setIsExpanded(false)} style={styles.closeButton}>
               <Feather name="x" size={24} color={colors.text} />
             </Pressable>
@@ -155,14 +187,35 @@ const styles = StyleSheet.create({
   },
   fullMapFallback: {
     flex: 1,
+  },
+  webMapContainer: {
+    height: 250,
+    width: '100%',
+  },
+  mapPlaceholder: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
+  contentContainer: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
   roadList: {
-    marginTop: Spacing.lg,
     width: '100%',
-    maxWidth: 300,
+    marginBottom: Spacing.xl,
   },
   roadItem: {
     flexDirection: 'row',
@@ -173,6 +226,23 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    marginRight: Spacing.sm,
+  },
+  legend: {
+    marginTop: 'auto',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  markerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: Spacing.sm,
   },
 });

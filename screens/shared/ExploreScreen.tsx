@@ -109,10 +109,17 @@ export default function ExploreScreen() {
 
   const menuItems: MenuItemProps[] = [
     {
+      icon: 'map',
+      title: 'Rural Connect',
+      subtitle: 'Estradas e Infraestrutura Rural',
+      color: colors.primary,
+      onPress: () => navigation.navigate('CommunityHome'),
+    },
+    {
       icon: 'map-pin',
       title: 'Mapa de Atividades',
       subtitle: 'Veja o que esta acontecendo na regiao',
-      color: colors.primary,
+      color: colors.accent,
       onPress: () => {},
     },
     {
