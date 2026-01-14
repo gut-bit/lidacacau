@@ -21,7 +21,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'map' | 'roads' | 'activities'>('map');
-  const [mapMode, setMapMode] = useState<'roadmap' | 'satellite' | 'hybrid'>('hybrid');
+  const [mapMode, setMapMode] = useState<'roadmap' | 'satellite'>('satellite');
   const activities = getMapActivities();
   const scale = useSharedValue(1);
 
@@ -47,7 +47,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
     const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
-    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=10&maptype=hybrid`;
+    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=10&maptype=satellite`;
   }, []);
 
   const jobActivities = activities.filter(a => a.type === 'job');
@@ -109,7 +109,6 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const mapModeLabels: Record<string, string> = {
     roadmap: 'Padrao',
     satellite: 'Satelite',
-    hybrid: 'Hibrido',
   };
 
   const renderMapTab = () => (
@@ -126,7 +125,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
       <View style={[styles.mapLayerSelector, { top: Spacing.md, backgroundColor: colors.backgroundSecondary }]}>
         <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Tipo de Mapa</ThemedText>
         <View style={styles.layerButtons}>
-          {(['roadmap', 'satellite', 'hybrid'] as const).map(mode => (
+          {(['roadmap', 'satellite'] as const).map(mode => (
             <Pressable
               key={mode}
               style={[
