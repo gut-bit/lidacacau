@@ -39,6 +39,7 @@ import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel 
 import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { IntroVideoModal } from '@/components/IntroVideoModal';
+import { ExpandableMapWidget } from '@/components/ExpandableMapWidget';
 
 interface UserLocation {
   latitude: number;
@@ -1197,6 +1198,9 @@ export default function UnifiedHomeScreen() {
         {renderProfileHeader()}
         {renderLocationBanner()}
         {renderQuickStats()}
+        
+        {/* Interactive Map Widget */}
+        <ExpandableMapWidget />
         
         {/* Decorative branch divider */}
         <View style={styles.branchDividerContainer}>
