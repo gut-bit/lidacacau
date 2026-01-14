@@ -157,10 +157,9 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             key={activity.id}
             coordinate={{ latitude: activity.latitude, longitude: activity.longitude }}
             title={activity.title}
-            description={activity.description}
           >
-            <View style={[styles.markerContainer, { backgroundColor: activity.type === 'demand' ? colors.primary : colors.accent }]}>
-              <Feather name={activity.type === 'demand' ? 'briefcase' : 'user'} size={14} color="#FFFFFF" />
+            <View style={[styles.markerContainer, { backgroundColor: activity.type === 'job' ? colors.primary : colors.accent }]}>
+              <Feather name={activity.type === 'job' ? 'briefcase' : 'user'} size={14} color="#FFFFFF" />
             </View>
           </Marker>
         ))}
