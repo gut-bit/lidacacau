@@ -1311,15 +1311,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     marginBottom: Spacing.md,
   },
-  headerIcon: {
-    position: 'relative',
-  },
   notificationDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
   },
   logo: {
     width: 40,
@@ -1399,14 +1397,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   locationBanner: {
     flexDirection: 'row',
