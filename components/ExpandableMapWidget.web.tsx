@@ -39,15 +39,16 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const mapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
-    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=12&maptype=${mapMode}`;
+    if (mapMode === 'satellite') {
+      return `https://www.google.com/maps/@${lat},${lng},5000m/data=!3m1!1e3`;
+    }
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.15}%2C${lat - 0.1}%2C${lng + 0.15}%2C${lat + 0.1}&layer=mapnik&marker=${lat}%2C${lng}`;
   }, [mapMode]);
 
   const miniMapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
-    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=10&maptype=satellite`;
+    return `https://www.google.com/maps/@${lat},${lng},8000m/data=!3m1!1e3`;
   }, []);
 
   const jobActivities = activities.filter(a => a.type === 'job');
