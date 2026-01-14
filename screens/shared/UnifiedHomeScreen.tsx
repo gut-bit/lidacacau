@@ -1183,19 +1183,28 @@ export default function UnifiedHomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View style={styles.header}>
           <View style={styles.headerTop}>
             <Image
               source={require('@/assets/images/icon.png')}
               style={styles.logo}
               contentFit="contain"
             />
-            <ThemedText type="h2">LidaCacau</ThemedText>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="h2" style={{ color: colors.text }}>LidaCacau</ThemedText>
+              <ThemedText type="small" style={{ color: colors.textSecondary }}>Olá, {user?.name?.split(' ')[0] || 'Produtor'}</ThemedText>
+            </View>
+            <Pressable 
+              onPress={() => navigation.navigate('Notifications')}
+              style={[styles.headerIcon, { backgroundColor: colors.backgroundSecondary, padding: 8, borderRadius: 12 }]}
+            >
+              <Feather name="bell" size={20} color={colors.text} />
+              <View style={[styles.notificationDot, { backgroundColor: colors.error, position: 'absolute', top: 8, right: 8 }]} />
+            </Pressable>
           </View>
           {renderRoleSwitcher()}
         </View>
 
-        {renderProfileHeader()}
         {renderLocationBanner()}
         {renderQuickStats()}
         
@@ -1299,7 +1308,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    marginBottom: Spacing.lg,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  headerIcon: {
+    position: 'relative',
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   logo: {
     width: 40,
