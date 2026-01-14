@@ -169,20 +169,27 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
 
       <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Estradas Mapeadas</ThemedText>
       {roadsKm140.map(road => (
-        <View key={road.id} style={[styles.roadCard, { backgroundColor: colors.card }]}>
+        <Pressable 
+          key={road.id} 
+          style={[styles.roadCard, { backgroundColor: colors.backgroundSecondary }]}
+          onPress={() => {
+            setSelectedTab('map');
+            // In web version, we can't easily animate the iframe, but we can update the mapUrl if needed
+          }}
+        >
           <View style={[styles.roadIndicator, { backgroundColor: road.color || colors.primary }]} />
           <View style={styles.roadInfo}>
             <ThemedText type="body" style={{ fontWeight: '600' }}>{road.name}</ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary }}>
-              {road.classification === 'principal' ? 'Rodovia Principal' : 'Ramal'}
+              {road.classification === 'principal' ? 'Rodovia Principal' : 'Ramal/Vicinal'}
             </ThemedText>
           </View>
-          <View style={[styles.roadBadge, { backgroundColor: road.color + '20' || colors.primary + '20' }]}>
-            <ThemedText type="small" style={{ color: road.color || colors.primary, fontWeight: '600' }}>
+          <View style={[styles.roadBadge, { backgroundColor: (road.color || colors.primary) + '20' }]}>
+            <ThemedText type="small" style={{ color: road.color || colors.primary, fontWeight: '700', fontSize: 10 }}>
               {road.classification?.toUpperCase() || 'ESTRADA'}
             </ThemedText>
           </View>
-        </View>
+        </Pressable>
       ))}
     </ScrollView>
   );
