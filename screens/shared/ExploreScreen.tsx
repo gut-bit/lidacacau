@@ -113,7 +113,7 @@ export default function ExploreScreen() {
       title: 'Rural Connect',
       subtitle: 'Estradas e Infraestrutura Rural',
       color: colors.primary,
-      onPress: () => navigation.navigate('CommunityHome'),
+      onPress: () => navigation.navigate('CommunityHome' as any),
     },
     {
       icon: 'map-pin',
