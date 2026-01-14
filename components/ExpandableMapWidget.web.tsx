@@ -21,7 +21,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'map' | 'roads' | 'activities'>('map');
-  const [mapMode, setMapMode] = useState<'mapnik' | 'cycle' | 'transport'>('mapnik');
+  const [mapMode, setMapMode] = useState<'roadmap' | 'satellite' | 'hybrid'>('hybrid');
   const activities = getMapActivities();
   const scale = useSharedValue(1);
 
@@ -39,14 +39,15 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const mapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    const layer = mapMode === 'mapnik' ? 'mapnik' : mapMode === 'cycle' ? 'cycle' : 'transport';
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.15}%2C${lat - 0.1}%2C${lng + 0.15}%2C${lat + 0.1}&layer=${layer}&marker=${lat}%2C${lng}`;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
+    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=12&maptype=${mapMode}`;
   }, [mapMode]);
 
   const miniMapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.2}%2C${lat - 0.15}%2C${lng + 0.2}%2C${lat + 0.15}&layer=mapnik&marker=${lat}%2C${lng}`;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID || '';
+    return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${lat},${lng}&zoom=10&maptype=hybrid`;
   }, []);
 
   const jobActivities = activities.filter(a => a.type === 'job');
@@ -106,9 +107,9 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   );
 
   const mapModeLabels: Record<string, string> = {
-    mapnik: 'Padrao',
-    cycle: 'Ciclovias',
-    transport: 'Transporte',
+    roadmap: 'Padrao',
+    satellite: 'Satelite',
+    hybrid: 'Hibrido',
   };
 
   const renderMapTab = () => (
@@ -123,9 +124,9 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         title="Mapa Rural Connect - km 140"
       />
       <View style={[styles.mapLayerSelector, { top: Spacing.md, backgroundColor: colors.backgroundSecondary }]}>
-        <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Camadas</ThemedText>
+        <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Tipo de Mapa</ThemedText>
         <View style={styles.layerButtons}>
-          {(['mapnik', 'cycle', 'transport'] as const).map(mode => (
+          {(['roadmap', 'satellite', 'hybrid'] as const).map(mode => (
             <Pressable
               key={mode}
               style={[

@@ -35,7 +35,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('hybrid');
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
   const [activeFilter, setActiveFilter] = useState<'all' | 'jobs' | 'workers' | 'roads' | 'vicinais'>('all');
   const [showMapTypeMenu, setShowMapTypeMenu] = useState(false);
   const activities = getMapActivities();
@@ -66,7 +66,6 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
     standard: 'Padrao',
     satellite: 'Satelite',
     hybrid: 'Hibrido',
-    terrain: 'Terreno',
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -356,7 +355,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
               {showMapTypeMenu && (
                 <View style={[styles.mapTypeMenu, { backgroundColor: colors.backgroundSecondary, bottom: insets.bottom + Spacing.lg + 110 }]}>
                   <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.sm }}>Tipo de Mapa</ThemedText>
-                  {(['standard', 'satellite', 'hybrid', 'terrain'] as const).map(type => (
+                  {(['standard', 'satellite', 'hybrid'] as const).map(type => (
                     <Pressable
                       key={type}
                       style={[
@@ -369,7 +368,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
                       }}
                     >
                       <Feather 
-                        name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : type === 'hybrid' ? 'layers' : 'triangle'} 
+                        name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : 'layers'} 
                         size={16} 
                         color={mapType === type ? colors.primary : colors.textSecondary} 
                       />
