@@ -21,7 +21,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'map' | 'roads' | 'activities'>('map');
-  const [mapMode, setMapMode] = useState<'roadmap' | 'satellite'>('satellite');
+  const [mapMode, setMapMode] = useState<'roadmap'>('roadmap');
   const activities = getMapActivities();
   const scale = useSharedValue(1);
 
@@ -39,16 +39,13 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const mapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    if (mapMode === 'satellite') {
-      return `https://www.google.com/maps/@${lat},${lng},5000m/data=!3m1!1e3`;
-    }
     return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.15}%2C${lat - 0.1}%2C${lng + 0.15}%2C${lat + 0.1}&layer=mapnik&marker=${lat}%2C${lng}`;
-  }, [mapMode]);
+  }, []);
 
   const miniMapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    return `https://www.google.com/maps/@${lat},${lng},8000m/data=!3m1!1e3`;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.2}%2C${lat - 0.15}%2C${lng + 0.2}%2C${lat + 0.15}&layer=mapnik&marker=${lat}%2C${lng}`;
   }, []);
 
   const jobActivities = activities.filter(a => a.type === 'job');
@@ -107,10 +104,6 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
     </View>
   );
 
-  const mapModeLabels: Record<string, string> = {
-    roadmap: 'Padrao',
-    satellite: 'Satelite',
-  };
 
   const renderMapTab = () => (
     <View style={styles.fullMapContainer}>
@@ -124,30 +117,17 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         title="Mapa Rural Connect - km 140"
       />
       <View style={[styles.mapLayerSelector, { top: Spacing.md, backgroundColor: colors.backgroundSecondary }]}>
-        <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Tipo de Mapa</ThemedText>
-        <View style={styles.layerButtons}>
-          {(['roadmap', 'satellite'] as const).map(mode => (
-            <Pressable
-              key={mode}
-              style={[
-                styles.layerButton,
-                mapMode === mode && { backgroundColor: colors.primary }
-              ]}
-              onPress={() => setMapMode(mode)}
-            >
-              <ThemedText type="small" style={{ color: mapMode === mode ? '#FFFFFF' : colors.textSecondary, fontSize: 11 }}>
-                {mapModeLabels[mode]}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </View>
+        <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>km 140 - Uruara/PA</ThemedText>
+        <ThemedText type="small" style={{ color: colors.textSecondary, fontSize: 10 }}>
+          Satelite disponivel no app mobile
+        </ThemedText>
       </View>
       <View style={[styles.mapLegend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
         <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.xs }}>
           km 140 - Vila Alvorada
         </ThemedText>
         <ThemedText type="small" style={{ color: colors.textSecondary }}>
-          Uruara, Para | {mapModeLabels[mapMode]}
+          Uruara, Para
         </ThemedText>
       </View>
     </View>
