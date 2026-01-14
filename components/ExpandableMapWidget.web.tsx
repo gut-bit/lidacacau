@@ -21,6 +21,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'map' | 'roads' | 'activities'>('map');
+  const [mapMode, setMapMode] = useState<'mapnik' | 'cycle' | 'transport'>('mapnik');
   const activities = getMapActivities();
   const scale = useSharedValue(1);
 
@@ -38,8 +39,9 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const mapUrl = useMemo(() => {
     const lat = km140Center.latitude;
     const lng = km140Center.longitude;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.15}%2C${lat - 0.1}%2C${lng + 0.15}%2C${lat + 0.1}&layer=mapnik&marker=${lat}%2C${lng}`;
-  }, []);
+    const layer = mapMode === 'mapnik' ? 'mapnik' : mapMode === 'cycle' ? 'cycle' : 'transport';
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.15}%2C${lat - 0.1}%2C${lng + 0.15}%2C${lat + 0.1}&layer=${layer}&marker=${lat}%2C${lng}`;
+  }, [mapMode]);
 
   const miniMapUrl = useMemo(() => {
     const lat = km140Center.latitude;
@@ -114,6 +116,14 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         }}
         title="Mapa Rural Connect - km 140"
       />
+      <View style={[styles.mapControls, { bottom: Spacing.lg }]}>
+        <Pressable
+          style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
+          onPress={() => setMapMode(prev => prev === 'mapnik' ? 'cycle' : prev === 'cycle' ? 'transport' : 'mapnik')}
+        >
+          <Feather name="layers" size={20} color={colors.text} />
+        </Pressable>
+      </View>
       <View style={[styles.mapLegend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
         <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.xs }}>
           km 140 - Vila Alvorada
@@ -350,6 +360,23 @@ const styles = StyleSheet.create({
     left: Spacing.lg,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
+  },
+  mapControls: {
+    position: 'absolute',
+    right: Spacing.lg,
+    bottom: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  controlButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   listContainer: {
     flex: 1,

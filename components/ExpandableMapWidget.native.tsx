@@ -35,9 +35,24 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'jobs' | 'workers' | 'roads' | 'vicinais'>('all');
   const activities = getMapActivities();
   const mapRef = useRef<any>(null);
   const scale = useSharedValue(1);
+
+  const filteredActivities = activities.filter(a => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'jobs') return a.type === 'job';
+    if (activeFilter === 'workers') return a.type === 'worker' || a.type === 'producer';
+    return true;
+  });
+
+  const filteredRoads = roadsKm140.filter(r => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'roads') return true;
+    return false;
+  });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -141,9 +156,9 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={true}
-        mapType="hybrid"
+        mapType={mapType}
       >
-        {roadsKm140.map(road => (
+        {filteredRoads.map(road => (
           <Polyline
             key={road.id}
             coordinates={road.coordinates.map(c => ({ latitude: c[0], longitude: c[1] }))}
@@ -152,7 +167,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
             lineDashPattern={road.classification === 'ramal' ? [5, 5] : undefined}
           />
         ))}
-        {activities.map(activity => (
+        {filteredActivities.map(activity => (
           <Marker
             key={activity.id}
             coordinate={{ latitude: activity.latitude, longitude: activity.longitude }}
@@ -215,10 +230,42 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
           <View style={[styles.mapControls, { bottom: insets.bottom + Spacing.lg }]}>
             <Pressable
               style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
+              onPress={() => setMapType(prev => prev === 'standard' ? 'hybrid' : prev === 'hybrid' ? 'satellite' : 'standard')}
+            >
+              <Feather name="layers" size={20} color={colors.text} />
+            </Pressable>
+            <Pressable
+              style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
               onPress={centerOnLocation}
             >
               <Feather name="crosshair" size={20} color={colors.text} />
             </Pressable>
+          </View>
+
+          <View style={[styles.filterBar, { top: insets.top + 60 }]}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+              {[
+                { id: 'all', label: 'Tudo', icon: 'grid' },
+                { id: 'jobs', label: 'Vagas', icon: 'briefcase' },
+                { id: 'workers', label: 'Gente', icon: 'users' },
+                { id: 'roads', label: 'Estradas', icon: 'navigation' },
+                { id: 'vicinais', label: 'Vicinais', icon: 'map-pin' }
+              ].map(filter => (
+                <Pressable
+                  key={filter.id}
+                  onPress={() => setActiveFilter(filter.id as any)}
+                  style={[
+                    styles.filterChip,
+                    { backgroundColor: activeFilter === filter.id ? colors.primary : colors.backgroundSecondary }
+                  ]}
+                >
+                  <Feather name={filter.icon as any} size={14} color={activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary} />
+                  <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary, marginLeft: 6 }}>
+                    {filter.label}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
 
           <View style={[styles.legend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
@@ -353,5 +400,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  filterBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  filterScroll: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
