@@ -202,6 +202,58 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
     );
   };
 
+  const renderRoadsList = () => (
+    <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}>
+          <Feather name="navigation" size={24} color={colors.primary} />
+          <ThemedText type="h3" style={{ marginTop: Spacing.xs }}>{roadsKm140.length}</ThemedText>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>Estradas</ThemedText>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: colors.accent + '15' }]}>
+          <Feather name="git-branch" size={24} color={colors.accent} />
+          <ThemedText type="h3" style={{ marginTop: Spacing.xs }}>{vicinalCount}</ThemedText>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>Vicinais</ThemedText>
+        </View>
+      </View>
+
+      <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Estradas Mapeadas</ThemedText>
+      {roadsKm140.map(road => (
+        <Pressable 
+          key={road.id} 
+          style={[styles.roadCard, { backgroundColor: colors.backgroundSecondary }]}
+          onPress={() => {
+            if (mapRef.current) {
+              const midPoint = road.coordinates[Math.floor(road.coordinates.length / 2)];
+              mapRef.current.animateToRegion({
+                latitude: midPoint[0],
+                longitude: midPoint[1],
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              }, 1000);
+              // Switch to map tab? We don't have tabs here yet, but let's keep it clean
+            }
+          }}
+        >
+          <View style={[styles.roadIndicator, { backgroundColor: road.color || colors.primary }]} />
+          <View style={styles.roadInfo}>
+            <ThemedText type="body" style={{ fontWeight: '600' }}>{road.name}</ThemedText>
+            <ThemedText type="small" style={{ color: colors.textSecondary }}>
+              {road.classification === 'principal' ? 'Rodovia Principal' : 'Ramal/Vicinal'}
+            </ThemedText>
+          </View>
+          <View style={[styles.roadBadge, { backgroundColor: (road.color || colors.primary) + '20' }]}>
+            <ThemedText type="small" style={{ color: road.color || colors.primary, fontWeight: '700', fontSize: 10 }}>
+              {road.classification?.toUpperCase() || 'ESTRADA'}
+            </ThemedText>
+          </View>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+
+  const [activeTab, setActiveTab] = useState<'map' | 'roads'>('map');
+
   return (
     <>
       <Animated.View style={animatedStyle}>
@@ -232,127 +284,123 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.backgroundDefault }]}>
           <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
-            <ThemedText type="h4">Rural Connect: Mapa de Integracao</ThemedText>
+            <View style={styles.tabContainer}>
+              <Pressable 
+                onPress={() => setActiveTab('map')}
+                style={[styles.tabItem, activeTab === 'map' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+              >
+                <ThemedText style={{ color: activeTab === 'map' ? colors.primary : colors.textSecondary, fontWeight: '600' }}>Mapa</ThemedText>
+              </Pressable>
+              <Pressable 
+                onPress={() => setActiveTab('roads')}
+                style={[styles.tabItem, activeTab === 'roads' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+              >
+                <ThemedText style={{ color: activeTab === 'roads' ? colors.primary : colors.textSecondary, fontWeight: '600' }}>Estradas</ThemedText>
+              </Pressable>
+            </View>
             <Pressable onPress={() => setIsExpanded(false)} style={styles.closeButton}>
               <Feather name="x" size={24} color={colors.text} />
             </Pressable>
           </View>
           
           <View style={styles.mapContainer}>
-            {renderFullMap()}
+            {activeTab === 'map' ? (
+              <>
+                {renderFullMap()}
+                <View style={[styles.filterBar, { top: 10 }]}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                    {[
+                      { id: 'all', label: 'Tudo', icon: 'grid', count: null },
+                      { id: 'jobs', label: 'Vagas', icon: 'briefcase', count: jobCount },
+                      { id: 'workers', label: 'Gente', icon: 'users', count: workerCount },
+                      { id: 'roads', label: 'Estradas', icon: 'navigation', count: roadCount },
+                      { id: 'vicinais', label: 'Vicinais', icon: 'git-branch', count: vicinalCount }
+                    ].map(filter => (
+                      <Pressable
+                        key={filter.id}
+                        onPress={() => setActiveFilter(filter.id as any)}
+                        style={[
+                          styles.filterChip,
+                          { backgroundColor: activeFilter === filter.id ? colors.primary : colors.backgroundSecondary }
+                        ]}
+                      >
+                        <Feather name={filter.icon as any} size={14} color={activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary} />
+                        <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary, marginLeft: 6 }}>
+                          {filter.label}
+                        </ThemedText>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              </>
+            ) : renderRoadsList()}
           </View>
 
-          <View style={[styles.mapControls, { bottom: insets.bottom + Spacing.lg }]}>
-            <Pressable
-              style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
-              onPress={() => setShowMapTypeMenu(!showMapTypeMenu)}
-            >
-              <Feather name="layers" size={20} color={colors.text} />
-            </Pressable>
-            <Pressable
-              style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
-              onPress={centerOnLocation}
-            >
-              <Feather name="crosshair" size={20} color={colors.text} />
-            </Pressable>
-          </View>
-
-          {showMapTypeMenu && (
-            <View style={[styles.mapTypeMenu, { backgroundColor: colors.backgroundSecondary, bottom: insets.bottom + Spacing.lg + 100 }]}>
-              <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.sm }}>Tipo de Mapa</ThemedText>
-              {(['standard', 'satellite', 'hybrid', 'terrain'] as const).map(type => (
+          {activeTab === 'map' && (
+            <>
+              <View style={[styles.mapControls, { bottom: insets.bottom + Spacing.lg }]}>
                 <Pressable
-                  key={type}
-                  style={[
-                    styles.mapTypeOption,
-                    mapType === type && { backgroundColor: colors.primary + '20' }
-                  ]}
-                  onPress={() => {
-                    setMapType(type);
-                    setShowMapTypeMenu(false);
-                  }}
+                  style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
+                  onPress={() => setShowMapTypeMenu(!showMapTypeMenu)}
                 >
-                  <Feather 
-                    name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : type === 'hybrid' ? 'layers' : 'triangle'} 
-                    size={16} 
-                    color={mapType === type ? colors.primary : colors.textSecondary} 
-                  />
-                  <ThemedText type="small" style={{ marginLeft: Spacing.sm, color: mapType === type ? colors.primary : colors.text, fontWeight: mapType === type ? '600' : '400' }}>
-                    {mapTypeLabels[type]}
-                  </ThemedText>
-                  {mapType === type && (
-                    <Feather name="check" size={16} color={colors.primary} style={{ marginLeft: 'auto' }} />
-                  )}
+                  <Feather name="layers" size={20} color={colors.text} />
                 </Pressable>
-              ))}
-            </View>
-          )}
-
-          <View style={[styles.filterBar, { top: insets.top + 60 }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-              {[
-                { id: 'all', label: 'Tudo', icon: 'grid', count: null },
-                { id: 'jobs', label: 'Vagas', icon: 'briefcase', count: jobCount },
-                { id: 'workers', label: 'Gente', icon: 'users', count: workerCount },
-                { id: 'roads', label: 'Estradas', icon: 'navigation', count: roadCount },
-                { id: 'vicinais', label: 'Vicinais', icon: 'git-branch', count: vicinalCount }
-              ].map(filter => (
                 <Pressable
-                  key={filter.id}
-                  onPress={() => setActiveFilter(filter.id as any)}
-                  style={[
-                    styles.filterChip,
-                    { backgroundColor: activeFilter === filter.id ? colors.primary : colors.backgroundSecondary }
-                  ]}
+                  style={[styles.controlButton, { backgroundColor: colors.backgroundSecondary }]}
+                  onPress={centerOnLocation}
                 >
-                  <Feather name={filter.icon as any} size={14} color={activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary} />
-                  <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.textSecondary, marginLeft: 6 }}>
-                    {filter.label}
-                  </ThemedText>
-                  {filter.count !== null && (
-                    <View style={[styles.filterCount, { backgroundColor: activeFilter === filter.id ? 'rgba(255,255,255,0.3)' : colors.primary + '20' }]}>
-                      <ThemedText type="small" style={{ color: activeFilter === filter.id ? '#FFFFFF' : colors.primary, fontSize: 10, fontWeight: '700' }}>
-                        {filter.count}
+                  <Feather name="crosshair" size={20} color={colors.text} />
+                </Pressable>
+              </View>
+
+              {showMapTypeMenu && (
+                <View style={[styles.mapTypeMenu, { backgroundColor: colors.backgroundSecondary, bottom: insets.bottom + Spacing.lg + 110 }]}>
+                  <ThemedText type="small" style={{ fontWeight: '700', marginBottom: Spacing.sm }}>Tipo de Mapa</ThemedText>
+                  {(['standard', 'satellite', 'hybrid', 'terrain'] as const).map(type => (
+                    <Pressable
+                      key={type}
+                      style={[
+                        styles.mapTypeOption,
+                        mapType === type && { backgroundColor: colors.primary + '20' }
+                      ]}
+                      onPress={() => {
+                        setMapType(type);
+                        setShowMapTypeMenu(false);
+                      }}
+                    >
+                      <Feather 
+                        name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : type === 'hybrid' ? 'layers' : 'triangle'} 
+                        size={16} 
+                        color={mapType === type ? colors.primary : colors.textSecondary} 
+                      />
+                      <ThemedText type="small" style={{ marginLeft: Spacing.sm, color: mapType === type ? colors.primary : colors.text, fontWeight: mapType === type ? '600' : '400' }}>
+                        {mapTypeLabels[type]}
                       </ThemedText>
-                    </View>
-                  )}
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
 
-          <View style={[styles.legend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
-            <View style={styles.legendHeader}>
-              <ThemedText type="small" style={{ fontWeight: '700' }}>Legenda</ThemedText>
-              <View style={[styles.mapTypeBadge, { backgroundColor: colors.primary + '20' }]}>
-                <ThemedText type="small" style={{ color: colors.primary, fontSize: 10 }}>{mapTypeLabels[mapType]}</ThemedText>
+              <View style={[styles.legend, { backgroundColor: colors.backgroundSecondary + 'E6' }]}>
+                <View style={styles.legendHeader}>
+                  <ThemedText type="small" style={{ fontWeight: '700' }}>Legenda</ThemedText>
+                </View>
+                <View style={styles.legendRow}>
+                  <View style={[styles.legendLine, { backgroundColor: '#ef4444' }]} />
+                  <ThemedText type="small">Rodovia Principal</ThemedText>
+                </View>
+                <View style={styles.legendRow}>
+                  <View style={[styles.legendLine, { backgroundColor: '#22c55e' }]} />
+                  <ThemedText type="small">Ramais/Vicinais</ThemedText>
+                </View>
               </View>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendLine, { backgroundColor: '#ef4444' }]} />
-              <ThemedText type="small">BR-230 Transamazonica</ThemedText>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendLine, { backgroundColor: '#22c55e' }]} />
-              <ThemedText type="small">Vicinais</ThemedText>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={[styles.markerLegend, { backgroundColor: colors.primary }]}>
-                <Feather name="briefcase" size={10} color="#FFFFFF" />
-              </View>
-              <ThemedText type="small">Trabalhos</ThemedText>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={[styles.markerLegend, { backgroundColor: colors.accent }]}>
-                <Feather name="user" size={10} color="#FFFFFF" />
-              </View>
-              <ThemedText type="small">Prestadores</ThemedText>
-            </View>
-          </View>
+            </>
+          )}
         </View>
       </Modal>
     </>
   );
+}
 }
 
 const styles = StyleSheet.create({
@@ -539,5 +587,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.sm,
     marginTop: Spacing.xs,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  tabItem: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContent: {
+    padding: Spacing.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  roadCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  roadIndicator: {
+    width: 4,
+    height: 40,
+    borderRadius: 2,
+    marginRight: Spacing.md,
+  },
+  roadInfo: {
+    flex: 1,
+  },
+  roadBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
   },
 });
