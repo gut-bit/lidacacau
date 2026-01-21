@@ -24,7 +24,7 @@ export interface WorkOrderPayment {
   processedAt?: string;
 }
 
-export type PaymentTermType = 
+export type PaymentTermType =
   | 'per_unit'       // Por unidade (planta, saca, hectare)
   | 'per_hour'       // Por hora trabalhada
   | 'per_day'        // Por diária
@@ -582,7 +582,7 @@ export interface QuizAttempt {
   createdAt: string;
 }
 
-export type PixPaymentStatus = 
+export type PixPaymentStatus =
   | 'pending'
   | 'paid'
   | 'expired'
@@ -888,7 +888,7 @@ export interface ActiveUsersStats {
 // SISTEMA DE ANALYTICS E LOGS
 // ==========================================
 
-export type AnalyticsEventType = 
+export type AnalyticsEventType =
   | 'app_open'
   | 'login'
   | 'logout'
@@ -985,7 +985,7 @@ export interface UserSearchResult {
 // NOTIFICACOES - GENTE DA LIDA
 // ==========================================
 
-export type NotificationType = 
+export type NotificationType =
   | 'new_user'            // Novo usuario se cadastrou
   | 'friend_request'      // Pedido de amizade
   | 'friend_accepted'     // Amizade aceita
@@ -1011,7 +1011,7 @@ export interface AppNotification {
 // ESQUADRAO DA LIDA - GRUPOS DE TRABALHO
 // ==========================================
 
-export type SquadStatus = 
+export type SquadStatus =
   | 'proposed'        // Proposta de criacao (aguardando aprovacao)
   | 'recruiting'      // Recrutando membros
   | 'active'          // Equipe formada e ativa
@@ -1019,7 +1019,7 @@ export type SquadStatus =
   | 'completed'       // Trabalho concluido
   | 'disbanded';      // Equipe dissolvida
 
-export type SquadMemberStatus = 
+export type SquadMemberStatus =
   | 'invited'         // Convidado (aguardando resposta)
   | 'accepted'        // Aceitou o convite
   | 'declined'        // Recusou o convite
@@ -1088,7 +1088,7 @@ export interface SquadProposal {
 // SISTEMA DE PROPRIEDADES RURAIS
 // ==========================================
 
-export type PropertyVerificationStatus = 
+export type PropertyVerificationStatus =
   | 'none'              // Sem verificacao
   | 'pending'           // Documentos enviados, aguardando analise
   | 'verified'          // Propriedade verificada com selo
@@ -1122,6 +1122,30 @@ export interface TalhaoServiceTag {
   createdAt: string;
 }
 
+// Registro de colheita
+export interface HarvestLog {
+  id: string;
+  talhaoId: string;
+  date: string;       // ISO date
+  weightKg: number;   // Peso
+  type: 'wet' | 'dry'; // 'wet' = Cacau Baba (recém colhido), 'dry' = Amêndoa Seca
+  quality?: string;   // Classificacao
+  priceSold?: number; // Se vendido, valor total
+  notes?: string;
+  createdAt: string;
+}
+
+// Registro de despesa (insumo ou servico)
+export interface ExpenseLog {
+  id: string;
+  talhaoId: string;
+  date: string;
+  category: 'labor' | 'input' | 'equipment' | 'other';
+  amount: number;
+  description: string;
+  createdAt: string;
+}
+
 // Talhao - Subdivisao da propriedade
 export interface Talhao {
   id: string;
@@ -1135,6 +1159,8 @@ export interface Talhao {
   harvestDate?: string;           // Previsao de colheita
   visibility: TalhaoVisibility;   // Publico ou privado
   serviceTags: TalhaoServiceTag[]; // Tags de servico pendentes
+  harvestLogs?: HarvestLog[];     // Historico de colheitas
+  expenseLogs?: ExpenseLog[];     // Historico de despesas
   photos?: string[];              // Fotos do talhao
   notes?: string;
   createdAt: string;
@@ -1165,7 +1191,7 @@ export interface PropertyDetail {
   ownerId: string;                // ID do produtor dono
   name: string;                   // Nome da propriedade
   description?: string;
-  
+
   // Localizacao
   address: string;                // Endereco completo
   city?: string;
@@ -1173,33 +1199,33 @@ export interface PropertyDetail {
   cep?: string;
   latitude: number;
   longitude: number;
-  
+
   // Geometria
   polygon?: PolygonGeometry;      // Poligono da propriedade inteira
   areaHectares?: number;          // Area total
-  
+
   // Subdivisoes
   talhoes: Talhao[];              // Lista de talhoes
-  
+
   // Documentacao
   documents: PropertyDocument[];   // Documentos da propriedade
   carNumber?: string;             // Numero do CAR principal
-  
+
   // Verificacao
   verificationStatus: PropertyVerificationStatus;
   verificationBadge?: boolean;    // Selo de propriedade verificada
   verifiedAt?: string;
-  
+
   // Fotos
   coverPhoto?: string;            // Foto de capa
   photos?: string[];              // Galeria de fotos
-  
+
   // Metadados para tokenizacao futura
   registryCode?: string;          // Codigo de registro unico
   blockchainRef?: string;         // Referencia blockchain (futuro)
   carbonPotential?: number;       // Potencial de credito de carbono
   certifications?: string[];      // Certificacoes (organico, etc)
-  
+
   // Auditoria
   createdAt: string;
   updatedAt: string;
@@ -1232,10 +1258,10 @@ export interface PropertySearchFilters {
 // Funcao auxiliar para calcular area de poligono (formula de Shoelace)
 export function calculatePolygonArea(coordinates: GeoCoordinate[]): number {
   if (coordinates.length < 3) return 0;
-  
+
   let area = 0;
   const n = coordinates.length;
-  
+
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     // Conversao aproximada para metros (1 grau ~ 111km no equador)
@@ -1243,10 +1269,10 @@ export function calculatePolygonArea(coordinates: GeoCoordinate[]): number {
     const y1 = coordinates[i].latitude * 110540;
     const x2 = coordinates[j].longitude * 111320 * Math.cos(coordinates[j].latitude * Math.PI / 180);
     const y2 = coordinates[j].latitude * 110540;
-    
+
     area += (x1 * y2) - (x2 * y1);
   }
-  
+
   // Area em metros quadrados, convertida para hectares (1 ha = 10000 m2)
   return Math.abs(area / 2) / 10000;
 }

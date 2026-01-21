@@ -2,47 +2,47 @@ import { Platform } from "react-native";
 
 export const Colors = {
   light: {
-    text: "#3E2723",
-    textSecondary: "#6D4C41",
+    text: "#3E2723", // Deep Cocoa
+    textSecondary: "#5D4037", // Lighter Cocoa
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6D4C41",
-    tabIconSelected: "#4E342E",
-    link: "#2E7D32",
-    backgroundRoot: "#FAFAFA",
-    backgroundDefault: "#FFFFFF",
-    backgroundSecondary: "#F5F5F5",
-    backgroundTertiary: "#EEEEEE",
-    border: "#D7CCC8",
-    primary: "#4E342E",
-    primaryLight: "#6D4C41",
-    secondary: "#2E7D32",
-    accent: "#FBC02D",
-    success: "#43A047",
-    warning: "#FBC02D",
+    tabIconDefault: "#A1887F",
+    tabIconSelected: "#00C853", // Leaf Green
+    link: "#00C853",
+    backgroundRoot: "#FAFAFA", // Off-white
+    backgroundDefault: "#FAFAFA",
+    backgroundSecondary: "#FFFFFF", // Surface
+    backgroundTertiary: "#F5F5F5",
+    border: "#E0E0E0",
+    primary: "#00C853", // Leaf Green
+    primaryLight: "#69F0AE",
+    secondary: "#3E2723", // Deep Cocoa
+    accent: "#FFAB00", // Harvest Gold
+    success: "#00C853",
+    warning: "#FFAB00",
     error: "#D32F2F",
     card: "#FFFFFF",
-    handshake: "#43A047",
+    handshake: "#00C853",
   },
   dark: {
-    text: "#EFEBE9",
+    text: "#FAFAFA",
     textSecondary: "#BCAAA4",
     buttonText: "#FFFFFF",
     tabIconDefault: "#BCAAA4",
-    tabIconSelected: "#8D6E63",
-    link: "#81C784",
-    backgroundRoot: "#1F2123",
-    backgroundDefault: "#2A2C2E",
-    backgroundSecondary: "#353739",
-    backgroundTertiary: "#404244",
-    border: "#5D4037",
-    primary: "#6D4C41",
-    primaryLight: "#8D6E63",
-    secondary: "#43A047",
-    accent: "#FBC02D",
-    success: "#43A047",
-    warning: "#FBC02D",
+    tabIconSelected: "#69F0AE",
+    link: "#69F0AE",
+    backgroundRoot: "#121212",
+    backgroundDefault: "#1E1E1E",
+    backgroundSecondary: "#2C2C2C",
+    backgroundTertiary: "#333333",
+    border: "#424242",
+    primary: "#00C853",
+    primaryLight: "#69F0AE",
+    secondary: "#3E2723",
+    accent: "#FFD740",
+    success: "#69F0AE",
+    warning: "#FFD740",
     error: "#EF5350",
-    card: "#2A2C2E",
+    card: "#1E1E1E",
     handshake: "#66BB6A",
   },
 };
@@ -161,6 +161,13 @@ export const Fonts = Platform.select({
 });
 
 export const Shadows = {
+  sm: {
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.18,
+    shadowRadius: 1.0,
+  },
   card: {
     elevation: 2,
   },

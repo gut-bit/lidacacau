@@ -4,7 +4,7 @@ import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import LoginScreen from '@/screens/auth/LoginScreen';
-import SectionTabNavigator from '@/navigation/SectionTabNavigator';
+import UnifiedTabNavigator from '@/navigation/UnifiedTabNavigator'; // Swapped from SectionTabNavigator
 import AdminStackNavigator from '@/navigation/AdminStackNavigator';
 import JobDetailScreen from '@/screens/shared/JobDetailScreen';
 import CreateJobScreen from '@/screens/producer/CreateJobScreen';
@@ -48,6 +48,8 @@ import PropertyDetailScreen from '@/screens/shared/PropertyDetailScreen';
 import PropertyFormScreen from '@/screens/shared/PropertyFormScreen';
 import StoreDetailScreen from '@/screens/shared/StoreDetailScreen';
 import CacauPricesScreen from '@/screens/shared/CacauPricesScreen';
+import HarvestLogScreen from '@/screens/producer/HarvestLogScreen';
+import ProfitDashboardScreen from '@/screens/producer/ProfitDashboardScreen';
 import { getCommonScreenOptions } from '@/navigation/screenOptions';
 import { User, CardType } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -117,6 +119,8 @@ export type RootStackParamList = {
   PropertyForm: { propertyId?: string };
   StoreDetail: { storeId: string };
   CacauPrices: undefined;
+  HarvestLog: { propertyId: string; talhaoId?: string };
+  ProfitDashboard: { propertyId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -151,7 +155,7 @@ export default function RootNavigator() {
         <>
           <Stack.Screen
             name="MainTabs"
-            component={SectionTabNavigator}
+            component={UnifiedTabNavigator}
             options={{ headerShown: false }}
           />
           <Stack.Screen
@@ -326,8 +330,8 @@ export default function RootNavigator() {
           <Stack.Screen
             name="QuickActions"
             component={QuickActionsScreen}
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               presentation: 'transparentModal',
               animation: 'fade',
             }}
@@ -374,6 +378,16 @@ export default function RootNavigator() {
             name="CacauPrices"
             component={CacauPricesScreen}
             options={{ title: 'Precos do Cacau' }}
+          />
+          <Stack.Screen
+            name="HarvestLog"
+            component={HarvestLogScreen}
+            options={{ title: 'Registrar Colheita', presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="ProfitDashboard"
+            component={ProfitDashboardScreen}
+            options={{ title: 'Painel de Lucros' }}
           />
           <Stack.Screen
             name="Tutorial"

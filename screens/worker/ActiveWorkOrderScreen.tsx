@@ -19,6 +19,7 @@ import { WorkOrder, Job, User } from '@/types';
 import { getWorkOrderById, getJobById, getUserById, updateWorkOrder } from '@/utils/storage';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, formatDateTime, getStatusLabel, getStatusColor } from '@/utils/format';
+import { generateAndShareContract } from '@/utils/contractGenerator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveWorkOrder'>;
 
@@ -215,6 +216,30 @@ export default function ActiveWorkOrderScreen() {
               </ThemedText>
             </View>
           </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.contractButton,
+              { backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={() => {
+              if (job && workOrder && producer && user && serviceType) {
+                generateAndShareContract({
+                  job,
+                  workOrder,
+                  producer,
+                  worker: user,
+                  serviceType,
+                });
+              } else {
+                Alert.alert('Erro', 'Dados incompletos para gerar o contrato');
+              }
+            }}
+          >
+            <Feather name="file-text" size={16} color={colors.text} />
+            <ThemedText type="small" style={{ fontWeight: '600' }}>
+              Visualizar Contrato
+            </ThemedText>
+          </Pressable>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
@@ -386,36 +411,40 @@ export default function ActiveWorkOrderScreen() {
         )}
       </ScreenScrollView>
 
-      {workOrder.status === 'assigned' && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button onPress={handleCheckIn} disabled={submitting}>
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Feather name="log-in" size={20} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
-                Check-in
-              </>
-            )}
-          </Button>
-        </View>
-      )}
+      {
+        workOrder.status === 'assigned' && (
+          <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
+            <Button onPress={handleCheckIn} disabled={submitting}>
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Feather name="log-in" size={20} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
+                  Check-in
+                </>
+              )}
+            </Button>
+          </View>
+        )
+      }
 
-      {workOrder.status === 'checked_in' && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
-          <Button onPress={handleCheckOut} disabled={submitting}>
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Feather name="log-out" size={20} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
-                Check-out
-              </>
-            )}
-          </Button>
-        </View>
-      )}
-    </ThemedView>
+      {
+        workOrder.status === 'checked_in' && (
+          <View style={[styles.bottomBar, { backgroundColor: colors.backgroundRoot, paddingBottom: insets.bottom + Spacing.md }]}>
+            <Button onPress={handleCheckOut} disabled={submitting}>
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Feather name="log-out" size={20} color="#FFFFFF" style={{ marginRight: Spacing.sm }} />
+                  Check-out
+                </>
+              )}
+            </Button>
+          </View>
+        )
+      }
+    </ThemedView >
   );
 }
 
@@ -526,5 +555,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  contractButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xs,
+    marginTop: Spacing.sm,
   },
 });

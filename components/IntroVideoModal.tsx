@@ -11,10 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { BlurView } from 'expo-blur';
 
-const BRAND_PRIMARY = '#F15A29';
-const BRAND_SECONDARY = '#7ED957';
+
+const BRAND_PRIMARY = Colors.light.primary;
+const BRAND_SECONDARY = Colors.light.secondary;
 
 const INTRO_SEEN_KEY = '@lidacacau_intro_seen';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -111,7 +111,7 @@ export function IntroVideoModal({ onClose }: IntroVideoModalProps) {
       statusBarTranslucent
     >
       <View style={styles.overlay}>
-        <BlurView intensity={80} style={styles.blurContainer}>
+        <View style={styles.overlay}>
           <View style={[styles.content, isDark ? styles.contentDark : styles.contentLight]}>
             <Pressable style={styles.skipButton} onPress={handleSkip}>
               <ThemedText style={styles.skipText}>Pular</ThemedText>
@@ -121,7 +121,7 @@ export function IntroVideoModal({ onClose }: IntroVideoModalProps) {
               <View style={[styles.iconContainer, { backgroundColor: BRAND_PRIMARY }]}>
                 <Feather name={slide.icon} size={48} color="white" />
               </View>
-              
+
               <ThemedText style={styles.title}>{slide.title}</ThemedText>
               <ThemedText style={styles.description}>{slide.description}</ThemedText>
             </View>
@@ -152,7 +152,7 @@ export function IntroVideoModal({ onClose }: IntroVideoModalProps) {
               />
             </Pressable>
           </View>
-        </BlurView>
+        </View>
       </View>
     </Modal>
   );
@@ -161,13 +161,7 @@ export function IntroVideoModal({ onClose }: IntroVideoModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  blurContainer: {
-    flex: 1,
-    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -178,10 +172,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   contentLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#FFFFFF',
   },
   contentDark: {
-    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+    backgroundColor: '#1E1E1E',
   },
   skipButton: {
     position: 'absolute',

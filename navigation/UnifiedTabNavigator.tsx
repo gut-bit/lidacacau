@@ -11,13 +11,14 @@ import UnifiedHomeScreen from '@/screens/shared/UnifiedHomeScreen';
 import ExploreScreen from '@/screens/shared/ExploreScreen';
 import ChatListScreen from '@/screens/shared/ChatListScreen';
 import UnifiedProfileScreen from '@/screens/shared/UnifiedProfileScreen';
+import WalletScreen from '@/screens/shared/WalletScreen';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 export type UnifiedTabParamList = {
   Home: undefined;
-  Messages: undefined;
+  Community: undefined;
   Create: undefined;
-  Explore: undefined;
+  Wallet: undefined;
   Profile: undefined;
 };
 
@@ -25,7 +26,7 @@ const Tab = createBottomTabNavigator<UnifiedTabParamList>();
 
 function CreateButtonIconComponent({ focused, isDark }: { focused: boolean; isDark: boolean }) {
   const colors = isDark ? Colors.dark : Colors.light;
-  
+
   return (
     <View style={[styles.createButton, { backgroundColor: colors.primary }, Shadows.fab]}>
       <Feather name="plus" size={28} color="#FFFFFF" />
@@ -78,18 +79,20 @@ export default function UnifiedTabNavigator() {
         name="Home"
         component={UnifiedHomeScreen}
         options={{
-          title: 'Inicio',
+          title: 'Início',
           tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
         }}
       />
+
       <Tab.Screen
-        name="Messages"
-        component={ChatListScreen}
+        name="Community"
+        component={ExploreScreen}
         options={{
-          title: 'Conversas',
-          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
+          title: 'Comunidade',
+          tabBarIcon: ({ color, size }) => <Feather name="users" size={size} color={color} />,
         }}
       />
+
       <Tab.Screen
         name="Create"
         component={PlaceholderScreen}
@@ -104,14 +107,16 @@ export default function UnifiedTabNavigator() {
           },
         }}
       />
+
       <Tab.Screen
-        name="Explore"
-        component={ExploreScreen}
+        name="Wallet"
+        component={WalletScreen}
         options={{
-          title: 'Explorar',
-          tabBarIcon: ({ color, size }) => <Feather name="compass" size={size} color={color} />,
+          title: 'Carteira',
+          tabBarIcon: ({ color, size }) => <Feather name="credit-card" size={size} color={color} />,
         }}
       />
+
       <Tab.Screen
         name="Profile"
         component={UnifiedProfileScreen}

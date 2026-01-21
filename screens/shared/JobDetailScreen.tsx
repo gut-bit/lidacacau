@@ -37,6 +37,7 @@ import {
   getStatusColor,
   getLevelLabel,
 } from '@/utils/format';
+import { generateAndShareContract } from '@/utils/contractGenerator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JobDetail'>;
 
@@ -132,9 +133,9 @@ export default function JobDetailScreen() {
         price: parseFloat(bidPrice),
         message: bidMessage.trim() || undefined,
       });
-      
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
+
       Alert.alert(
         'Sucesso',
         myBid ? 'Proposta atualizada com sucesso!' : 'Proposta enviada com sucesso!',
@@ -235,9 +236,9 @@ export default function JobDetailScreen() {
 
   const handleShare = async (method: 'whatsapp' | 'system' | 'copy') => {
     if (!job) return;
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     if (method === 'copy') {
       const success = await copyCardLink('demand', job.id);
       if (success) {
@@ -247,7 +248,7 @@ export default function JobDetailScreen() {
       }
       return;
     }
-    
+
     const success = await shareCard('demand', job, producer?.name, method);
     if (!success && method === 'whatsapp') {
       Alert.alert('Erro', 'Nao foi possivel compartilhar via WhatsApp. Tente pelo botao de compartilhar.');
@@ -458,7 +459,7 @@ export default function JobDetailScreen() {
                     onPress={() => setSelectedBidId(bid.id)}
                   >
                     <View style={styles.bidHeader}>
-                      <Pressable 
+                      <Pressable
                         style={styles.bidWorkerInfo}
                         onPress={() => navigation.navigate('OtherUserProfile', { userId: bid.worker.id })}
                       >
@@ -509,7 +510,7 @@ export default function JobDetailScreen() {
               Ordem de Serviço
             </ThemedText>
             <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
-              <Pressable 
+              <Pressable
                 style={styles.detailRow}
                 onPress={() => navigation.navigate('OtherUserProfile', { userId: worker.id })}
               >
@@ -547,6 +548,30 @@ export default function JobDetailScreen() {
                   <SocialLinksDisplay socialLinks={worker.socialLinks} size="small" />
                 </View>
               )}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.contractButton,
+                  { backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+                ]}
+                onPress={() => {
+                  if (job && workOrder && producer && worker && serviceType) {
+                    generateAndShareContract({
+                      job,
+                      workOrder,
+                      producer,
+                      worker,
+                      serviceType,
+                    });
+                  } else {
+                    Alert.alert('Erro', 'Dados incompletos para gerar o contrato');
+                  }
+                }}
+              >
+                <Feather name="file-text" size={16} color={colors.text} />
+                <ThemedText type="small" style={{ fontWeight: '600' }}>
+                  Visualizar Contrato
+                </ThemedText>
+              </Pressable>
             </View>
           </View>
         )}
@@ -557,7 +582,7 @@ export default function JobDetailScreen() {
               Contato do Produtor
             </ThemedText>
             <View style={[styles.card, { backgroundColor: colors.card }, Shadows.card]}>
-              <Pressable 
+              <Pressable
                 style={styles.detailRow}
                 onPress={() => navigation.navigate('OtherUserProfile', { userId: producer.id })}
               >
@@ -889,5 +914,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  contractButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xs,
+    marginTop: Spacing.md,
   },
 });

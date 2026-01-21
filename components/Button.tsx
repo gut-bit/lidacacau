@@ -99,7 +99,7 @@ export function Button({
 const styles = StyleSheet.create({
   button: {
     height: Spacing.buttonHeight,
-    borderRadius: BorderRadius.xs,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: Spacing["2xl"],

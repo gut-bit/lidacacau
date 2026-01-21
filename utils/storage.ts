@@ -1,12 +1,12 @@
 // LidaCacau - Marketplace Rural (MVP sem dados fake)
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
+import {
   User, Job, Bid, WorkOrder, Review, SkillProgress, QuizAttempt, SignedContract, ContractHistoryItem,
   ServiceOffer, OfferInterest, CardPreset, UserPreferences, CardMatch, ChatMessage, CardVisibility, CardStatus,
   FriendConnection, ChatRoom, DirectMessage, UserPresence, ActiveUsersStats, AppNotification, LIDA_PHRASES,
   LidaSquad, SquadMember, SquadInvite, SquadProposal,
   PropertyDetail, Talhao, PropertyDocument, TalhaoServiceTag, calculatePolygonArea, Property,
-  Store, Product, CartItem, Order, StoreSignup
+  Store, Product, CartItem, Order, StoreSignup, HarvestLog, ExpenseLog
 } from '@/types';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 import { AppConfiguration } from '@/config';
@@ -99,7 +99,7 @@ const DEV_DEMO_USERS: User[] = [
     createdAt: '2024-02-01T08:00:00Z',
     searchRadius: 50,
     verification: { status: 'approved' },
-    workerProfile: { 
+    workerProfile: {
       bio: 'Trabalhador rural experiente. Especialista em colheita de cacau.',
       skills: ['colheita', 'poda', 'aplicacao'],
       equipment: ['facão', 'escada', 'cesto'],
@@ -185,18 +185,18 @@ export const createUser = async (user: Omit<User, 'id' | 'createdAt'>): Promise<
       averageRating: user.role === 'worker' ? 0 : undefined,
     };
     await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([...users, newUser]));
-    
+
     const welcomePhrases = LIDA_PHRASES.welcome;
     const randomPhrase = welcomePhrases[Math.floor(Math.random() * welcomePhrases.length)];
     const roleText = user.role === 'worker' ? 'trabalhador' : 'produtor';
-    
+
     await createNotification({
       type: 'new_user',
       title: randomPhrase,
       message: `${user.name} entrou como ${roleText}. Bora dar as boas-vindas!`,
       userId: newUser.id,
     });
-    
+
     return newUser;
   } catch (error) {
     console.error('Error creating user:', error);
@@ -707,7 +707,7 @@ export const updateSkillProgress = async (
     const allProgress: SkillProgress[] = data ? JSON.parse(data) : [];
     const key = `${userId}_${skillId}`;
     const index = allProgress.findIndex((p) => p.skillId === key);
-    
+
     const defaultProgress: SkillProgress = {
       skillId: key,
       xpTotal: 0,
@@ -716,17 +716,17 @@ export const updateSkillProgress = async (
       quizzesCompleted: [],
       updatedAt: new Date().toISOString(),
     };
-    
+
     if (index === -1) {
       const newProgress = { ...defaultProgress, ...updates, skillId: key };
       allProgress.push(newProgress);
       await AsyncStorage.setItem(STORAGE_KEYS.SKILL_PROGRESS, JSON.stringify(allProgress));
       return newProgress;
     } else {
-      allProgress[index] = { 
-        ...allProgress[index], 
-        ...updates, 
-        updatedAt: new Date().toISOString() 
+      allProgress[index] = {
+        ...allProgress[index],
+        ...updates,
+        updatedAt: new Date().toISOString()
       };
       await AsyncStorage.setItem(STORAGE_KEYS.SKILL_PROGRESS, JSON.stringify(allProgress));
       return allProgress[index];
@@ -749,11 +749,11 @@ export const addXPToSkill = async (
     const currentXP = current?.xpTotal || 0;
     const coursesCompleted = current?.coursesCompleted || [];
     const quizzesCompleted = current?.quizzesCompleted || [];
-    
+
     if (courseId && !coursesCompleted.includes(courseId)) {
       coursesCompleted.push(courseId);
     }
-    
+
     if (quizResult) {
       const existingQuiz = quizzesCompleted.find(q => q.quizId === quizResult.quizId);
       if (existingQuiz) {
@@ -771,7 +771,7 @@ export const addXPToSkill = async (
         });
       }
     }
-    
+
     return await updateSkillProgress(userId, skillId, {
       xpTotal: currentXP + xpAmount,
       coursesCompleted,
@@ -798,13 +798,13 @@ export const saveQuizAttempt = async (attempt: Omit<QuizAttempt, 'id' | 'created
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.QUIZ_ATTEMPTS);
     const allAttempts: QuizAttempt[] = data ? JSON.parse(data) : [];
-    
+
     const newAttempt: QuizAttempt = {
       ...attempt,
       id: generateId(),
       createdAt: new Date().toISOString(),
     };
-    
+
     allAttempts.push(newAttempt);
     await AsyncStorage.setItem(STORAGE_KEYS.QUIZ_ATTEMPTS, JSON.stringify(allAttempts));
     return newAttempt;
@@ -840,14 +840,14 @@ export const saveContractToHistory = async (
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.CONTRACT_HISTORY);
     const allContracts: ContractHistoryItem[] = data ? JSON.parse(data) : [];
-    
+
     const existingIndex = allContracts.findIndex(
       (c) => c.workOrderId === workOrderId && c.userId === userId
     );
-    
+
     const bothSigned = contract.producerSignedAt && contract.workerSignedAt;
     const status = bothSigned ? 'signed' : 'pending';
-    
+
     const contractItem: ContractHistoryItem = {
       id: existingIndex >= 0 ? allContracts[existingIndex].id : generateId(),
       workOrderId,
@@ -862,13 +862,13 @@ export const saveContractToHistory = async (
       status,
       savedAt: new Date().toISOString(),
     };
-    
+
     if (existingIndex >= 0) {
       allContracts[existingIndex] = contractItem;
     } else {
       allContracts.push(contractItem);
     }
-    
+
     await AsyncStorage.setItem(STORAGE_KEYS.CONTRACT_HISTORY, JSON.stringify(allContracts));
     return contractItem;
   } catch (error) {
@@ -885,11 +885,11 @@ export const updateContractHistoryStatus = async (
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.CONTRACT_HISTORY);
     const allContracts: ContractHistoryItem[] = data ? JSON.parse(data) : [];
-    
+
     const index = allContracts.findIndex(
       (c) => c.workOrderId === workOrderId && c.userId === userId
     );
-    
+
     if (index >= 0) {
       allContracts[index].status = status;
       allContracts[index].savedAt = new Date().toISOString();
@@ -1058,13 +1058,13 @@ export const createOfferInterest = async (
       createdAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(STORAGE_KEYS.OFFER_INTERESTS, JSON.stringify([...interests, newInterest]));
-    
+
     // Incrementar contador de interesses na oferta
     const offer = await getServiceOfferById(interest.offerId);
     if (offer) {
       await updateServiceOffer(interest.offerId, { interestCount: (offer.interestCount || 0) + 1 });
     }
-    
+
     return newInterest;
   } catch (error) {
     console.error('Error creating offer interest:', error);
@@ -1159,7 +1159,7 @@ export const updateUserPreferences = async (
     const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
     const allPrefs: UserPreferences[] = data ? JSON.parse(data) : [];
     const index = allPrefs.findIndex((p) => p.userId === userId);
-    
+
     const defaultPrefs: UserPreferences = {
       userId,
       preferredServiceTypes: [],
@@ -1172,7 +1172,7 @@ export const updateUserPreferences = async (
       },
       updatedAt: new Date().toISOString(),
     };
-    
+
     if (index === -1) {
       const newPrefs = { ...defaultPrefs, ...updates, userId, updatedAt: new Date().toISOString() };
       allPrefs.push(newPrefs);
@@ -1258,18 +1258,18 @@ export const addChatMessage = async (
     const matches = await getCardMatches();
     const index = matches.findIndex((m) => m.id === matchId);
     if (index === -1) throw new Error('Match nao encontrado');
-    
+
     const newMessage: ChatMessage = {
       ...message,
       id: generateId(),
       createdAt: new Date().toISOString(),
       read: false,
     };
-    
+
     const chatMessages = matches[index].chatMessages || [];
     matches[index].chatMessages = [...chatMessages, newMessage];
     matches[index].status = 'negotiating';
-    
+
     await AsyncStorage.setItem(STORAGE_KEYS.CARD_MATCHES, JSON.stringify(matches));
     return newMessage;
   } catch (error) {
@@ -1294,9 +1294,9 @@ export const calculateDistance = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -1787,7 +1787,7 @@ export const initializeDevData = async (): Promise<void> => {
     if (existingUsers.length > 0 && await AsyncStorage.getItem(DEV_DATA_KEY)) {
       return;
     }
-    
+
     // Force reset dev data in development
     await AsyncStorage.removeItem(DEV_DATA_KEY);
     await AsyncStorage.removeItem(STORAGE_KEYS.STORES);
@@ -2070,8 +2070,8 @@ export const getSquadById = async (id: string): Promise<LidaSquad | null> => {
 export const getUserSquads = async (userId: string): Promise<LidaSquad[]> => {
   try {
     const squads = await getSquads();
-    return squads.filter((s) => 
-      s.leaderId === userId || 
+    return squads.filter((s) =>
+      s.leaderId === userId ||
       s.members.some((m) => m.userId === userId && m.status === 'accepted')
     );
   } catch (error) {
@@ -2106,7 +2106,7 @@ export const updateSquad = async (id: string, updates: Partial<LidaSquad>): Prom
     const squads = await getSquads();
     const index = squads.findIndex((s) => s.id === id);
     if (index === -1) return null;
-    
+
     squads[index] = { ...squads[index], ...updates, updatedAt: new Date().toISOString() };
     await AsyncStorage.setItem(STORAGE_KEYS.SQUADS, JSON.stringify(squads));
     return squads[index];
@@ -2125,17 +2125,17 @@ export const inviteToSquad = async (
   try {
     const squad = await getSquadById(squadId);
     if (!squad) throw new Error('Esquadrao nao encontrado');
-    
+
     const acceptedMembers = squad.members.filter((m) => m.status === 'accepted').length;
     if (acceptedMembers >= squad.maxMembers) {
       throw new Error('Esquadrao ja esta completo');
     }
-    
+
     const existingMember = squad.members.find((m) => m.userId === inviteeId);
     if (existingMember && existingMember.status !== 'declined') {
       throw new Error('Usuario ja foi convidado');
     }
-    
+
     const newMember: SquadMember = {
       userId: inviteeId,
       role: 'member',
@@ -2143,13 +2143,13 @@ export const inviteToSquad = async (
       invitedAt: new Date().toISOString(),
       invitedBy: inviterId,
     };
-    
+
     const updatedMembers = existingMember
       ? squad.members.map((m) => (m.userId === inviteeId ? newMember : m))
       : [...squad.members, newMember];
-    
+
     await updateSquad(squadId, { members: updatedMembers });
-    
+
     const invite: SquadInvite = {
       id: generateId(),
       squadId,
@@ -2159,10 +2159,10 @@ export const inviteToSquad = async (
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
-    
+
     const invites = await getSquadInvites();
     await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_INVITES, JSON.stringify([...invites, invite]));
-    
+
     return invite;
   } catch (error) {
     console.error('Error inviting to squad:', error);
@@ -2198,7 +2198,7 @@ export const respondToSquadInvite = async (
     const invites = await getSquadInvites();
     const inviteIndex = invites.findIndex((i) => i.id === inviteId);
     if (inviteIndex === -1) throw new Error('Convite nao encontrado');
-    
+
     const invite = invites[inviteIndex];
     invites[inviteIndex] = {
       ...invite,
@@ -2206,7 +2206,7 @@ export const respondToSquadInvite = async (
       respondedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_INVITES, JSON.stringify(invites));
-    
+
     const squad = await getSquadById(invite.squadId);
     if (squad) {
       const updatedMembers = squad.members.map((m) =>
@@ -2269,7 +2269,7 @@ export const respondToSquadProposal = async (
     const proposals = await getSquadProposals();
     const proposalIndex = proposals.findIndex((p) => p.id === proposalId);
     if (proposalIndex === -1) throw new Error('Proposta nao encontrada');
-    
+
     const proposal = proposals[proposalIndex];
     proposals[proposalIndex] = {
       ...proposal,
@@ -2277,7 +2277,7 @@ export const respondToSquadProposal = async (
       respondedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(STORAGE_KEYS.SQUAD_PROPOSALS, JSON.stringify(proposals));
-    
+
     if (accept) {
       const leaderMember: SquadMember = {
         userId: proposal.proposedLeaderId,
@@ -2287,7 +2287,7 @@ export const respondToSquadProposal = async (
         invitedBy: proposal.proposerId,
         joinedAt: new Date().toISOString(),
       };
-      
+
       const invitedMembers: SquadMember[] = proposal.invitedUserIds.map((id) => ({
         userId: id,
         role: 'member' as const,
@@ -2295,7 +2295,7 @@ export const respondToSquadProposal = async (
         invitedAt: new Date().toISOString(),
         invitedBy: proposal.proposedLeaderId,
       }));
-      
+
       const squad = await createSquad({
         name: proposal.squadName,
         description: proposal.description,
@@ -2305,10 +2305,10 @@ export const respondToSquadProposal = async (
         serviceTypeIds: proposal.serviceTypeIds,
         status: 'recruiting',
       });
-      
+
       return squad;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error responding to squad proposal:', error);
@@ -2334,7 +2334,7 @@ export const migrateUserProperties = async (userId: string): Promise<number> => 
       const alreadyExists = existingProperties.some((existing) => {
         const sameOwner = existing.ownerId === userId;
         const sameName = existing.name.toLowerCase() === legacyProperty.name.toLowerCase();
-        const sameCoords = 
+        const sameCoords =
           Math.abs(existing.latitude - legacyProperty.latitude) < 0.0001 &&
           Math.abs(existing.longitude - legacyProperty.longitude) < 0.0001;
         return sameOwner && (sameName || sameCoords);
@@ -2395,7 +2395,7 @@ export const createProperty = async (
   try {
     const properties = await getProperties();
     const now = new Date().toISOString();
-    
+
     const newProperty: PropertyDetail = {
       ...data,
       id: generateId(),
@@ -2411,7 +2411,7 @@ export const createProperty = async (
         details: 'Propriedade criada',
       }],
     };
-    
+
     await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify([...properties, newProperty]));
     return newProperty;
   } catch (error) {
@@ -2429,10 +2429,10 @@ export const updateProperty = async (
     const properties = await getProperties();
     const index = properties.findIndex((p) => p.id === propertyId);
     if (index === -1) throw new Error('Propriedade nao encontrada');
-    
+
     const now = new Date().toISOString();
     const property = properties[index];
-    
+
     const updatedProperty: PropertyDetail = {
       ...property,
       ...updates,
@@ -2447,7 +2447,7 @@ export const updateProperty = async (
         },
       ],
     };
-    
+
     properties[index] = updatedProperty;
     await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
     return updatedProperty;
@@ -2477,7 +2477,7 @@ export const addTalhao = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const now = new Date().toISOString();
     const newTalhao: Talhao = {
       ...data,
@@ -2487,18 +2487,18 @@ export const addTalhao = async (
       createdAt: now,
       updatedAt: now,
     };
-    
+
     if (newTalhao.polygon && newTalhao.polygon.coordinates.length >= 3) {
       newTalhao.areaHectares = calculatePolygonArea(newTalhao.polygon.coordinates);
       newTalhao.polygon.areaHectares = newTalhao.areaHectares;
     }
-    
+
     await updateProperty(
       propertyId,
       { talhoes: [...property.talhoes, newTalhao] },
       changedBy
     );
-    
+
     return newTalhao;
   } catch (error) {
     console.error('Error adding talhao:', error);
@@ -2515,32 +2515,108 @@ export const updateTalhao = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const talhaoIndex = property.talhoes.findIndex((t) => t.id === talhaoId);
     if (talhaoIndex === -1) throw new Error('Talhao nao encontrado');
-    
+
     const now = new Date().toISOString();
     const talhao = property.talhoes[talhaoIndex];
-    
+
     const updatedTalhao: Talhao = {
       ...talhao,
       ...updates,
       updatedAt: now,
     };
-    
+
     if (updatedTalhao.polygon && updatedTalhao.polygon.coordinates.length >= 3) {
       updatedTalhao.areaHectares = calculatePolygonArea(updatedTalhao.polygon.coordinates);
       updatedTalhao.polygon.areaHectares = updatedTalhao.areaHectares;
     }
-    
+
     const updatedTalhoes = [...property.talhoes];
     updatedTalhoes[talhaoIndex] = updatedTalhao;
-    
+
     await updateProperty(propertyId, { talhoes: updatedTalhoes }, changedBy);
     return updatedTalhao;
   } catch (error) {
     console.error('Error updating talhao:', error);
     throw error;
+  }
+};
+
+export const addHarvestLog = async (
+  propertyId: string,
+  talhaoId: string,
+  data: Omit<HarvestLog, 'id' | 'createdAt'>,
+  userId: string
+): Promise<HarvestLog> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    const talhao = property.talhoes.find(t => t.id === talhaoId);
+    if (!talhao) throw new Error('Talhao nao encontrado');
+
+    const newLog: HarvestLog = {
+      ...data,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedLogs = [...(talhao.harvestLogs || []), newLog];
+    await updateTalhao(propertyId, talhaoId, { harvestLogs: updatedLogs }, userId);
+    return newLog;
+  } catch (error) {
+    console.error('Error adding harvest log:', error);
+    throw error;
+  }
+};
+
+export const getTalhaoHarvestLogs = async (propertyId: string, talhaoId: string): Promise<HarvestLog[]> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    const talhao = property?.talhoes.find(t => t.id === talhaoId);
+    return talhao?.harvestLogs || [];
+  } catch (error) {
+    console.error('Error getting harvest logs:', error);
+    return [];
+  }
+};
+
+export const addExpenseLog = async (
+  propertyId: string,
+  talhaoId: string,
+  data: Omit<ExpenseLog, 'id' | 'createdAt'>,
+  userId: string
+): Promise<ExpenseLog> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    if (!property) throw new Error('Propriedade nao encontrada');
+    const talhao = property.talhoes.find(t => t.id === talhaoId);
+    if (!talhao) throw new Error('Talhao nao encontrado');
+
+    const newLog: ExpenseLog = {
+      ...data,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedLogs = [...(talhao.expenseLogs || []), newLog];
+    await updateTalhao(propertyId, talhaoId, { expenseLogs: updatedLogs }, userId);
+    return newLog;
+  } catch (error) {
+    console.error('Error adding expense log:', error);
+    throw error;
+  }
+};
+
+export const getTalhaoExpenseLogs = async (propertyId: string, talhaoId: string): Promise<ExpenseLog[]> => {
+  try {
+    const property = await getPropertyById(propertyId);
+    const talhao = property?.talhoes.find(t => t.id === talhaoId);
+    return talhao?.expenseLogs || [];
+  } catch (error) {
+    console.error('Error getting expense logs:', error);
+    return [];
   }
 };
 
@@ -2552,7 +2628,7 @@ export const deleteTalhao = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const updatedTalhoes = property.talhoes.filter((t) => t.id !== talhaoId);
     await updateProperty(propertyId, { talhoes: updatedTalhoes }, changedBy);
   } catch (error) {
@@ -2571,10 +2647,10 @@ export const addServiceTag = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const talhao = property.talhoes.find((t) => t.id === talhaoId);
     if (!talhao) throw new Error('Talhao nao encontrado');
-    
+
     const now = new Date().toISOString();
     const newTag: TalhaoServiceTag = {
       ...data,
@@ -2582,14 +2658,14 @@ export const addServiceTag = async (
       status: 'pending',
       createdAt: now,
     };
-    
+
     await updateTalhao(
       propertyId,
       talhaoId,
       { serviceTags: [...talhao.serviceTags, newTag] },
       changedBy
     );
-    
+
     return newTag;
   } catch (error) {
     console.error('Error adding service tag:', error);
@@ -2607,21 +2683,21 @@ export const updateServiceTag = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const talhao = property.talhoes.find((t) => t.id === talhaoId);
     if (!talhao) throw new Error('Talhao nao encontrado');
-    
+
     const tagIndex = talhao.serviceTags.findIndex((t) => t.id === tagId);
     if (tagIndex === -1) throw new Error('Tag nao encontrada');
-    
+
     const updatedTag: TalhaoServiceTag = {
       ...talhao.serviceTags[tagIndex],
       ...updates,
     };
-    
+
     const updatedTags = [...talhao.serviceTags];
     updatedTags[tagIndex] = updatedTag;
-    
+
     await updateTalhao(propertyId, talhaoId, { serviceTags: updatedTags }, changedBy);
     return updatedTag;
   } catch (error) {
@@ -2639,7 +2715,7 @@ export const addPropertyDocument = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const now = new Date().toISOString();
     const newDocument: PropertyDocument = {
       ...data,
@@ -2648,16 +2724,16 @@ export const addPropertyDocument = async (
       verificationStatus: 'pending',
       uploadedAt: now,
     };
-    
+
     await updateProperty(
       propertyId,
-      { 
+      {
         documents: [...property.documents, newDocument],
         verificationStatus: 'pending',
       },
       changedBy
     );
-    
+
     return newDocument;
   } catch (error) {
     console.error('Error adding property document:', error);
@@ -2675,10 +2751,10 @@ export const updateDocumentVerification = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const docIndex = property.documents.findIndex((d) => d.id === documentId);
     if (docIndex === -1) throw new Error('Documento nao encontrado');
-    
+
     const now = new Date().toISOString();
     const updatedDoc: PropertyDocument = {
       ...property.documents[docIndex],
@@ -2686,20 +2762,20 @@ export const updateDocumentVerification = async (
       verifiedAt: status === 'verified' ? now : undefined,
       rejectionReason: status === 'rejected' ? rejectionReason : undefined,
     };
-    
+
     const updatedDocs = [...property.documents];
     updatedDocs[docIndex] = updatedDoc;
-    
+
     const allVerified = updatedDocs.every((d) => d.verificationStatus === 'verified');
     const anyRejected = updatedDocs.some((d) => d.verificationStatus === 'rejected');
-    
+
     let propertyStatus: PropertyDetail['verificationStatus'] = 'pending';
     if (allVerified && updatedDocs.length > 0) {
       propertyStatus = 'verified';
     } else if (anyRejected) {
       propertyStatus = 'rejected';
     }
-    
+
     await updateProperty(
       propertyId,
       {
@@ -2710,7 +2786,7 @@ export const updateDocumentVerification = async (
       },
       reviewerId || 'system'
     );
-    
+
     return updatedDoc;
   } catch (error) {
     console.error('Error updating document verification:', error);
@@ -2726,13 +2802,13 @@ export const deletePropertyDocument = async (
   try {
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     const updatedDocs = property.documents.filter((d) => d.id !== documentId);
-    
+
     const allVerified = updatedDocs.length > 0 && updatedDocs.every((d) => d.verificationStatus === 'verified');
     const anyRejected = updatedDocs.some((d) => d.verificationStatus === 'rejected');
     const anyPending = updatedDocs.some((d) => d.verificationStatus === 'pending');
-    
+
     let propertyStatus: PropertyDetail['verificationStatus'] = 'none';
     if (allVerified) {
       propertyStatus = 'verified';
@@ -2741,7 +2817,7 @@ export const deletePropertyDocument = async (
     } else if (anyPending) {
       propertyStatus = 'pending';
     }
-    
+
     await updateProperty(
       propertyId,
       {
@@ -2767,16 +2843,16 @@ export const updatePropertyPolygon = async (
     const now = new Date().toISOString();
     const property = await getPropertyById(propertyId);
     if (!property) throw new Error('Propriedade nao encontrada');
-    
+
     let areaHectares: number | undefined;
     if (polygon && polygon.coordinates.length >= 3) {
       areaHectares = calculatePolygonArea(polygon.coordinates);
       polygon.areaHectares = areaHectares;
     }
-    
+
     const properties = await getProperties();
     const index = properties.findIndex((p) => p.id === propertyId);
-    
+
     const updatedProperty: PropertyDetail = {
       ...property,
       polygon,
@@ -2792,7 +2868,7 @@ export const updatePropertyPolygon = async (
         },
       ],
     };
-    
+
     properties[index] = updatedProperty;
     await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
     return updatedProperty;
@@ -2826,16 +2902,16 @@ export const getPropertyStats = async (ownerId?: string): Promise<{
     if (ownerId) {
       properties = properties.filter((p) => p.ownerId === ownerId);
     }
-    
+
     const totalArea = properties.reduce((sum, p) => sum + (p.areaHectares || 0), 0);
     const verifiedCount = properties.filter((p) => p.verificationStatus === 'verified').length;
     const totalTalhoes = properties.reduce((sum, p) => sum + p.talhoes.length, 0);
-    const pendingServices = properties.reduce((sum, p) => 
-      sum + p.talhoes.reduce((ts, t) => 
+    const pendingServices = properties.reduce((sum, p) =>
+      sum + p.talhoes.reduce((ts, t) =>
         ts + t.serviceTags.filter((s) => s.status === 'pending').length, 0
       ), 0
     );
-    
+
     return {
       totalProperties: properties.length,
       totalArea,
@@ -2940,14 +3016,14 @@ export const addToCart = async (productId: string, storeId: string, quantity: nu
   try {
     const cart = await getCart();
     const existingItem = cart.find(item => item.productId === productId);
-    
+
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
       const products = await getProductsByStore(storeId);
       const product = products.find(p => p.id === productId);
       if (!product) throw new Error('Product not found');
-      
+
       const newItem: CartItem = {
         id: generateId(),
         productId,
@@ -2958,7 +3034,7 @@ export const addToCart = async (productId: string, storeId: string, quantity: nu
       };
       cart.push(newItem);
     }
-    
+
     await AsyncStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
   } catch (error) {
     console.error('Error adding to cart:', error);

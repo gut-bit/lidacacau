@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View, Pressable, Linking, Platform } from 'react-native';
+import { StyleSheet, View, Pressable, Linking, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import * as Clipboard from 'expo-clipboard';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -126,7 +127,7 @@ export default function NFSeScreen() {
           <ThemedText type="h4" style={styles.sectionTitle}>
             Como Emitir sua Nota Fiscal
           </ThemedText>
-          
+
           <View style={[styles.stepCard, { backgroundColor: colors.card }, Shadows.card]}>
             <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
               <ThemedText type="small" style={styles.stepNumberText}>1</ThemedText>
@@ -186,10 +187,10 @@ export default function NFSeScreen() {
               >
                 <View style={styles.orderHeader}>
                   <View style={[styles.serviceIcon, { backgroundColor: colors.primary + '15' }]}>
-                    <Feather 
-                      name={order.serviceType?.icon as any || 'tool'} 
-                      size={20} 
-                      color={colors.primary} 
+                    <Feather
+                      name={order.serviceType?.icon as any || 'tool'}
+                      size={20}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.orderInfo}>
@@ -215,6 +216,23 @@ export default function NFSeScreen() {
                     Concluído
                   </ThemedText>
                 </View>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.copyButton,
+                    { opacity: pressed ? 0.7 : 1, marginTop: Spacing.sm },
+                  ]}
+                  onPress={async () => {
+                    const data = `TOMADOR: ${order.worker?.name || 'N/A'}\nCPF: ${order.worker?.id || 'N/A'}\nSERVIÇO: ${order.serviceType?.name || 'N/A'}\nVALOR: ${formatCurrency(order.finalPrice)}\nDATA: ${formatDate(order.createdAt)}`;
+                    await Clipboard.setStringAsync(data);
+                    Alert.alert('Copiado', 'Dados copiados para a área de transferência');
+                  }}
+                >
+                  <Feather name="copy" size={14} color={colors.primary} />
+                  <ThemedText type="small" style={{ color: colors.primary, fontWeight: '600' }}>
+                    Copiar Dados
+                  </ThemedText>
+                </Pressable>
               </View>
             ))}
           </View>
@@ -422,5 +440,12 @@ const styles = StyleSheet.create({
   },
   infoCardContent: {
     flex: 1,
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.xs,
   },
 });

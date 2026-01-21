@@ -36,10 +36,12 @@ import { Job, MapActivity, UserRole, ServiceOffer, CARD_COLORS, CardType, UserPr
 import { getOpenJobs, getJobsByProducer, getBidsByJob, getBidsByWorker, getPublicServiceOffers, getServiceOffersByWorker, getUserPreferences, getRecentNewUsers } from '@/utils/api';
 import { getServiceTypeById, SERVICE_TYPES } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
-import { ActivityItem, getActivityItems, getMapActivities } from '@/data/sampleData';
+import { ActivityItem, getActivityItems } from '@/data/sampleData';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
 import { IntroVideoModal } from '@/components/IntroVideoModal';
 import { ExpandableMapWidget } from '@/components/ExpandableMapWidget';
+import { seedMockData } from '@/utils/mockDataGenerator';
+import { Alert } from 'react-native';
 
 interface UserLocation {
   latitude: number;
@@ -65,9 +67,9 @@ const calculateHaversineDistance = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -94,11 +96,11 @@ const calculateRelevanceScore = (
   userLocation: UserLocation
 ): { score: number; distance: number | null } => {
   let score = 0;
-  
+
   if (preferences?.preferredServiceTypes?.includes(job.serviceTypeId)) {
     score += 100;
   }
-  
+
   const serviceType = getServiceTypeById(job.serviceTypeId);
   if (serviceType) {
     const category = serviceType.id.split('_')[0];
@@ -109,16 +111,16 @@ const calculateRelevanceScore = (
       score += 30;
     }
   }
-  
+
   const createdAt = new Date(job.createdAt).getTime();
   const now = Date.now();
   const hoursOld = (now - createdAt) / (1000 * 60 * 60);
   score += Math.max(0, 50 - hoursOld);
-  
+
   score += Math.min(job.offer / 50, 30);
-  
+
   const distance = getDistanceToCard(userLocation, job.latitude, job.longitude);
-  
+
   if (distance !== null) {
     if (distance <= 10) {
       score += 80;
@@ -130,7 +132,7 @@ const calculateRelevanceScore = (
       score += 20;
     }
   }
-  
+
   return { score, distance };
 };
 
@@ -140,28 +142,28 @@ const calculateOfferRelevanceScore = (
   userLocation: UserLocation
 ): { score: number; distance: number | null } => {
   let score = 0;
-  
+
   if (preferences?.preferredServiceTypes) {
     const matchingServices = offer.serviceTypeIds.filter(
       (id: string) => preferences.preferredServiceTypes?.includes(id)
     );
     score += matchingServices.length * 50;
   }
-  
+
   const createdAt = new Date(offer.createdAt).getTime();
   const now = Date.now();
   const hoursOld = (now - createdAt) / (1000 * 60 * 60);
   score += Math.max(0, 50 - hoursOld);
-  
+
   const price = offer.pricePerDay || offer.pricePerHour || 0;
   score += Math.min(price / 20, 30);
-  
+
   if (offer.extras?.providesFood) score += 10;
   if (offer.extras?.providesAccommodation) score += 10;
   if (offer.extras?.providesTransport) score += 10;
-  
+
   const distance = getDistanceToCard(userLocation, offer.latitude, offer.longitude);
-  
+
   if (distance !== null) {
     if (distance <= 10) {
       score += 80;
@@ -173,7 +175,7 @@ const calculateOfferRelevanceScore = (
       score += 20;
     }
   }
-  
+
   return { score, distance };
 };
 
@@ -280,7 +282,7 @@ function SwipeableJobCard({ job, onSwipe, onPress, colors, isWorker, hasBid }: S
           SALVAR
         </ThemedText>
       </Animated.View>
-      
+
       <Animated.View style={[styles.swipeIndicator, styles.rightIndicator, rightIndicatorStyle]}>
         <View style={[styles.indicatorCircle, { backgroundColor: colors.error }]}>
           <Feather name="x" size={24} color="#FFFFFF" />
@@ -404,6 +406,7 @@ export default function UnifiedHomeScreen() {
   const [locationLoading, setLocationLoading] = useState(true);
   const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
+  const [mapActivities, setMapActivities] = useState<MapActivity[]>([]);
 
   const isWorker = activeRole === 'worker';
   const isProducer = activeRole === 'producer';
@@ -467,13 +470,14 @@ export default function UnifiedHomeScreen() {
     if (!user) return;
     try {
       const preferences = await getUserPreferences(user.id);
-      
+      let activities: MapActivity[] = [];
+
       if (isWorker) {
         const openJobs = await getOpenJobs(user.level || 1);
         const myBids = await getBidsByWorker(user.id);
         const bidJobIds = new Set(myBids.filter((b) => b.status === 'pending').map((b) => b.jobId));
         setMyBidJobIds(bidJobIds);
-        
+
         const jobsWithScores = openJobs
           .filter(j => !dismissedJobs.has(j.id))
           .map(job => {
@@ -486,16 +490,30 @@ export default function UnifiedHomeScreen() {
           })
           .sort((a, b) => b.score - a.score)
           .map(({ score, ...job }) => job as JobWithDistance);
-        
+
         setAllJobs(jobsWithScores);
-        
+
         const workerOffers = await getServiceOffersByWorker(user.id);
         setMyOffers(workerOffers.filter(o => o.status === 'active'));
+
+        activities = [
+          ...activities,
+          ...jobsWithScores.map(j => ({
+            id: j.id,
+            type: 'job' as const,
+            latitude: j.latitude || 0,
+            longitude: j.longitude || 0,
+            title: getServiceTypeById(j.serviceTypeId)?.name || 'Serviço',
+            subtitle: formatCurrency(j.offer),
+            icon: getServiceTypeById(j.serviceTypeId)?.icon || 'briefcase',
+            status: j.status,
+            jobId: j.id,
+          })).filter(a => a.latitude !== 0 && a.longitude !== 0)
+        ];
       }
-      
+
       if (isProducer) {
         const publicOffers = await getPublicServiceOffers();
-        
         const offersWithScores = publicOffers
           .filter(o => o.workerId !== user.id)
           .map(offer => {
@@ -508,23 +526,41 @@ export default function UnifiedHomeScreen() {
           })
           .sort((a, b) => b.score - a.score)
           .map(({ score, ...offer }) => offer as OfferWithDistance);
-        
+
         setAllOffers(offersWithScores);
+
+        activities = [
+          ...activities,
+          ...offersWithScores.map(o => ({
+            id: o.id,
+            type: 'worker' as const,
+            latitude: o.latitude || 0,
+            longitude: o.longitude || 0,
+            title: getServiceTypeById(o.serviceTypeIds[0])?.name || 'Trabalhador',
+            subtitle: formatCurrency(o.pricePerDay || o.pricePerHour || 0),
+            icon: 'user' as const,
+            status: (o.status === 'matched' ? 'assigned' : o.status) as any,
+            workerId: o.workerId,
+          })).filter(a => a.latitude !== 0 && a.longitude !== 0)
+        ];
       }
-      
+
       const userJobs = await getJobsByProducer(user.id);
       const activeJobs = userJobs.filter((j) => j.status !== 'closed');
       setMyJobs(activeJobs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      
+
       const counts: Record<string, number> = {};
       for (const job of activeJobs) {
         const bids = await getBidsByJob(job.id);
         counts[job.id] = bids.filter((b) => b.status === 'pending').length;
       }
       setBidCounts(counts);
-      
+
       const newUsers = await getRecentNewUsers(6);
       setRecentUsers(newUsers.filter((u) => u.id !== user.id));
+
+      setMapActivities(activities);
+
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -537,6 +573,12 @@ export default function UnifiedHomeScreen() {
       loadData();
     }, [loadData])
   );
+
+  const handleManualSeed = async () => {
+    await seedMockData();
+    await loadData();
+    Alert.alert('Sucesso', 'Dados de teste gerados!');
+  };
 
   const jobs = useMemo(() => {
     if (radiusFilter === 'all') return allJobs;
@@ -590,7 +632,7 @@ export default function UnifiedHomeScreen() {
       }
 
       const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status === 'granted') {
         setLocationLoading(true);
         const location = await Location.getCurrentPositionAsync({
@@ -638,14 +680,14 @@ export default function UnifiedHomeScreen() {
         ]}
         onPress={() => handleRoleSwitch('producer')}
       >
-        <Feather 
-          name="briefcase" 
-          size={18} 
-          color={isProducer ? '#FFFFFF' : colors.textSecondary} 
+        <Feather
+          name="briefcase"
+          size={18}
+          color={isProducer ? '#FFFFFF' : colors.textSecondary}
         />
-        <ThemedText 
-          type="body" 
-          style={{ 
+        <ThemedText
+          type="body"
+          style={{
             color: isProducer ? '#FFFFFF' : colors.textSecondary,
             fontWeight: isProducer ? '700' : '500',
           }}
@@ -661,14 +703,14 @@ export default function UnifiedHomeScreen() {
         ]}
         onPress={() => handleRoleSwitch('worker')}
       >
-        <Feather 
-          name="tool" 
-          size={18} 
-          color={isWorker ? '#FFFFFF' : colors.textSecondary} 
+        <Feather
+          name="tool"
+          size={18}
+          color={isWorker ? '#FFFFFF' : colors.textSecondary}
         />
-        <ThemedText 
-          type="body" 
-          style={{ 
+        <ThemedText
+          type="body"
+          style={{
             color: isWorker ? '#FFFFFF' : colors.textSecondary,
             fontWeight: isWorker ? '700' : '500',
           }}
@@ -686,57 +728,91 @@ export default function UnifiedHomeScreen() {
     </View>
   );
 
+  const renderQuickLinks = () => (
+    <View style={styles.quickLinksContainer}>
+      <Pressable
+        style={[styles.quickLinkCard, { backgroundColor: colors.card }, Shadows.sm]}
+        onPress={() => navigation.navigate('CacauPrices')}
+      >
+        <View style={[styles.quickLinkIcon, { backgroundColor: colors.accent + '20' }]}>
+          <Feather name="trending-up" size={24} color={colors.accent} />
+        </View>
+        <View>
+          <ThemedText type="h4">Preço do Cacau</ThemedText>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>Acompanhe a cotação</ThemedText>
+        </View>
+      </Pressable>
+
+      <Pressable
+        style={[styles.quickLinkCard, { backgroundColor: colors.card }, Shadows.sm]}
+        onPress={() => navigation.navigate('StoreDetail', { storeId: 'shop' })} // Placeholder for ShopList route if needed, or redirect
+      >
+        <View style={[styles.quickLinkIcon, { backgroundColor: colors.secondary + '20' }]}>
+          <Feather name="shopping-bag" size={24} color={colors.secondary} />
+        </View>
+        <View>
+          <ThemedText type="h4">LidaShop</ThemedText>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>Compre insumos</ThemedText>
+        </View>
+      </Pressable>
+    </View>
+  );
+
   const renderProfileHeader = () => (
     <View style={styles.profileHeader}>
-      <View style={styles.avatarContainer}>
-        {user?.avatar ? (
-          <Image source={{ uri: user.avatar }} style={styles.avatar} contentFit="cover" />
-        ) : (
-          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-            <ThemedText type="h2" style={{ color: '#FFFFFF' }}>
-              {user?.name?.charAt(0) || 'U'}
-            </ThemedText>
-          </View>
-        )}
-        {user?.verification?.status === 'approved' ? (
-          <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
-            <Feather name="check" size={12} color="#FFFFFF" />
-          </View>
-        ) : null}
+      <View style={styles.headerTopRow}>
+        <View style={styles.avatarContainer}>
+          {user?.avatar ? (
+            <Image source={{ uri: user.avatar }} style={styles.avatar} contentFit="cover" />
+          ) : (
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+              <ThemedText type="h2" style={{ color: '#FFFFFF' }}>
+                {user?.name?.charAt(0) || 'U'}
+              </ThemedText>
+            </View>
+          )}
+          {user?.verification?.status === 'approved' ? (
+            <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
+              <Feather name="check" size={12} color="#FFFFFF" />
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.profileInfo}>
+          <ThemedText type="h3">E aí, {user?.name?.split(' ')[0]}!</ThemedText>
+          <ThemedText type="body" style={{ color: colors.textSecondary }}>
+            {isProducer ? 'Bora meter a mão na massa?' : 'Firme na lida?'}
+          </ThemedText>
+        </View>
+        <Pressable
+          style={[styles.notificationButton, { backgroundColor: colors.card }]}
+          onPress={() => navigation.navigate('Notifications')}
+        >
+          <Feather name="bell" size={22} color={colors.text} />
+          <View style={[styles.notificationDot, { backgroundColor: colors.error }]} />
+        </Pressable>
       </View>
-      <View style={styles.profileInfo}>
-        <ThemedText type="h3">E ai, {user?.name?.split(' ')[0]}!</ThemedText>
-        <ThemedText type="body" style={{ color: colors.textSecondary }}>
-          {isProducer ? 'Bora meter a mao na massa?' : 'Firme na lida?'}
-        </ThemedText>
-      </View>
-      <Pressable 
-        style={[styles.notificationButton, { backgroundColor: colors.card }]}
-        onPress={() => navigation.navigate('Notifications')}
-      >
-        <Feather name="bell" size={22} color={colors.text} />
-        <View style={[styles.notificationDot, { backgroundColor: colors.error }]} />
-      </Pressable>
+
+      {renderQuickLinks()}
     </View>
   );
 
   const renderLocationBanner = () => {
     if (!usingDefaultLocation) return null;
-    
+
     const isWeb = Platform.OS === 'web';
-    
+
     return (
       <View style={[styles.locationBanner, { backgroundColor: colors.warning + '20' }]}>
         <View style={[styles.locationBannerIcon, { backgroundColor: colors.warning + '30' }]}>
           <Feather name="map-pin" size={18} color={colors.warning} />
         </View>
         <View style={styles.locationBannerContent}>
-          <ThemedText 
-            type="body" 
+          <ThemedText
+            type="body"
             style={[styles.locationBannerText, { color: colors.text }]}
           >
-            {isWeb 
-              ? 'Use o app Expo Go no celular para distancias reais' 
+            {isWeb
+              ? 'Use o app Expo Go no celular para distancias reais'
               : 'Usando localizacao de Uruara'}
           </ThemedText>
           {!isWeb ? (
@@ -795,7 +871,7 @@ export default function UnifiedHomeScreen() {
 
   const renderGenteDaLida = () => {
     if (recentUsers.length === 0) return null;
-    
+
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -816,9 +892,9 @@ export default function UnifiedHomeScreen() {
             </ThemedText>
           </Pressable>
         </View>
-        
-        <ScrollView 
-          horizontal 
+
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.genteDaLidaScroll}
         >
@@ -826,7 +902,7 @@ export default function UnifiedHomeScreen() {
             const isNewUser = new Date(person.createdAt!).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
             const roleLabel = person.role === 'worker' ? 'Trabalhador' : 'Produtor';
             const roleColor = person.role === 'worker' ? colors.handshake : colors.primary;
-            
+
             return (
               <Pressable
                 key={person.id}
@@ -881,7 +957,7 @@ export default function UnifiedHomeScreen() {
 
   const renderMyJobsSection = () => {
     if (myJobs.length === 0) return null;
-    
+
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -901,7 +977,7 @@ export default function UnifiedHomeScreen() {
           {myJobs.slice(0, 3).map((job) => {
             const serviceType = getServiceTypeById(job.serviceTypeId);
             const bidCount = bidCounts[job.id] || 0;
-            
+
             return (
               <Pressable
                 key={job.id}
@@ -997,7 +1073,7 @@ export default function UnifiedHomeScreen() {
       .join(', ');
     const price = offer.pricePerDay || offer.pricePerHour || offer.pricePerUnit || 0;
     const priceLabel = offer.pricePerDay ? '/dia' : offer.pricePerHour ? '/hora' : '/unid';
-    
+
     return (
       <Pressable
         key={offer.id}
@@ -1070,9 +1146,9 @@ export default function UnifiedHomeScreen() {
 
   const renderAvailableJobs = () => {
     if (!isWorker) return null;
-    
+
     const filteredJobs = feedFilter === 'offers' ? [] : jobs;
-    
+
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -1088,7 +1164,7 @@ export default function UnifiedHomeScreen() {
             ) : null}
           </View>
         </View>
-        
+
         {filteredJobs.length > 0 ? (
           <GestureHandlerRootView style={styles.jobsContainer}>
             {filteredJobs.slice(0, 5).map((job) => (
@@ -1117,7 +1193,7 @@ export default function UnifiedHomeScreen() {
 
   const renderAvailableOffers = () => {
     if (!isProducer || feedFilter === 'demands') return null;
-    
+
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -1133,7 +1209,7 @@ export default function UnifiedHomeScreen() {
             ) : null}
           </View>
         </View>
-        
+
         {offers.length > 0 ? (
           <View style={styles.offersContainer}>
             {offers.slice(0, 5).map(renderOfferCard)}
@@ -1156,7 +1232,7 @@ export default function UnifiedHomeScreen() {
     <ThemedView style={styles.container}>
       {/* Intro Video Modal - shows on first visit */}
       <IntroVideoModal />
-      
+
       {/* Decorative cacao canopy header - positioned behind content */}
       <Image
         source={cacaoCanopyHeader}
@@ -1164,7 +1240,7 @@ export default function UnifiedHomeScreen() {
         contentFit="cover"
         contentPosition="bottom"
       />
-      
+
       {/* Corner branch decorations */}
       <Image
         source={cornerBranch}
@@ -1194,7 +1270,7 @@ export default function UnifiedHomeScreen() {
               <ThemedText type="h2" style={{ color: colors.text }}>LidaCacau</ThemedText>
               <ThemedText type="small" style={{ color: colors.textSecondary }}>Olá, {user?.name?.split(' ')[0] || 'Produtor'}</ThemedText>
             </View>
-            <Pressable 
+            <Pressable
               onPress={() => navigation.navigate('Notifications')}
               style={[styles.headerIcon, { backgroundColor: colors.backgroundSecondary, padding: 8, borderRadius: 12 }]}
             >
@@ -1207,10 +1283,10 @@ export default function UnifiedHomeScreen() {
 
         {renderLocationBanner()}
         {renderQuickStats()}
-        
+
         {/* Interactive Map Widget */}
         <ExpandableMapWidget />
-        
+
         {/* Decorative branch divider */}
         <View style={styles.branchDividerContainer}>
           <Image
@@ -1219,10 +1295,10 @@ export default function UnifiedHomeScreen() {
             contentFit="contain"
           />
         </View>
-        
+
         {renderGenteDaLida()}
         {renderFeedFilters()}
-        
+
         {/* Decorative branch divider before jobs */}
         <View style={styles.branchDividerContainer}>
           <Image
@@ -1231,7 +1307,7 @@ export default function UnifiedHomeScreen() {
             contentFit="contain"
           />
         </View>
-        
+
         {renderMyJobsSection()}
         {renderAvailableJobs()}
         {renderAvailableOffers()}
@@ -1748,6 +1824,30 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  quickLinksContainer: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  quickLinkCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.md,
+  },
+  quickLinkIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   miniVerifiedBadge: {
     position: 'absolute',
     bottom: 0,
@@ -1759,5 +1859,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { roadsKm140, km140Center } from '@/data/roads-km140';
+import { MapActivity } from '@/types';
 import { getMapActivities } from '@/data/sampleData';
 
 let MapView: any = null;
@@ -28,9 +29,10 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ExpandableMapWidgetProps {
   minimized?: boolean;
+  activities?: MapActivity[];
 }
 
-export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetProps) {
+export function ExpandableMapWidget({ minimized = true, activities: propActivities }: ExpandableMapWidgetProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
@@ -38,7 +40,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
   const [activeFilter, setActiveFilter] = useState<'all' | 'jobs' | 'workers' | 'roads' | 'vicinais'>('all');
   const [showMapTypeMenu, setShowMapTypeMenu] = useState(false);
-  const activities = getMapActivities();
+  const activities = propActivities || getMapActivities();
   const mapRef = useRef<any>(null);
   const scale = useSharedValue(1);
 
@@ -218,8 +220,8 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
 
       <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Estradas Mapeadas</ThemedText>
       {roadsKm140.map(road => (
-        <Pressable 
-          key={road.id} 
+        <Pressable
+          key={road.id}
           style={[styles.roadCard, { backgroundColor: colors.backgroundSecondary }]}
           onPress={() => {
             if (mapRef.current) {
@@ -284,13 +286,13 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
         <View style={[styles.modalContainer, { backgroundColor: colors.backgroundDefault }]}>
           <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
             <View style={styles.tabContainer}>
-              <Pressable 
+              <Pressable
                 onPress={() => setActiveTab('map')}
                 style={[styles.tabItem, activeTab === 'map' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
               >
                 <ThemedText style={{ color: activeTab === 'map' ? colors.primary : colors.textSecondary, fontWeight: '600' }}>Mapa</ThemedText>
               </Pressable>
-              <Pressable 
+              <Pressable
                 onPress={() => setActiveTab('roads')}
                 style={[styles.tabItem, activeTab === 'roads' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
               >
@@ -301,7 +303,7 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
               <Feather name="x" size={24} color={colors.text} />
             </Pressable>
           </View>
-          
+
           <View style={styles.mapContainer}>
             {activeTab === 'map' ? (
               <>
@@ -367,10 +369,10 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
                         setShowMapTypeMenu(false);
                       }}
                     >
-                      <Feather 
-                        name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : 'layers'} 
-                        size={16} 
-                        color={mapType === type ? colors.primary : colors.textSecondary} 
+                      <Feather
+                        name={type === 'standard' ? 'map' : type === 'satellite' ? 'globe' : 'layers'}
+                        size={16}
+                        color={mapType === type ? colors.primary : colors.textSecondary}
                       />
                       <ThemedText type="small" style={{ marginLeft: Spacing.sm, color: mapType === type ? colors.primary : colors.text, fontWeight: mapType === type ? '600' : '400' }}>
                         {mapTypeLabels[type]}
@@ -399,7 +401,6 @@ export function ExpandableMapWidget({ minimized = true }: ExpandableMapWidgetPro
       </Modal>
     </>
   );
-}
 }
 
 const styles = StyleSheet.create({

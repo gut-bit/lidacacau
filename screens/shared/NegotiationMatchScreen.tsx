@@ -22,7 +22,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from '@/components/ThemedText';
@@ -174,20 +173,20 @@ export default function NegotiationMatchScreen() {
 
   const handleWhatsApp = async (user: User) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     const phone = user.socialLinks?.whatsapp || user.phone;
     if (!phone) {
       Alert.alert('Sem contato', 'Este usuario nao possui telefone cadastrado.');
       return;
     }
-    
+
     let cleanPhone = phone.replace(/\D/g, '');
-    
+
     if (!cleanPhone) {
       Alert.alert('Numero invalido', 'O numero de telefone informado nao e valido.');
       return;
     }
-    
+
     if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
     } else if (cleanPhone.length >= 10 && cleanPhone.length <= 11) {
       cleanPhone = '55' + cleanPhone;
@@ -195,10 +194,10 @@ export default function NegotiationMatchScreen() {
       Alert.alert('Numero incompleto', 'O numero de telefone parece estar incompleto. Verifique e tente novamente.');
       return;
     }
-    
+
     const message = encodeURIComponent(`Ola ${user.name.split(' ')[0]}! Vi que fechamos acordo no LidaCacau para ${serviceName}. Vamos conversar?`);
     const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${message}`;
-    
+
     try {
       const canOpen = await Linking.canOpenURL(whatsappUrl);
       if (canOpen) {
@@ -221,8 +220,7 @@ export default function NegotiationMatchScreen() {
 
   return (
     <Animated.View style={[styles.container, overlayStyle]}>
-      <BlurView intensity={80} style={StyleSheet.absoluteFill} tint="dark" />
-      
+
       <View style={styles.content}>
         <Animated.View style={[styles.confettiContainer, confettiStyle]}>
           {[...Array(12)].map((_, i) => (
@@ -337,8 +335,8 @@ export default function NegotiationMatchScreen() {
               <ThemedText type="small" style={{ color: colors.textSecondary, marginBottom: Spacing.xs }}>
                 Redes Sociais
               </ThemedText>
-              <SocialLinksDisplay 
-                socialLinks={(isProducer ? worker : producer).socialLinks || {}} 
+              <SocialLinksDisplay
+                socialLinks={(isProducer ? worker : producer).socialLinks || {}}
               />
             </View>
           )}

@@ -31,7 +31,6 @@
     "cors": "^2.8.5",
     "drizzle-kit": "^0.31.7",
     "drizzle-orm": "^0.44.7",
-    "eas-cli": "^16.28.0",
     "expo": "^54.0.25",
     "expo-blur": "^15.0.7",
     "expo-clipboard": "^8.0.7",
