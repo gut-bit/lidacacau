@@ -89,7 +89,7 @@ export default function StoreSignupModal({ visible, onClose, onSubmit }: StoreSi
           </View>
 
           <View style={[styles.introSection, { backgroundColor: colors.backgroundDefault, borderColor: colors.border }]}>
-            <ThemedText type="h5" style={{ marginBottom: Spacing.md }}>
+            <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>
               Vamos construir a melhor agro loja virtual da regiao!
             </ThemedText>
             <ThemedText type="small" style={{ color: colors.textSecondary, lineHeight: 20 }}>
@@ -98,7 +98,7 @@ export default function StoreSignupModal({ visible, onClose, onSubmit }: StoreSi
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText type="h5" style={{ marginBottom: Spacing.md }}>Informacoes Pessoais</ThemedText>
+            <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Informacoes Pessoais</ThemedText>
 
             <View style={styles.inputGroup}>
               <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Nome Completo*</ThemedText>
@@ -140,7 +140,7 @@ export default function StoreSignupModal({ visible, onClose, onSubmit }: StoreSi
           </View>
 
           <View style={styles.formSection}>
-            <ThemedText type="h5" style={{ marginBottom: Spacing.md }}>Informacoes da Loja</ThemedText>
+            <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Informacoes da Loja</ThemedText>
 
             <View style={styles.inputGroup}>
               <ThemedText type="small" style={{ fontWeight: '600', marginBottom: Spacing.xs }}>Nome da Loja*</ThemedText>

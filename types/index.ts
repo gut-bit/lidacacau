@@ -909,7 +909,13 @@ export type AnalyticsEventType =
   | 'squad_proposed'
   | 'squad_invite_sent'
   | 'squad_invite_responded'
-  | 'error_occurred';
+  | 'error_occurred'
+  | 'chat_send'
+  | 'tutorial_complete'
+  | 'friend_request_accept'
+  | 'friend_request_reject'
+  | 'friend_remove'
+  | 'friend_request_send';
 
 export interface AnalyticsEvent {
   id: string;

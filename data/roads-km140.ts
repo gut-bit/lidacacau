@@ -6,6 +6,8 @@ export interface RoadSegment {
   color?: string;
 }
 
+export type Road = RoadSegment;
+
 export const roadsKm140: RoadSegment[] = [
   {
     id: 'transamazonica-main',

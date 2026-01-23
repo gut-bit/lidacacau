@@ -12,13 +12,13 @@ export interface AppConfig {
   env: Environment;
   appName: string;
   appVersion: string;
-  
+
   api: {
     baseUrl: string;
     timeout: number;
     retryAttempts: number;
   };
-  
+
   features: {
     enableMockData: boolean;
     enableAnalytics: boolean;
@@ -30,18 +30,18 @@ export interface AppConfig {
     enableMaps: boolean;
     enableDevFallback: boolean;
   };
-  
+
   storage: {
     prefix: string;
     encryptSensitive: boolean;
   };
-  
+
   services: {
     openPixAppId: string;
     mapsApiKey: string;
     analyticsId: string;
   };
-  
+
   metadata: {
     region: string;
     defaultLocation: {
@@ -84,12 +84,12 @@ export function isProductionHost(): boolean {
   if (isNativeRuntime()) {
     return !isDevMode();
   }
-  
+
   const hostname = window.location?.hostname || '';
   // Production hosts: lidacacau.com, www.lidacacau.com, *.replit.app
-  return hostname === 'lidacacau.com' || 
-         hostname === 'www.lidacacau.com' ||
-         hostname.endsWith('.replit.app');
+  return hostname === 'lidacacau.com' ||
+    hostname === 'www.lidacacau.com' ||
+    hostname.endsWith('.replit.app');
 }
 
 /**
@@ -108,16 +108,16 @@ export function shouldUseMockData(): boolean {
   if (isNativeRuntime()) {
     return isDevMode();
   }
-  
+
   const hostname = window.location?.hostname || '';
-  
+
   // Production hosts - use real API
-  if (hostname === 'lidacacau.com' || 
-      hostname === 'www.lidacacau.com' ||
-      hostname.endsWith('.replit.app')) {
+  if (hostname === 'lidacacau.com' ||
+    hostname === 'www.lidacacau.com' ||
+    hostname.endsWith('.replit.app')) {
     return false;
   }
-  
+
   // Development hosts - use mock data
   // Includes localhost, *.replit.dev (development preview)
   return true;
@@ -132,14 +132,14 @@ export function shouldUseDevFallback(): boolean {
   if (isNativeRuntime()) {
     return isDevMode(); // Only allow in Expo Go / dev client
   }
-  
+
   const hostname = window.location?.hostname || '';
-  
+
   // Only allow dev fallback on localhost
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return true;
   }
-  
+
   // Everywhere else (including replit.dev, replit.app, lidacacau.com) - no fallback
   return false;
 }
@@ -148,13 +148,13 @@ const developmentConfig: AppConfig = {
   env: 'development',
   appName: 'LidaCacau',
   appVersion: '1.0.0',
-  
+
   api: {
     baseUrl: '/api',
     timeout: 30000,
     retryAttempts: 3,
   },
-  
+
   features: {
     enableMockData: true,
     enableAnalytics: true,
@@ -166,18 +166,18 @@ const developmentConfig: AppConfig = {
     enableMaps: true,
     enableDevFallback: true,
   },
-  
+
   storage: {
     prefix: '@lidacacau_',
     encryptSensitive: false,
   },
-  
+
   services: {
     openPixAppId: '',
     mapsApiKey: '',
     analyticsId: '',
   },
-  
+
   metadata: {
     region: 'Uruara/PA',
     defaultLocation: {
@@ -194,13 +194,13 @@ const productionConfig: AppConfig = {
   env: 'production',
   appName: 'LidaCacau',
   appVersion: '1.0.0',
-  
+
   api: {
-    baseUrl: '/api',
+    baseUrl: 'https://www.lidacacau.com/api',
     timeout: 30000,
     retryAttempts: 3,
   },
-  
+
   features: {
     enableMockData: false,
     enableAnalytics: true,
@@ -212,18 +212,18 @@ const productionConfig: AppConfig = {
     enableMaps: true,
     enableDevFallback: false,
   },
-  
+
   storage: {
     prefix: '@lidacacau_',
     encryptSensitive: true,
   },
-  
+
   services: {
     openPixAppId: '',
     mapsApiKey: '',
     analyticsId: '',
   },
-  
+
   metadata: {
     region: 'Uruara/PA',
     defaultLocation: {
@@ -264,7 +264,7 @@ export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
   }
-  return '';
+  return AppConfiguration.api.baseUrl;
 }
 
 export default AppConfiguration;

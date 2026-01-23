@@ -60,7 +60,7 @@ export default function AdminUsersScreen() {
             </ThemedText>
           </View>
           <View style={[styles.roleBadge, { backgroundColor: roleColor + '20' }]}>
-            <ThemedText type="caption" style={{ color: roleColor, fontWeight: '600' }}>
+            <ThemedText type="small" style={{ color: roleColor, fontWeight: '600' }}>
               {roleLabel}
             </ThemedText>
           </View>
@@ -82,7 +82,7 @@ export default function AdminUsersScreen() {
                     { backgroundColor: LevelColors[`N${item.level || 1}` as keyof typeof LevelColors] },
                   ]}
                 >
-                  <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                  <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                     {getLevelLabel(item.level || 1)}
                   </ThemedText>
                 </View>

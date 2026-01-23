@@ -67,7 +67,7 @@ export default function ProducerHistoryScreen() {
     setRefreshing(false);
   };
 
-  const renderJobItem = ({ item }: { item: HistoryItem }) => {
+  const renderJobItem = useCallback(({ item }: { item: HistoryItem }) => {
     const serviceType = getServiceTypeById(item.serviceTypeId);
 
     return (
@@ -112,18 +112,18 @@ export default function ProducerHistoryScreen() {
         </View>
 
         <View style={styles.jobFooter}>
-          <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+          <ThemedText type="small" style={{ color: colors.textSecondary }}>
             {formatDate(item.createdAt)}
           </ThemedText>
           <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
-            <ThemedText type="caption" style={{ color: colors.success, fontWeight: '600' }}>
+            <ThemedText type="small" style={{ color: colors.success, fontWeight: '600' }}>
               Concluído
             </ThemedText>
           </View>
         </View>
       </Pressable>
     );
-  };
+  }, [colors, navigation]);
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>

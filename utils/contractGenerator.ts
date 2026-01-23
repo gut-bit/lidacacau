@@ -1,15 +1,36 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Job, WorkOrder, User, ServiceType } from '@/types';
+import { Job, WorkOrder, User, ServiceType, PaymentTerms, SignedContract } from '@/types';
 import { formatCurrency, formatDate } from './format';
 
-interface ContractData {
+export interface ContractData {
   job: Job;
   workOrder: WorkOrder;
   producer: User;
   worker: User;
   serviceType: ServiceType;
+  paymentTerms?: PaymentTerms;
+  totalValue?: number;
 }
+
+export const createSignedContract = (data: ContractData): SignedContract => {
+  const { job, workOrder, producer, worker, serviceType, paymentTerms, totalValue } = data;
+
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    text: generateContractHtml(data), // Using HTML for now as text representation
+    producerName: producer.name,
+    producerEmail: producer.email,
+    workerName: worker.name,
+    workerEmail: worker.email,
+    serviceType: serviceType.name,
+    startDate: job.startDate,
+    endDate: job.endDate,
+    totalValue: totalValue || workOrder.finalPrice,
+    paymentTermsType: paymentTerms?.type || workOrder.paymentTerms?.type || 'full_after',
+    createdAt: new Date().toISOString(),
+  };
+};
 
 export const generateContractHtml = (data: ContractData): string => {
   const { job, workOrder, producer, worker, serviceType } = data;

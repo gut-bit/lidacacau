@@ -47,13 +47,13 @@ export default function ChatRoomScreen() {
 
   const loadData = useCallback(async () => {
     if (!roomId || !otherUserId) return;
-    
+
     try {
       const [loadedMessages, loadedUser] = await Promise.all([
         getMessages(roomId),
         getUserById(otherUserId),
       ]);
-      
+
       setMessages(loadedMessages);
       setOtherUser(loadedUser);
 
@@ -129,7 +129,7 @@ export default function ChatRoomScreen() {
       const newMessage = await sendDirectMessage(roomId, user.id, text);
       await trackEvent('chat_send', { roomId, messageLength: text.length });
       setMessages((prev) => [...prev, newMessage]);
-      
+
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
@@ -202,7 +202,7 @@ export default function ChatRoomScreen() {
             </ThemedText>
             <View style={styles.messageFooter}>
               <ThemedText
-                type="caption"
+                type="small"
                 style={[
                   styles.messageTime,
                   { color: isMyMessage ? 'rgba(255,255,255,0.7)' : colors.textSecondary },

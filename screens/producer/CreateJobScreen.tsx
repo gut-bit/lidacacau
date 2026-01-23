@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator, ScrollView, FlatList, Image as RNImage } from 'react-native';
+import { StyleSheet, View, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
-import * as ImagePicker from 'expo-image-picker';
 import { ScreenKeyboardAwareScrollView } from '@/components/ScreenKeyboardAwareScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/Button';
+import { ServiceTypeSelector } from '@/components/producer/ServiceTypeSelector';
+import { JobPhotoPicker } from '@/components/producer/JobPhotoPicker';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
 import { createJob } from '@/utils/storage';
@@ -35,7 +36,6 @@ export default function CreateJobScreen() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [isPickingPhoto, setIsPickingPhoto] = useState(false);
 
   const selectedService = SERVICE_TYPES.find((s) => s.id === serviceTypeId);
   const suggestedPrice = selectedService ? selectedService.basePrice * (parseFloat(quantity) || 0) : 0;
@@ -65,30 +65,6 @@ export default function CreateJobScreen() {
     } finally {
       setIsGettingLocation(false);
     }
-  };
-
-  const handlePickPhoto = async () => {
-    setIsPickingPhoto(true);
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.7,
-      });
-
-      if (!result.canceled) {
-        setPhotos([...photos, result.assets[0].uri]);
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível selecionar a foto');
-    } finally {
-      setIsPickingPhoto(false);
-    }
-  };
-
-  const handleRemovePhoto = (index: number) => {
-    setPhotos(photos.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -147,38 +123,8 @@ export default function CreateJobScreen() {
         <ThemedText type="small" style={styles.sectionTitle}>
           Tipo de Serviço
         </ThemedText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.servicesContainer}
-        >
-          {SERVICE_TYPES.map((service) => (
-            <Pressable
-              key={service.id}
-              style={[
-                styles.serviceChip,
-                {
-                  backgroundColor:
-                    serviceTypeId === service.id ? colors.primary : colors.backgroundDefault,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setServiceTypeId(service.id)}
-            >
-              <Feather
-                name={service.icon as any}
-                size={18}
-                color={serviceTypeId === service.id ? '#FFFFFF' : colors.text}
-              />
-              <ThemedText
-                type="small"
-                style={{ color: serviceTypeId === service.id ? '#FFFFFF' : colors.text }}
-              >
-                {service.name}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </ScrollView>
+
+        <ServiceTypeSelector selectedId={serviceTypeId} onSelect={setServiceTypeId} />
 
         {selectedService && (
           <View style={[styles.infoBox, { backgroundColor: colors.primary + '10' }]}>
@@ -209,7 +155,7 @@ export default function CreateJobScreen() {
             />
           </View>
           {suggestedPrice > 0 && (
-            <ThemedText type="caption" style={{ color: colors.textSecondary, marginTop: Spacing.xs }}>
+            <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.xs }}>
               Sugestão: {formatCurrency(suggestedPrice)} (base)
             </ThemedText>
           )}
@@ -251,7 +197,7 @@ export default function CreateJobScreen() {
             )}
           </Pressable>
           {latitude && longitude && (
-            <ThemedText type="caption" style={{ color: colors.success, marginTop: Spacing.xs }}>
+            <ThemedText type="small" style={{ color: colors.success, marginTop: Spacing.xs }}>
               GPS capturado com sucesso
             </ThemedText>
           )}
@@ -281,66 +227,13 @@ export default function CreateJobScreen() {
           </View>
         </View>
 
-        <View style={styles.inputContainer}>
-          <ThemedText type="small" style={styles.label}>
-            Fotos da Demanda
-          </ThemedText>
-          <ThemedText type="caption" style={{ color: colors.textSecondary, marginBottom: Spacing.md }}>
-            Adicione fotos para aumentar as chances de receber propostas
-          </ThemedText>
-          
-          {photos.length > 0 && (
-            <FlatList
-              data={photos}
-              renderItem={({ item, index }) => (
-                <View style={styles.photoWrapper}>
-                  <RNImage source={{ uri: item }} style={styles.photoThumbnail} />
-                  <Pressable
-                    style={[styles.removePhotoButton, { backgroundColor: colors.error }]}
-                    onPress={() => handleRemovePhoto(index)}
-                  >
-                    <Feather name="x" size={16} color="#FFFFFF" />
-                  </Pressable>
-                </View>
-              )}
-              keyExtractor={(_, index) => `photo-${index}`}
-              horizontal
-              scrollEnabled={false}
-              contentContainerStyle={styles.photosList}
-              itemSeparatorComponent={() => <View style={{ width: Spacing.md }} />}
-            />
-          )}
-
-          <Pressable
-            style={[
-              styles.photoButton,
-              {
-                backgroundColor: colors.primary,
-                borderColor: colors.border,
-                opacity: isPickingPhoto ? 0.6 : 1,
-              },
-            ]}
-            onPress={handlePickPhoto}
-            disabled={isPickingPhoto}
-          >
-            {isPickingPhoto ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <Feather name="image" size={20} color="#FFFFFF" />
-                <ThemedText type="small" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                  Adicionar Foto ({photos.length})
-                </ThemedText>
-              </>
-            )}
-          </Pressable>
-        </View>
+        <JobPhotoPicker photos={photos} onPhotosChange={setPhotos} />
 
         <View style={styles.inputContainer}>
           <ThemedText type="small" style={styles.label}>
             Descrição Detalhada *
           </ThemedText>
-          <ThemedText type="caption" style={{ color: colors.accent, marginBottom: Spacing.md }}>
+          <ThemedText type="small" style={{ color: colors.accent, marginBottom: Spacing.md }}>
             💡 Dica: Quanto melhor a descrição, mais propostas você receberá
           </ThemedText>
           <View
@@ -350,7 +243,7 @@ export default function CreateJobScreen() {
             ]}
           >
             <Feather name="info" size={14} color={colors.accent} />
-            <ThemedText type="caption" style={{ color: colors.accent, flex: 1 }}>
+            <ThemedText type="small" style={{ color: colors.accent, flex: 1 }}>
               Inclua: padrão desejado, requisitos especiais, urgência, contatos, referências
             </ThemedText>
           </View>
@@ -391,19 +284,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: '600',
     marginBottom: Spacing.sm,
-  },
-  servicesContainer: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-  },
-  serviceChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
   },
   infoBox: {
     flexDirection: 'row',
@@ -451,38 +331,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.xs,
     marginTop: Spacing.sm,
-  },
-  photoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xs,
-    marginTop: Spacing.sm,
-  },
-  photosList: {
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-  photoWrapper: {
-    position: 'relative',
-  },
-  photoThumbnail: {
-    width: 100,
-    height: 100,
-    borderRadius: BorderRadius.xs,
-    backgroundColor: '#f0f0f0',
-  },
-  removePhotoButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   tipsBox: {
     flexDirection: 'row',

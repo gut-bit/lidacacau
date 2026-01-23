@@ -105,7 +105,7 @@ export default function TutorialScreen({ onComplete }: { onComplete?: () => void
 
   const completeTutorial = async () => {
     if (!user) return;
-    
+
     try {
       const updatedUser = { ...user, tutorialCompleted: true };
       await updateUser(user.id, { tutorialCompleted: true });

@@ -31,7 +31,7 @@ router.get('/friends', authMiddleware, async (req: AuthenticatedRequest, res: Re
         )
       );
 
-    const friendIds = connections.map(c => 
+    const friendIds = connections.map(c =>
       c.requesterId === userId ? c.receiverId : c.requesterId
     );
 
@@ -162,7 +162,7 @@ router.post('/friends/:connectionId/accept', authMiddleware, async (req: Authent
       .from(friendConnections)
       .where(
         and(
-          eq(friendConnections.id, connectionId),
+          eq(friendConnections.id, connectionId as string),
           eq(friendConnections.receiverId, userId),
           eq(friendConnections.status, 'pending')
         )
@@ -177,7 +177,7 @@ router.post('/friends/:connectionId/accept', authMiddleware, async (req: Authent
     await db
       .update(friendConnections)
       .set({ status: 'accepted', acceptedAt: new Date() })
-      .where(eq(friendConnections.id, connectionId));
+      .where(eq(friendConnections.id, connectionId as string));
 
     res.json({ success: true });
   } catch (error) {
@@ -413,7 +413,7 @@ router.post('/notifications/:id/read', authMiddleware, async (req: Authenticated
       .set({ read: true })
       .where(
         and(
-          eq(notifications.id, id),
+          eq(notifications.id, id as string),
           eq(notifications.userId, userId)
         )
       );

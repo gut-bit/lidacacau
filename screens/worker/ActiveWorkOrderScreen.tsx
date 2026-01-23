@@ -285,7 +285,7 @@ export default function ActiveWorkOrderScreen() {
                     {formatDateTime(workOrder.checkInTime)}
                   </ThemedText>
                   {workOrder.checkInLatitude && (
-                    <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+                    <ThemedText type="small" style={{ color: colors.textSecondary }}>
                       GPS: {workOrder.checkInLatitude.toFixed(4)}, {workOrder.checkInLongitude?.toFixed(4)}
                     </ThemedText>
                   )}
@@ -311,7 +311,7 @@ export default function ActiveWorkOrderScreen() {
                     {formatDateTime(workOrder.checkOutTime)}
                   </ThemedText>
                   {workOrder.checkOutLatitude && (
-                    <ThemedText type="caption" style={{ color: colors.textSecondary }}>
+                    <ThemedText type="small" style={{ color: colors.textSecondary }}>
                       GPS: {workOrder.checkOutLatitude.toFixed(4)}, {workOrder.checkOutLongitude?.toFixed(4)}
                     </ThemedText>
                   )}

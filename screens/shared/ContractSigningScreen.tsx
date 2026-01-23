@@ -95,6 +95,7 @@ export default function ContractSigningScreen() {
           producer: producerData,
           worker: workerData,
           job: jobData,
+          workOrder: wo,
           serviceType: svc || { id: '', name: 'Serviço', unit: '', basePrice: 0, minLevel: 1, icon: '' },
           paymentTerms: wo.paymentTerms || { type: 'full_after' },
           totalValue: wo.finalPrice,
@@ -141,7 +142,7 @@ export default function ContractSigningScreen() {
       });
 
       const bothSignedNow = updatedContract.producerSignedAt && updatedContract.workerSignedAt;
-      
+
       if (bothSignedNow) {
         await saveContractToHistory(
           workOrderId,
@@ -153,7 +154,7 @@ export default function ContractSigningScreen() {
           worker.name,
           serviceType?.name || 'Servico'
         );
-        
+
         await saveContractToHistory(
           workOrderId,
           job.id,
@@ -167,7 +168,7 @@ export default function ContractSigningScreen() {
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
+
       setContract(updatedContract);
 
       if (bothSignedNow) {
@@ -193,7 +194,7 @@ export default function ContractSigningScreen() {
       setSigning(false);
     }
   };
-  
+
   const handleCloseModal = () => {
     setShowContractModal(false);
     navigation.goBack();
@@ -369,10 +370,10 @@ export default function ContractSigningScreen() {
                     Sua assinatura foi registrada em{' '}
                     {contract?.[isProducer ? 'producerSignedAt' : 'workerSignedAt']
                       ? new Date(
-                          contract[
-                            isProducer ? 'producerSignedAt' : 'workerSignedAt'
-                          ] as string
-                        ).toLocaleDateString('pt-BR')
+                        contract[
+                        isProducer ? 'producerSignedAt' : 'workerSignedAt'
+                        ] as string
+                      ).toLocaleDateString('pt-BR')
                       : ''}
                   </ThemedText>
                 </View>
@@ -457,7 +458,7 @@ export default function ContractSigningScreen() {
           </View>
         )}
       </KeyboardAvoidingView>
-      
+
       <ContractCompletedModal
         visible={showContractModal}
         onClose={handleCloseModal}

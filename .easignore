@@ -1,0 +1,31 @@
+# Large Directories
+.git
+.git/
+node_modules
+node_modules/
+attached_assets
+attached_assets/
+lidacacau_demo_screenshots/
+server/
+static-build/
+dist/
+web-build/
+android/
+ios/
+
+# Large Files
+lidacacau_videos.zip
+lidacacau_demo_screenshots.zip
+rural_connect_1768358883994.zip
+
+# Misc
+.replit
+.expo/
+expo-env.d.ts
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+heavy_files.txt
+heavy_files_debug.txt
+comparison_report.txt

@@ -21,10 +21,12 @@ export interface ApiResponse<T> {
   code?: string;
 }
 
+import AppConfiguration from '../../config/app.config';
+
 function getBaseUrl(): string {
   try {
     const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
-    
+
     if (typeof window !== 'undefined' && window.location) {
       if (isDev) {
         // In Replit development, Express runs on port 5000
@@ -36,10 +38,11 @@ function getBaseUrl(): string {
       }
       return '/api';
     }
-    
-    return '/api';
+
+    // Native Environment: use configured URL
+    return AppConfiguration.api.baseUrl;
   } catch {
-    return '/api';
+    return AppConfiguration.api.baseUrl;
   }
 }
 
@@ -78,7 +81,7 @@ export class ApiAdapter {
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<ServiceResult<T>> {
     try {
       let url = `${this.baseUrl}${endpoint}`;
-      
+
       if (params) {
         const searchParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
@@ -109,7 +112,7 @@ export class ApiAdapter {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       console.log('[ApiAdapter] POST', url);
-      
+
       const response = await this.fetchWithTimeout(url, {
         method: 'POST',
         headers: this.getHeaders(),
@@ -127,7 +130,7 @@ export class ApiAdapter {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       console.log('[ApiAdapter] PUT', url);
-      
+
       const response = await this.fetchWithTimeout(url, {
         method: 'PUT',
         headers: this.getHeaders(),
@@ -145,7 +148,7 @@ export class ApiAdapter {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       console.log('[ApiAdapter] PATCH', url);
-      
+
       const response = await this.fetchWithTimeout(url, {
         method: 'PATCH',
         headers: this.getHeaders(),
@@ -163,7 +166,7 @@ export class ApiAdapter {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       console.log('[ApiAdapter] DELETE', url);
-      
+
       const response = await this.fetchWithTimeout(url, {
         method: 'DELETE',
         headers: this.getHeaders(),
@@ -193,7 +196,7 @@ export class ApiAdapter {
 
   private async handleResponse<T>(response: Response): Promise<ServiceResult<T>> {
     console.log('[ApiAdapter] Response status:', response.status);
-    
+
     if (!response.ok) {
       const errorBody = await response.text();
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -217,11 +220,11 @@ export class ApiAdapter {
     if (contentType?.includes('application/json')) {
       const json = await response.json();
       console.log('[ApiAdapter] JSON response received');
-      
+
       if (json.success === false) {
         return createError<T>(json.error || 'Erro desconhecido', json.code);
       }
-      
+
       const responseData = json.data !== undefined ? json.data : json;
       return createSuccess<T>(responseData as T);
     }
@@ -232,9 +235,9 @@ export class ApiAdapter {
   private handleError<T>(error: any): ServiceResult<T> {
     const errorMessage = error?.message || 'Erro de conexao';
     const errorName = error?.name || 'Error';
-    
+
     console.error('[ApiAdapter] Handle error:', errorName, errorMessage);
-    
+
     if (errorName === 'AbortError') {
       return createError<T>('Tempo limite da requisicao excedido', 'TIMEOUT');
     }

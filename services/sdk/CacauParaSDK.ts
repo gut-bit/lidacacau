@@ -102,11 +102,13 @@ export class CacauParaError extends Error {
   }
 }
 
+import AppConfiguration from '../../config/app.config';
+
 function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
   }
-  return '';
+  return AppConfiguration.api.baseUrl;
 }
 
 export class CacauParaClient {
@@ -129,11 +131,11 @@ export class CacauParaClient {
     body?: unknown
   ): Promise<T> {
     const url = `${this.apiUrl}${endpoint}`;
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     if (this.authToken) {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
@@ -177,7 +179,7 @@ export class CacauParaClient {
   async listPrices(): Promise<PriceSubmission[]> {
     try {
       const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
-        'GET', '/api/cacau-precos'
+        'GET', '/cacau-precos'
       );
       if (response.success && response.data) {
         await this.cachePrices(response.data);
@@ -197,7 +199,7 @@ export class CacauParaClient {
   async submitPrice(input: SubmitPriceInput): Promise<{ success: boolean; data?: PriceSubmission; message?: string; pending?: boolean }> {
     try {
       const response = await this.request<{ success: boolean; data: PriceSubmission; message: string }>(
-        'POST', '/api/cacau-precos', input
+        'POST', '/cacau-precos', input
       );
       return response;
     } catch (error) {
@@ -214,7 +216,7 @@ export class CacauParaClient {
   async getMetrics(): Promise<PriceMetrics | null> {
     try {
       const response = await this.request<{ success: boolean; data: PriceMetrics }>(
-        'GET', '/api/cacau-precos/metrics'
+        'GET', '/cacau-precos/metrics'
       );
       if (response.success) {
         await this.cacheMetrics(response.data);
@@ -230,7 +232,7 @@ export class CacauParaClient {
   async getMySubmissions(): Promise<PriceSubmission[]> {
     try {
       const response = await this.request<{ success: boolean; data: PriceSubmission[] }>(
-        'GET', '/api/cacau-precos/my-submissions'
+        'GET', '/cacau-precos/my-submissions'
       );
       return response.data || [];
     } catch (error) {
@@ -326,7 +328,7 @@ export class CacauParaClient {
     for (const submission of pending) {
       try {
         await this.request<{ success: boolean }>(
-          'POST', '/api/cacau-precos', submission.input
+          'POST', '/cacau-precos', submission.input
         );
         synced++;
       } catch (error) {
@@ -339,11 +341,11 @@ export class CacauParaClient {
     }
 
     await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(remaining));
-    
+
     if (synced > 0) {
       console.log(`[CacauPara] Synced ${synced} pending submissions`);
     }
-    
+
     return { synced, failed };
   }
 

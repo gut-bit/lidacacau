@@ -14,83 +14,24 @@
       "fallbackToCacheTimeout": 30000,
       "url": "https://u.expo.dev/2bb9d9cb-38f9-4300-a038-64b30038b453"
     },
+    "experiments": {
+      "reactCompiler": true
+    },
     "extra": {
       "eas": {
-        "projectId": "2bb9d9cb-38f9-4300-a038-64b30038b453"
-      }
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.lidacacau.app",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
-        "NSLocationAlwaysUsageDescription": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos.",
-        "NSCameraUsageDescription": "Precisamos da camera para capturar fotos antes e depois do servico.",
-        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para anexar evidencias do servico."
+        "projectId": "a276ebfc-560e-4a80-9009-21cbf2efea01"
       }
     },
     "android": {
       "package": "com.lidacacau.app",
       "adaptiveIcon": {
-        "backgroundColor": "#F15A29",
-        "foregroundImage": "./assets/images/android-icon-foreground.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyCAOFQrMdaGDOEsZROblVVgyFfz6ptbeG8"
-        }
-      },
-      "permissions": [
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
-      ]
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundColor": "#ffffff"
+      }
     },
-    "web": {
-      "output": "single",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#F15A29",
-          "dark": {
-            "backgroundColor": "#1F2123"
-          }
-        }
-      ],
-      "expo-web-browser",
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Precisamos da sua localizacao para registrar o check-in e check-out dos servicos."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Precisamos acessar suas fotos para anexar evidencias do servico.",
-          "cameraPermission": "Precisamos da camera para capturar fotos antes e depois do servico."
-        }
-      ]
-    ],
-    "experiments": {
-      "reactCompiler": true
-    },
-    "owner": "gut2s-organization",
-    "runtimeVersion": {
-      "policy": "appVersion"
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lidacacau.app"
     }
   }
 }

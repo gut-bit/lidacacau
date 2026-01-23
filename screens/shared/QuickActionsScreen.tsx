@@ -8,18 +8,9 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
-import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { trackEvent } from '@/utils/analytics';
-
-interface ActionItem {
-  id: string;
-  icon: keyof typeof Feather.glyphMap;
-  title: string;
-  subtitle: string;
-  color: string;
-  onPress: () => void;
-}
 
 export default function QuickActionsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -42,86 +33,11 @@ export default function QuickActionsScreen() {
     navigateTo();
   };
 
-  const actions: ActionItem[] = [
-    {
-      id: 'offer_service',
-      icon: 'tool',
-      title: 'Quero pegar uma lida',
-      subtitle: 'Ofereca seu trabalho para produtores',
-      color: colors.handshake,
-      onPress: () => handleAction('offer_service', () => 
-        navigation.replace('CreateCard', { type: 'offer' })
-      ),
-    },
-    {
-      id: 'hire_service',
-      icon: 'user-plus',
-      title: 'Preciso de gente pra lida',
-      subtitle: 'Publique uma demanda de trabalho',
-      color: colors.primary,
-      onPress: () => handleAction('hire_service', () => 
-        navigation.replace('CreateCard', { type: 'demand' })
-      ),
-    },
-    {
-      id: 'search_people',
-      icon: 'users',
-      title: 'Buscar Gente da Lida',
-      subtitle: 'Encontre companheiros de trabalho',
-      color: colors.accent,
-      onPress: () => handleAction('search_people', () => navigation.replace('UserSearch')),
-    },
-    {
-      id: 'create_squad',
-      icon: 'shield',
-      title: 'Montar Esquadrao',
-      subtitle: 'Forme uma equipe de ate 4 companheiros',
-      color: colors.secondary,
-      onPress: () => handleAction('create_squad', () => navigation.replace('CreateSquad')),
-    },
-    {
-      id: 'register_property',
-      icon: 'map-pin',
-      title: 'Cadastrar Propriedade',
-      subtitle: 'Adicione sua fazenda ou sitio',
-      color: colors.success,
-      onPress: () => handleAction('register_property', () => navigation.replace('PropertyForm', {})),
-    },
-  ];
-
-  const ActionCard = ({ item }: { item: ActionItem }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionCard,
-        { 
-          backgroundColor: colors.backgroundDefault,
-          borderColor: colors.border,
-          opacity: pressed ? 0.8 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
-      ]}
-      onPress={item.onPress}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: item.color + '15' }]}>
-        <Feather name={item.icon} size={28} color={item.color} />
-      </View>
-      <View style={styles.textContainer}>
-        <ThemedText type="h4" style={styles.actionTitle}>
-          {item.title}
-        </ThemedText>
-        <ThemedText type="small" style={{ color: colors.textSecondary }}>
-          {item.subtitle}
-        </ThemedText>
-      </View>
-      <Feather name="chevron-right" size={24} color={colors.textSecondary} />
-    </Pressable>
-  );
-
   const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
     if (Platform.OS === 'ios') {
       return (
-        <BlurView 
-          intensity={80} 
+        <BlurView
+          intensity={80}
           tint={isDark ? 'dark' : 'light'}
           style={[
             styles.content,
@@ -133,12 +49,12 @@ export default function QuickActionsScreen() {
       );
     }
     return (
-      <View 
+      <View
         style={[
           styles.content,
-          { 
+          {
             backgroundColor: colors.backgroundRoot,
-            paddingBottom: insets.bottom + Spacing.xl 
+            paddingBottom: insets.bottom + Spacing.xl
           }
         ]}
       >
@@ -147,28 +63,145 @@ export default function QuickActionsScreen() {
     );
   };
 
+  const PrimaryButton = ({
+    title,
+    subtitle,
+    icon,
+    color,
+    onPress
+  }: {
+    title: string;
+    subtitle: string;
+    icon: keyof typeof Feather.glyphMap;
+    color: string;
+    onPress: () => void;
+  }) => (
+    <Pressable
+      style={({ pressed }) => [
+        styles.primaryButton,
+        {
+          backgroundColor: color,
+          opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+          ...Shadows.card,
+        }
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.primaryIconContainer}>
+        <Feather name={icon} size={32} color="#FFFFFF" />
+      </View>
+      <View style={styles.primaryTextContainer}>
+        <ThemedText type="h4" style={{ color: '#FFFFFF', textAlign: 'center' }}>
+          {title}
+        </ThemedText>
+        <ThemedText type="small" style={{ color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 2 }}>
+          {subtitle}
+        </ThemedText>
+      </View>
+    </Pressable>
+  );
+
+  const SecondaryButton = ({
+    title,
+    icon,
+    color,
+    onPress
+  }: {
+    title: string;
+    icon: keyof typeof Feather.glyphMap;
+    color: string;
+    onPress: () => void;
+  }) => (
+    <Pressable
+      style={({ pressed }) => [
+        styles.secondaryButton,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          opacity: pressed ? 0.8 : 1,
+        }
+      ]}
+      onPress={onPress}
+    >
+      <View style={[styles.secondaryIconContainer, { backgroundColor: color + '15' }]}>
+        <Feather name={icon} size={24} color={color} />
+      </View>
+      <ThemedText type="body" style={{ fontWeight: '600' }}>{title}</ThemedText>
+    </Pressable>
+  );
+
   return (
     <View style={styles.container}>
       <Pressable style={styles.backdrop} onPress={handleClose} />
-      
+
       <ContentWrapper>
         <View style={styles.header}>
           <View style={styles.handle} />
-          <ThemedText type="h3" style={styles.title}>
-            O que voce quer fazer?
-          </ThemedText>
-          <Pressable 
-            style={[styles.closeButton, { backgroundColor: colors.backgroundDefault }]}
-            onPress={handleClose}
-          >
-            <Feather name="x" size={20} color={colors.text} />
-          </Pressable>
+          <View style={styles.headerRow}>
+            <ThemedText type="h3">O que voce quer fazer?</ThemedText>
+            <Pressable
+              style={[styles.closeButton, { backgroundColor: colors.backgroundDefault }]}
+              onPress={handleClose}
+            >
+              <Feather name="x" size={20} color={colors.text} />
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.actionsContainer}>
-          {actions.map((action) => (
-            <ActionCard key={action.id} item={action} />
-          ))}
+        <View style={styles.gridContainer}>
+          {/* Primary Actions */}
+          <View style={styles.row}>
+            <PrimaryButton
+              title="Quero Lida"
+              subtitle="Oferecer servico"
+              icon="tool"
+              color={colors.handshake || '#2E7D32'} // Fallback if handshake not defined
+              onPress={() => handleAction('offer_service', () =>
+                navigation.replace('CreateCard', { type: 'offer' })
+              )}
+            />
+            <PrimaryButton
+              title="Preciso de Lida"
+              subtitle="Contratar gente"
+              icon="user-plus"
+              color={colors.primary}
+              onPress={() => handleAction('hire_service', () =>
+                navigation.replace('CreateCard', { type: 'demand' })
+              )}
+            />
+          </View>
+
+          {/* Secondary Actions Row */}
+          <View style={styles.row}>
+            <SecondaryButton
+              title="Buscar Gente"
+              icon="users"
+              color={colors.accent}
+              onPress={() => handleAction('search_people', () => navigation.replace('UserSearch'))}
+            />
+            <SecondaryButton
+              title="Montar Time"
+              icon="shield"
+              color={colors.secondary}
+              onPress={() => handleAction('create_squad', () => navigation.replace('CreateSquad'))}
+            />
+          </View>
+
+          {/* Tertiary Action */}
+          <Pressable
+            style={[styles.listButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => handleAction('register_property', () => navigation.replace('PropertyForm', {}))}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+              <View style={[styles.secondaryIconContainer, { backgroundColor: colors.success + '15' }]}>
+                <Feather name="map-pin" size={20} color={colors.success} />
+              </View>
+              <ThemedText type="body" style={{ fontWeight: '600' }}>Cadastrar Propriedade</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.textSecondary} />
+          </Pressable>
+
         </View>
       </ContentWrapper>
     </View>
@@ -193,51 +226,79 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
+  },
+  headerRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
   },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: 'rgba(128,128,128,0.4)',
     borderRadius: 2,
-    marginBottom: Spacing.lg,
-  },
-  title: {
-    textAlign: 'center',
+    marginBottom: Spacing.xs,
   },
   closeButton: {
-    position: 'absolute',
-    right: 0,
-    top: Spacing.md,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actionsContainer: {
+  gridContainer: {
     gap: Spacing.md,
   },
-  actionCard: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    gap: Spacing.lg,
+    gap: Spacing.md,
   },
-  iconContainer: {
+  primaryButton: {
+    flex: 1,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 140,
+  },
+  primaryIconContainer: {
+    marginBottom: Spacing.md,
     width: 56,
     height: 56,
-    borderRadius: BorderRadius.md,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  primaryTextContainer: {
     alignItems: 'center',
   },
-  textContainer: {
+  secondaryButton: {
     flex: 1,
-    gap: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    justifyContent: 'center',
   },
-  actionTitle: {
-    fontSize: 16,
+  secondaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
   },
 });
