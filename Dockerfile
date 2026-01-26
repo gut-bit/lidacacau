@@ -14,7 +14,7 @@ COPY config/ ./config/
 COPY services/ ./services/
 COPY utils/ ./utils/
 COPY scripts/ ./scripts/
-COPY drizzle.config.ts ./
+COPY server/drizzle.config.ts ./
 COPY tsconfig.json ./
 
 # Build the TypeScript code (if needed) or run directly with tsx/ts-node
