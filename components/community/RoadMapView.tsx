@@ -53,6 +53,15 @@ export function RoadMapView({
   const colors = isDark ? Colors.dark : Colors.light;
   const mapRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
+
+  const toggleMapType = () => {
+    setMapType(current => {
+      if (current === 'standard') return 'satellite';
+      if (current === 'satellite') return 'hybrid';
+      return 'standard';
+    });
+  };
 
   const centerOnLocation = () => {
     if (mapRef.current) {
@@ -78,7 +87,7 @@ export function RoadMapView({
         <ThemedText type="small" style={{ color: colors.textSecondary, marginTop: Spacing.xs, textAlign: 'center' }}>
           {roads.length} estradas mapeadas
         </ThemedText>
-        
+
         <View style={styles.roadLegend}>
           {roads.slice(0, 4).map(road => (
             <View key={road.id} style={styles.legendItem}>
@@ -105,7 +114,7 @@ export function RoadMapView({
           longitudeDelta: 0.2,
         }}
         onMapReady={() => setMapReady(true)}
-        mapType="hybrid"
+        mapType={mapType}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass
@@ -125,7 +134,7 @@ export function RoadMapView({
             onPress={() => onRoadPress?.(road.id)}
           />
         ))}
-        
+
         {mapReady && occurrences.map(occurrence => (
           <Marker
             key={occurrence.id}
@@ -146,6 +155,16 @@ export function RoadMapView({
           onPress={centerOnLocation}
         >
           <Feather name="navigation" size={20} color={colors.primary} />
+        </Pressable>
+        <Pressable
+          style={[styles.controlButton, { backgroundColor: colors.backgroundDefault }]}
+          onPress={toggleMapType}
+        >
+          <Feather
+            name={mapType === 'standard' ? 'layers' : 'map'}
+            size={20}
+            color={mapType === 'standard' ? colors.textSecondary : colors.primary}
+          />
         </Pressable>
       </View>
 

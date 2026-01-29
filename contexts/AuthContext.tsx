@@ -11,6 +11,7 @@ interface AuthContextType {
   activeRole: UserRole;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
@@ -88,43 +89,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const initialize = async () => {
-      console.log('[AuthContext] Starting initialization...');
+      console.log('[AuthContext] Initializing auth system...');
       try {
         await initializeStorage();
-        console.log('[AuthContext] Storage initialized');
-        
-        // First try to restore existing session
-        const currentUser = await authService.getCurrentUser();
-        console.log('[AuthContext] getCurrentUser result:', currentUser ? `User: ${currentUser.email}` : 'null');
-        
+
+        // Use a more robust timeout pattern
+        const authPromise = authService.getCurrentUser();
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => {
+            console.warn('[AuthContext] Auth check timed out after 5s');
+            resolve(null);
+          }, 5000)
+        );
+
+        const currentUser = await Promise.race([authPromise, timeoutPromise]);
+        console.log('[AuthContext] Auth check result:', currentUser ? `User: ${currentUser.email}` : 'No session');
+
         if (currentUser) {
-          const restoredUser = ensureUserHasNewFields(currentUser);
-          setUser(restoredUser);
-          console.log('[AuthContext] User restored:', restoredUser.email);
-          setIsLoading(false);
-          return;
-        }
-        
-        // SECURITY: Only use fallback demo user for localhost development
-        // In production (replit.app, lidacacau.com), users MUST authenticate via login screen
-        const useDevFallback = shouldUseDevFallback();
-        console.log('[AuthContext] shouldUseDevFallback:', useDevFallback);
-        
-        if (useDevFallback) {
-          console.log('[AuthContext] LOCALHOST DEV MODE - Using fallback demo user for UI testing');
-          const fallbackUser = ensureUserHasNewFields(DEV_FALLBACK_USER);
-          setUser(fallbackUser);
+          setUser(ensureUserHasNewFields(currentUser));
+        } else if (shouldUseDevFallback()) {
+          console.log('[AuthContext] Dev mode: Using fallback user');
+          setUser(ensureUserHasNewFields(DEV_FALLBACK_USER));
         } else {
-          // Production: no session, show login screen (user must authenticate)
           setUser(null);
-          console.log('[AuthContext] No session found - showing login screen (production mode)');
         }
       } catch (error) {
-        console.error('[AuthContext] Error initializing auth:', error);
+        console.error('[AuthContext] Initialization failed:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
-        console.log('[AuthContext] Initialization complete, isLoading=false');
+        console.log('[AuthContext] Initialization finished');
       }
     };
     initialize();
@@ -149,11 +143,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await authService.login({ email, password });
       console.log('[AuthContext] Login result:', result.success ? 'SUCCESS' : `FAILED: ${result.error}`);
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Erro ao fazer login');
       }
-      
+
       if (result.user) {
         const updatedUser = ensureUserHasNewFields(result.user);
         setUser(updatedUser);
@@ -172,14 +166,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         name,
         role: role as 'producer' | 'worker',
       });
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Erro ao criar conta');
       }
-      
+
       if (result.user) {
         const updatedUser = ensureUserHasNewFields(result.user);
         setUser(updatedUser);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const googleLogin = async (idToken: string) => {
+    try {
+      const result = await authService.googleLogin(idToken);
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao entrar com Google');
+      }
+      if (result.user) {
+        setUser(ensureUserHasNewFields(result.user));
       }
     } catch (error) {
       throw error;
@@ -247,21 +255,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const enableRole = async (role: UserRole) => {
     if (!user) return;
     if (user.roles.includes(role)) return;
-    
+
     const newRoles = [...user.roles, role];
-    const updates: Partial<User> = { 
+    const updates: Partial<User> = {
       roles: newRoles,
       activeRole: role,
       role,
     };
-    
+
     if (role === 'worker' && !user.level) {
       updates.level = 1;
     }
     if (role === 'producer' && !user.producerLevel) {
       updates.producerLevel = 1;
     }
-    
+
     try {
       const updatedUser = await authService.updateUser(user.id, updates);
       if (updatedUser) {
@@ -285,6 +293,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         activeRole,
         login,
         register,
+        googleLogin,
         logout,
         refreshUser,
         updateProfile,

@@ -41,3 +41,13 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Deepmind/Antigravity added ignores
+*.zip
+*.log
+lidacacau-deploy.zip
+heavy_files.txt
+heavy_files_debug.txt
+lidacacau zip no node.zip
+lidacacau_videos.zip
+lidacacau_demo_screenshots.zip

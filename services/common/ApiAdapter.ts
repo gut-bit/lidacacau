@@ -96,7 +96,7 @@ export class ApiAdapter {
       }
 
       console.log('[ApiAdapter] GET', url);
-      const response = await this.fetchWithTimeout(url, {
+      const response = await this.fetchWithRetry(url, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -192,6 +192,36 @@ export class ApiAdapter {
     } finally {
       clearTimeout(timeoutId);
     }
+  }
+
+  private async fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
+    let lastError: any;
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await this.fetchWithTimeout(url, options);
+        // Only retry on server errors (5xx) or specific network errors
+        if (response.ok || response.status < 500) {
+          return response;
+        }
+        console.warn(`[ApiAdapter] Retry ${i + 1}/${retries} due to status ${response.status}`);
+      } catch (error: any) {
+        lastError = error;
+        const isTimeout = error?.name === 'AbortError';
+        const isNetworkError = error instanceof TypeError || error?.message?.includes('Network');
+
+        if (!isTimeout && !isNetworkError) {
+          throw error; // Don't retry on other errors
+        }
+
+        console.warn(`[ApiAdapter] Retry ${i + 1}/${retries} due to error: ${error?.message}`);
+      }
+
+      // Exponential backoff: 500ms, 1000ms, 2000ms
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 500));
+      }
+    }
+    throw lastError || new Error(`Failed after ${retries} retries`);
   }
 
   private async handleResponse<T>(response: Response): Promise<ServiceResult<T>> {

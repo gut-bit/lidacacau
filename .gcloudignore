@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules/
+android/
+ios/
+.expo/
+dist/
+build/
+web-build/
+coverage/
+*.log
+.env
+.DS_Store
+*.zip
+*.aab
+*.apk
+lidacacau_demo_screenshots/

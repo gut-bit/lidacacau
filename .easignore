@@ -14,8 +14,7 @@ android/
 ios/
 
 # Large Files
-lidacacau_videos.zip
-lidacacau_demo_screenshots.zip
+*.zip
 rural_connect_1768358883994.zip
 
 # Misc

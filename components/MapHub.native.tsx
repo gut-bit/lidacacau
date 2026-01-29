@@ -18,9 +18,9 @@ interface MapHubProps {
 
 const RADIUS_OPTIONS = [10, 25, 50, 75, 100];
 
-export function MapHub({ 
-  activities = [], 
-  searchRadius, 
+export function MapHub({
+  activities = [],
+  searchRadius,
   onRadiusChange,
   onActivityPress,
   height = 250,
@@ -29,6 +29,15 @@ export function MapHub({
   const mapRef = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
+
+  const toggleMapType = () => {
+    setMapType(current => {
+      if (current === 'standard') return 'satellite';
+      if (current === 'satellite') return 'hybrid';
+      return 'standard';
+    });
+  };
 
   const centerLocation = {
     latitude: VILA_ALVORADA_KM140.latitude,
@@ -116,7 +125,7 @@ export function MapHub({
       showsMyLocationButton={false}
       showsCompass={false}
       onMapReady={() => setMapReady(true)}
-      mapType="standard"
+      mapType={mapType}
     >
       <Circle
         center={centerLocation}
@@ -148,10 +157,10 @@ export function MapHub({
             styles.customMarker,
             { backgroundColor: getMarkerColor(activity) }
           ]}>
-            <Feather 
-              name={activity.icon as any} 
-              size={16} 
-              color="#FFFFFF" 
+            <Feather
+              name={activity.icon as any}
+              size={16}
+              color="#FFFFFF"
             />
           </View>
         </Marker>
@@ -176,20 +185,20 @@ export function MapHub({
               key={radius}
               style={[
                 styles.radiusButton,
-                { 
-                  backgroundColor: searchRadius === radius 
-                    ? colors.primary 
+                {
+                  backgroundColor: searchRadius === radius
+                    ? colors.primary
                     : colors.backgroundDefault + '80',
-                  borderColor: searchRadius === radius 
-                    ? colors.primary 
+                  borderColor: searchRadius === radius
+                    ? colors.primary
                     : colors.border,
                 }
               ]}
               onPress={() => handleRadiusSelect(radius)}
             >
-              <ThemedText 
-                type="small" 
-                style={{ 
+              <ThemedText
+                type="small"
+                style={{
                   color: searchRadius === radius ? '#FFFFFF' : colors.text,
                   fontWeight: searchRadius === radius ? '700' : '500',
                   fontSize: 11,
@@ -208,6 +217,20 @@ export function MapHub({
           {VILA_ALVORADA_KM140.name}
         </ThemedText>
       </View>
+
+      <Pressable
+        style={[styles.layerToggle, { backgroundColor: colors.card + 'E6' }]}
+        onPress={toggleMapType}
+      >
+        <Feather
+          name={mapType === 'standard' ? 'map' : 'layers'}
+          size={16}
+          color={mapType === 'standard' ? colors.text : colors.primary}
+        />
+        <ThemedText type="small" style={{ color: colors.text, marginLeft: 6, fontSize: 11, fontWeight: '600' }}>
+          {mapType === 'standard' ? 'Mapa' : mapType === 'satellite' ? 'Satélite' : 'Híbrido'}
+        </ThemedText>
+      </Pressable>
 
       {activities.length > 0 ? (
         <View style={[styles.activityCount, { backgroundColor: colors.accent }]}>
@@ -270,6 +293,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
+  },
+  layerToggle: {
+    position: 'absolute',
+    bottom: Spacing.sm,
+    left: '50%',
+    transform: [{ translateX: -60 }],
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   customMarker: {
     width: 32,

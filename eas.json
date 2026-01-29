@@ -48,7 +48,7 @@
       "env": {
         "APP_VARIANT": "production",
         "CONFIG_ENV": "production",
-        "API_BASE_URL": "https://www.lidacacau.com/api"
+        "API_BASE_URL": "https://lidacacau-api-790219172916.us-central1.run.app/api"
       }
     },
     "production-apk": {

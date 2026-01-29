@@ -24,6 +24,11 @@
     },
     "android": {
       "package": "com.lidacacau.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDRPIbKjl6at1fUMSgegDvLCUoIpcgRUT4"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#ffffff"

@@ -20,6 +20,8 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 const isProduction = process.env.NODE_ENV === 'production';
 
+app.set('trust proxy', 1); // Enable for Cloud Run/proxies
+
 let dbConnected = false;
 
 app.use(helmet({
@@ -28,7 +30,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
+  origin: process.env.NODE_ENV === 'production'
     ? ['https://www.lidacacau.com', 'https://lidacacau.com', 'https://lidacacau.replit.app']
     : '*',
   credentials: true,
@@ -79,7 +81,7 @@ app.get('/downloads', (_req: Request, res: Response) => {
 });
 
 app.get('/api/health', async (_req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     status: dbConnected ? 'ok' : 'degraded',
     database: dbConnected ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString(),
@@ -95,15 +97,15 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 // Share route for WhatsApp/Social Media preview with Open Graph meta tags
 app.get('/share/demand/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const baseUrl = isProduction ? 'https://lidacacau.com' : `https://${process.env.REPLIT_DEV_DOMAIN || 'localhost:5000'}`;
-    
+
     let title = 'Demanda de Trabalho';
     let description = 'Confira esta oportunidade de trabalho no LidaCacau';
     let imageUrl = `${baseUrl}/favicon.ico`;
     let offer = '';
     let location = '';
-    
+
     if (dbConnected) {
       try {
         const [job] = await db
@@ -119,7 +121,7 @@ app.get('/share/demand/:id', async (req: Request, res: Response) => {
           .leftJoin(serviceTypes, eq(jobs.serviceTypeId, serviceTypes.id))
           .where(eq(jobs.id, id))
           .limit(1);
-        
+
         if (job) {
           title = `${job.serviceTypeName || 'Trabalho'} - LidaCacau`;
           location = job.locationText || 'Uruara, PA';
@@ -130,7 +132,7 @@ app.get('/share/demand/:id', async (req: Request, res: Response) => {
         console.error('[Share] DB query error:', dbError);
       }
     }
-    
+
     const shareHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -213,7 +215,7 @@ app.get('/share/demand/:id', async (req: Request, res: Response) => {
   </div>
 </body>
 </html>`;
-    
+
     res.setHeader('Content-Type', 'text/html');
     res.send(shareHtml);
   } catch (error) {
@@ -224,29 +226,37 @@ app.get('/share/demand/:id', async (req: Request, res: Response) => {
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[API Error]', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Erro interno do servidor',
     message: isProduction ? undefined : err.message
   });
 });
 
 const staticPath = path.join(__dirname, '..', 'static-build');
+const distPath = path.join(__dirname, '..', 'dist');
 
+let finalPath = '';
 if (fs.existsSync(staticPath)) {
-  console.log('[LidaCacau] Servindo arquivos estaticos de:', staticPath);
-  
-  app.use(express.static(staticPath, {
+  finalPath = staticPath;
+} else if (fs.existsSync(distPath)) {
+  finalPath = distPath;
+}
+
+if (finalPath) {
+  console.log('[LidaCacau] Servindo arquivos estaticos de:', finalPath);
+
+  app.use(express.static(finalPath, {
     maxAge: isProduction ? '1d' : 0,
     etag: true,
   }));
-  
+
   app.use((req: Request, res: Response) => {
     if (req.path.startsWith('/api')) {
       res.status(404).json({ error: 'API endpoint nao encontrado' });
       return;
     }
-    
-    const indexPath = path.join(staticPath, 'index.html');
+
+    const indexPath = path.join(finalPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
@@ -254,11 +264,11 @@ if (fs.existsSync(staticPath)) {
     }
   });
 } else {
-  console.warn('[LidaCacau] AVISO: Pasta static-build nao encontrada!');
+  console.warn('[LidaCacau] AVISO: Pasta static-build ou dist nao encontrada!');
   console.warn('[LidaCacau] Execute: node scripts/build-web.js');
-  
+
   app.use((_req: Request, res: Response) => {
-    res.status(503).json({ 
+    res.status(503).json({
       error: 'App em manutencao',
       message: 'Arquivos estaticos nao encontrados. Tente novamente em alguns minutos.'
     });
@@ -270,8 +280,16 @@ async function startServer() {
   console.log('[LidaCacau] DATABASE_URL presente:', !!process.env.DATABASE_URL);
   console.log('[LidaCacau] SESSION_SECRET presente:', !!process.env.SESSION_SECRET);
   console.log('[LidaCacau] NODE_ENV:', process.env.NODE_ENV);
-  
+
+  // Start listening immediately to satisfy Cloud Run health checks
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[LidaCacau API] Servidor rodando na porta ${PORT}`);
+    console.log(`[LidaCacau] Ambiente: ${isProduction ? 'Producao' : 'Desenvolvimento'}`);
+  });
+
   try {
+    // Attempt DB connection in background
+    console.log('[LidaCacau] Tentando conectar ao banco de dados...');
     dbConnected = await testConnection();
     if (dbConnected) {
       console.log('[LidaCacau] Banco de dados conectado com sucesso');
@@ -281,12 +299,8 @@ async function startServer() {
   } catch (error) {
     console.error('[LidaCacau] Erro ao conectar banco de dados:', error);
   }
-  
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[LidaCacau API] Servidor rodando na porta ${PORT}`);
-    console.log(`[LidaCacau] Ambiente: ${isProduction ? 'Producao' : 'Desenvolvimento'}`);
-    console.log(`[LidaCacau] Banco de dados: ${dbConnected ? 'Conectado' : 'Desconectado'}`);
-  });
+
+  console.log(`[LidaCacau] Banco de dados: ${dbConnected ? 'Conectado' : 'Desconectado'}`);
 }
 
 startServer();

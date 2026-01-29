@@ -42,7 +42,16 @@ export function MapPropertyEditor({
   const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<GeoCoordinate | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
   const lastTapTimeRef = useRef<{ [key: number]: number }>({});
+
+  const toggleMapType = () => {
+    setMapType(current => {
+      if (current === 'standard') return 'satellite';
+      if (current === 'satellite') return 'hybrid';
+      return 'standard';
+    });
+  };
 
   const centerLocation = initialCenter || {
     latitude: VILA_ALVORADA_KM140.latitude,
@@ -80,14 +89,14 @@ export function MapPropertyEditor({
 
   const calculateDelta = useCallback((coords: GeoCoordinate[]) => {
     if (coords.length === 0) return { latDelta: 0.01, lngDelta: 0.01 };
-    
+
     const lats = coords.map(c => c.latitude);
     const lngs = coords.map(c => c.longitude);
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs);
     const maxLng = Math.max(...lngs);
-    
+
     return {
       latDelta: Math.max((maxLat - minLat) * 1.5, 0.005),
       lngDelta: Math.max((maxLng - minLng) * 1.5, 0.005),
@@ -96,13 +105,13 @@ export function MapPropertyEditor({
 
   const centerOnPolygon = useCallback(() => {
     if (vertices.length === 0 || !mapRef.current) return;
-    
+
     const lats = vertices.map(v => v.latitude);
     const lngs = vertices.map(v => v.longitude);
     const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
     const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
     const { latDelta, lngDelta } = calculateDelta(vertices);
-    
+
     mapRef.current.animateToRegion({
       latitude: centerLat,
       longitude: centerLng,
@@ -113,7 +122,7 @@ export function MapPropertyEditor({
 
   const centerOnUserLocation = useCallback(() => {
     if (!userLocation || !mapRef.current) return;
-    
+
     mapRef.current.animateToRegion({
       latitude: userLocation.latitude,
       longitude: userLocation.longitude,
@@ -124,7 +133,7 @@ export function MapPropertyEditor({
 
   const updatePolygon = useCallback((newVertices: GeoCoordinate[]) => {
     setVertices(newVertices);
-    
+
     if (newVertices.length >= 3) {
       const area = calculatePolygonArea(newVertices);
       onPolygonChange({
@@ -138,19 +147,19 @@ export function MapPropertyEditor({
 
   const handleMapPress = useCallback((event: MapPressEvent) => {
     if (currentMode !== 'draw') return;
-    
+
     const { latitude, longitude } = event.nativeEvent.coordinate;
     const newVertex: GeoCoordinate = { latitude, longitude };
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     const newVertices = [...vertices, newVertex];
     updatePolygon(newVertices);
   }, [currentMode, vertices, updatePolygon]);
 
   const handleMapLongPress = useCallback((event: LongPressEvent) => {
     if (currentMode !== 'draw') return;
-    
+
     if (vertices.length >= 3) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCurrentMode('view');
@@ -159,10 +168,10 @@ export function MapPropertyEditor({
 
   const handleVertexPress = useCallback((index: number) => {
     if (currentMode !== 'edit') return;
-    
+
     const now = Date.now();
     const lastTap = lastTapTimeRef.current[index] || 0;
-    
+
     if (now - lastTap < 300) {
       if (vertices.length > 3) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -173,13 +182,13 @@ export function MapPropertyEditor({
     } else {
       setSelectedVertexIndex(selectedVertexIndex === index ? null : index);
     }
-    
+
     lastTapTimeRef.current[index] = now;
   }, [currentMode, vertices, selectedVertexIndex, updatePolygon]);
 
   const handleVertexDrag = useCallback((index: number, coordinate: LatLng) => {
     if (currentMode !== 'edit') return;
-    
+
     const newVertices = [...vertices];
     newVertices[index] = {
       latitude: coordinate.latitude,
@@ -190,7 +199,7 @@ export function MapPropertyEditor({
 
   const handleUndo = useCallback(() => {
     if (vertices.length === 0) return;
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newVertices = vertices.slice(0, -1);
     updatePolygon(newVertices);
@@ -232,7 +241,7 @@ export function MapPropertyEditor({
   };
 
   const initialRegion = {
-    latitude: vertices.length > 0 
+    latitude: vertices.length > 0
       ? vertices.reduce((sum, v) => sum + v.latitude, 0) / vertices.length
       : centerLocation.latitude,
     longitude: vertices.length > 0
@@ -255,7 +264,7 @@ export function MapPropertyEditor({
         onMapReady={() => setMapReady(true)}
         onPress={handleMapPress}
         onLongPress={handleMapLongPress}
-        mapType="standard"
+        mapType={mapType}
       >
         {vertices.length >= 3 ? (
           <Polygon
@@ -277,7 +286,7 @@ export function MapPropertyEditor({
           >
             <View style={[
               styles.vertexMarker,
-              { 
+              {
                 backgroundColor: selectedVertexIndex === index ? VERTEX_SELECTED : VERTEX_COLOR,
                 borderColor: '#FFFFFF',
               }
@@ -294,7 +303,7 @@ export function MapPropertyEditor({
             key={mode}
             style={[
               styles.modeButton,
-              { 
+              {
                 backgroundColor: currentMode === mode ? PRIMARY_COLOR : 'transparent',
                 borderColor: currentMode === mode ? PRIMARY_COLOR : colors.border,
               }
@@ -304,12 +313,12 @@ export function MapPropertyEditor({
               setCurrentMode(mode);
             }}
           >
-            <Feather 
+            <Feather
               name={mode === 'view' ? 'eye' : mode === 'draw' ? 'edit-2' : 'move'}
               size={14}
               color={currentMode === mode ? '#FFFFFF' : colors.text}
             />
-            <ThemedText 
+            <ThemedText
               style={[
                 styles.modeButtonText,
                 { color: currentMode === mode ? '#FFFFFF' : colors.text }
@@ -354,6 +363,16 @@ export function MapPropertyEditor({
             <Feather name="navigation" size={18} color={PRIMARY_COLOR} />
           </Pressable>
         ) : null}
+        <Pressable
+          style={[styles.locationButton, { borderColor: colors.border, borderTopWidth: 1, borderTopColor: colors.border }]}
+          onPress={toggleMapType}
+        >
+          <Feather
+            name={mapType === 'standard' ? 'layers' : 'map'}
+            size={18}
+            color={mapType === 'standard' ? colors.text : PRIMARY_COLOR}
+          />
+        </Pressable>
       </View>
 
       {(currentMode === 'draw' || currentMode === 'edit') ? (
@@ -363,14 +382,14 @@ export function MapPropertyEditor({
             onPress={handleUndo}
             disabled={vertices.length === 0}
           >
-            <Feather 
-              name="corner-up-left" 
-              size={18} 
-              color={vertices.length === 0 ? colors.textSecondary : colors.text} 
+            <Feather
+              name="corner-up-left"
+              size={18}
+              color={vertices.length === 0 ? colors.textSecondary : colors.text}
             />
-            <ThemedText 
+            <ThemedText
               type="small"
-              style={{ 
+              style={{
                 color: vertices.length === 0 ? colors.textSecondary : colors.text,
                 marginLeft: 6,
               }}
@@ -384,14 +403,14 @@ export function MapPropertyEditor({
             onPress={handleClear}
             disabled={vertices.length === 0}
           >
-            <Feather 
-              name="trash-2" 
-              size={18} 
-              color={vertices.length === 0 ? colors.textSecondary : colors.error} 
+            <Feather
+              name="trash-2"
+              size={18}
+              color={vertices.length === 0 ? colors.textSecondary : colors.error}
             />
-            <ThemedText 
+            <ThemedText
               type="small"
-              style={{ 
+              style={{
                 color: vertices.length === 0 ? colors.textSecondary : colors.error,
                 marginLeft: 6,
               }}
@@ -402,8 +421,8 @@ export function MapPropertyEditor({
 
           <Pressable
             style={[
-              styles.actionButton, 
-              { 
+              styles.actionButton,
+              {
                 backgroundColor: vertices.length >= 3 ? PRIMARY_COLOR : 'transparent',
                 borderColor: vertices.length >= 3 ? PRIMARY_COLOR : colors.border,
               }
@@ -411,14 +430,14 @@ export function MapPropertyEditor({
             onPress={handleConfirm}
             disabled={vertices.length < 3}
           >
-            <Feather 
-              name="check" 
-              size={18} 
-              color={vertices.length >= 3 ? '#FFFFFF' : colors.textSecondary} 
+            <Feather
+              name="check"
+              size={18}
+              color={vertices.length >= 3 ? '#FFFFFF' : colors.textSecondary}
             />
-            <ThemedText 
+            <ThemedText
               type="small"
-              style={{ 
+              style={{
                 color: vertices.length >= 3 ? '#FFFFFF' : colors.textSecondary,
                 marginLeft: 6,
                 fontWeight: '600',

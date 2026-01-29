@@ -16,17 +16,17 @@ interface ShareContent {
 
 const getBaseUrl = (): string => {
   if (__DEV__) {
-    return process.env.REPLIT_DEV_DOMAIN 
+    return process.env.REPLIT_DEV_DOMAIN
       ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : 'https://lidacacau.replit.app';
+      : 'http://localhost:5000'; // Updated to match local testing port
   }
-  return 'https://lidacacau.com';
+  return 'https://www.lidacacau.com';
 };
 
 export const generateShareUrl = (type: CardShareType, id: string, forSocialPreview: boolean = false): string => {
   const baseUrl = getBaseUrl();
   const path = type === 'demand' ? 'demand' : 'offer';
-  
+
   if (forSocialPreview) {
     return `${baseUrl}/share/${path}/${id}`;
   }
@@ -38,7 +38,7 @@ export const generateJobShareText = (job: Job, producerName?: string): ShareCont
   const serviceName = serviceType?.name || 'Servico';
   const unit = serviceType?.unit || 'un';
   const shareUrl = generateShareUrl('demand', job.id, true);
-  
+
   const lines = [
     `OPORTUNIDADE DE TRABALHO`,
     ``,
@@ -55,7 +55,7 @@ export const generateJobShareText = (job: Job, producerName?: string): ShareCont
     ``,
     `#LidaCacau`,
   ].filter(Boolean);
-  
+
   return {
     title: `${serviceName} - ${formatCurrency(job.offer)}`,
     message: lines.join('\n'),
@@ -68,17 +68,17 @@ export const generateOfferShareText = (offer: ServiceOffer, workerName?: string)
     .map(id => getServiceTypeById(id)?.name)
     .filter(Boolean)
     .join(', ');
-    
-  const price = offer.pricePerDay 
-    ? `${formatCurrency(offer.pricePerDay)}/dia` 
-    : offer.pricePerHour 
-    ? `${formatCurrency(offer.pricePerHour)}/hora`
-    : offer.pricePerUnit
-    ? `${formatCurrency(offer.pricePerUnit)}/unidade`
-    : 'A combinar';
-  
+
+  const price = offer.pricePerDay
+    ? `${formatCurrency(offer.pricePerDay)}/dia`
+    : offer.pricePerHour
+      ? `${formatCurrency(offer.pricePerHour)}/hora`
+      : offer.pricePerUnit
+        ? `${formatCurrency(offer.pricePerUnit)}/unidade`
+        : 'A combinar';
+
   const shareUrl = generateShareUrl('offer', offer.id, true);
-  
+
   const lines = [
     `TRABALHADOR DISPONIVEL`,
     ``,
@@ -94,7 +94,7 @@ export const generateOfferShareText = (offer: ServiceOffer, workerName?: string)
     ``,
     `#LidaCacau`,
   ].filter(Boolean);
-  
+
   return {
     title: `${serviceNames} - ${price}`,
     message: lines.join('\n'),
@@ -106,7 +106,7 @@ export const shareViaWhatsApp = async (content: ShareContent): Promise<boolean> 
   try {
     const encodedMessage = encodeURIComponent(content.message);
     const whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
-    
+
     const canOpen = await Linking.canOpenURL(whatsappUrl);
     if (canOpen) {
       await Linking.openURL(whatsappUrl);
@@ -129,7 +129,7 @@ export const shareViaSystem = async (content: ShareContent): Promise<boolean> =>
       title: content.title,
       url: Platform.OS === 'ios' ? content.url : undefined,
     });
-    
+
     return result.action === Share.sharedAction;
   } catch (error) {
     console.error('Error sharing:', error);
@@ -143,14 +143,14 @@ export const shareCard = async (
   ownerName?: string,
   method: 'whatsapp' | 'system' = 'system'
 ): Promise<boolean> => {
-  const content = type === 'demand' 
+  const content = type === 'demand'
     ? generateJobShareText(data as Job, ownerName)
     : generateOfferShareText(data as ServiceOffer, ownerName);
-  
+
   if (method === 'whatsapp') {
     return shareViaWhatsApp(content);
   }
-  
+
   return shareViaSystem(content);
 };
 
@@ -173,7 +173,7 @@ export const shareUserProfile = async (user: User): Promise<boolean> => {
   try {
     const baseUrl = getBaseUrl();
     const shareUrl = `${baseUrl}/user/${user.id}`;
-    
+
     const content = {
       title: `${user.name} - LidaCacau`,
       message: [
@@ -188,7 +188,7 @@ export const shareUserProfile = async (user: User): Promise<boolean> => {
       ].join('\n'),
       url: shareUrl,
     };
-    
+
     return shareViaSystem(content);
   } catch (error) {
     console.error('Error sharing user profile:', error);

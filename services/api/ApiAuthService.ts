@@ -32,7 +32,7 @@ export class ApiAuthService implements IAuthService {
 
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     const result = await this.api.post<LoginResponse>('/auth/login', credentials);
-    
+
     if (!result.success || !result.data) {
       return {
         success: false,
@@ -52,7 +52,7 @@ export class ApiAuthService implements IAuthService {
 
   async register(data: RegisterData): Promise<AuthResult> {
     const result = await this.api.post<RegisterResponse>('/auth/register', data);
-    
+
     if (!result.success || !result.data) {
       return {
         success: false,
@@ -75,7 +75,7 @@ export class ApiAuthService implements IAuthService {
       await this.api.post('/auth/logout');
     } catch {
     }
-    
+
     await sessionManager.clearSession();
     this.api.setAuthToken(null);
   }
@@ -88,7 +88,7 @@ export class ApiAuthService implements IAuthService {
 
     this.api.setAuthToken(token);
     const result = await this.api.get<MeResponse>('/auth/me');
-    
+
     if (!result.success || !result.data) {
       await sessionManager.clearSession();
       this.api.setAuthToken(null);
@@ -111,7 +111,7 @@ export class ApiAuthService implements IAuthService {
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
     const result = await this.api.patch<UserResponse>('/users/me', updates);
-    
+
     if (!result.success || !result.data) {
       return null;
     }
@@ -121,7 +121,7 @@ export class ApiAuthService implements IAuthService {
 
   async getUserById(id: string): Promise<User | null> {
     const result = await this.api.get<UserResponse>(`/users/${id}`);
-    
+
     if (!result.success || !result.data) {
       return null;
     }
@@ -131,7 +131,7 @@ export class ApiAuthService implements IAuthService {
 
   async getUsers(filters?: { role?: string; verified?: boolean }): Promise<User[]> {
     const result = await this.api.get<UsersResponse>('/users', filters);
-    
+
     if (!result.success || !result.data) {
       return [];
     }
@@ -146,5 +146,25 @@ export class ApiAuthService implements IAuthService {
       return this.getCurrentUser();
     }
     return null;
+  }
+
+  async googleLogin(idToken: string): Promise<AuthResult> {
+    const result = await this.api.post<LoginResponse>('/auth/google', { idToken });
+
+    if (!result.success || !result.data) {
+      return {
+        success: false,
+        error: result.error || 'Erro ao entrar com Google',
+      };
+    }
+
+    await sessionManager.saveSession(result.data.token, result.data.user.id);
+    this.api.setAuthToken(result.data.token);
+
+    return {
+      success: true,
+      user: result.data.user,
+      token: result.data.token,
+    };
   }
 }

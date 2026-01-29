@@ -86,9 +86,10 @@ export function isProductionHost(): boolean {
   }
 
   const hostname = window.location?.hostname || '';
-  // Production hosts: lidacacau.com, www.lidacacau.com, *.replit.app
-  return hostname === 'lidacacau.com' ||
-    hostname === 'www.lidacacau.com' ||
+  // Primary production domain: www.lidacacau.com
+  // Legacy/Fallback domains: lidacacau.com, lidacacau.replit.app
+  return hostname === 'www.lidacacau.com' ||
+    hostname === 'lidacacau.com' ||
     hostname.endsWith('.replit.app');
 }
 
@@ -174,7 +175,7 @@ const developmentConfig: AppConfig = {
 
   services: {
     openPixAppId: '',
-    mapsApiKey: '',
+    mapsApiKey: 'AIzaSyDRPIbKjl6at1fUMSgegDvLCUoIpcgRUT4',
     analyticsId: '',
   },
 
@@ -196,7 +197,7 @@ const productionConfig: AppConfig = {
   appVersion: '1.0.0',
 
   api: {
-    baseUrl: 'https://www.lidacacau.com/api',
+    baseUrl: 'https://lidacacau-api-790219172916.us-central1.run.app/api',
     timeout: 30000,
     retryAttempts: 3,
   },
@@ -220,7 +221,7 @@ const productionConfig: AppConfig = {
 
   services: {
     openPixAppId: '',
-    mapsApiKey: '',
+    mapsApiKey: 'AIzaSyDRPIbKjl6at1fUMSgegDvLCUoIpcgRUT4',
     analyticsId: '',
   },
 

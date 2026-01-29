@@ -19,6 +19,8 @@ import RootNavigator, { RootStackParamList } from "@/navigation/RootNavigator";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ConfigProvider, AppConfiguration } from "@/config";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ConnectivityBar } from './components/ConnectivityBar';
+import { useAuth } from './hooks/useAuth';
 import { Colors } from "@/constants/theme";
 import { startSession } from "@/utils/analytics";
 import { initializeMockData } from "@/data/MockDataProvider";
@@ -28,6 +30,7 @@ import { AppInitializer } from "@/components/AppInitializer";
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [
     Linking.createURL('/'),
+    'https://www.lidacacau.com',
     'https://lidacacau.com',
     'https://lidacacau.replit.app',
     'lidacacau://',
@@ -52,24 +55,43 @@ export default function App() {
     Rubik_700Bold,
   });
 
+  const [isFontTimeout, setIsFontTimeout] = useState(false);
+
   useEffect(() => {
-    if (fontsLoaded) {
-      if (AppConfiguration.features.enableAnalytics) {
-        startSession();
+    // Separate timer to handle font timeout
+    const timer = setTimeout(() => {
+      if (!fontsLoaded) {
+        console.warn('Font loading timed out, proceeding with fallback fonts');
+        setIsFontTimeout(true);
       }
-      if (AppConfiguration.features.enableMockData) {
-        initializeMockData();
-      }
-    }
+    }, 4000);
+
+    return () => clearTimeout(timer);
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>LidaCacau</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    async function prepare() {
+      if (fontsLoaded || isFontTimeout) {
+        try {
+          if (AppConfiguration.features.enableAnalytics) {
+            startSession();
+          }
+          if (AppConfiguration.features.enableMockData) {
+            initializeMockData();
+          }
+        } catch (e) {
+          console.error('[App] Initialization error:', e);
+        } finally {
+          await SplashScreen.hideAsync().catch(() => { });
+        }
+      }
+    }
+
+    prepare();
+  }, [fontsLoaded, isFontTimeout]);
+
+  // Removed blocking check to force render
+  // const isReady = fontsLoaded || isFontTimeout;
 
   const handleError = (error: Error, stackTrace: string) => {
     console.error('[ErrorBoundary] App crashed:', error.message);
@@ -83,6 +105,7 @@ export default function App() {
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
               <AuthProvider>
+                <ConnectivityBar />
                 <AppInitializer>
                   <NavigationContainer linking={linking}>
                     <RootNavigator />

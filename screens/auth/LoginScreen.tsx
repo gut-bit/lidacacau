@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Pressable, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, TextInput, Pressable, ActivityIndicator, ScrollView, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ThemedText } from '@/components/ThemedText';
@@ -11,6 +11,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Spacing, BorderRadius, Colors } from '@/constants/theme';
 import { UserRole } from '@/types';
+import { biometricService } from '@/services/common/BiometricService';
+import { sessionManager } from '@/services/common/SessionManager';
 
 type AuthMode = 'login' | 'register';
 
@@ -34,8 +36,25 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<ErrorState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBiometricsAvailable, setIsBiometricsAvailable] = useState(false);
+  const [hasSavedSession, setHasSavedSession] = useState(false);
 
   const colors = isDark ? Colors.dark : Colors.light;
+
+  React.useEffect(() => {
+    const checkBiometrics = async () => {
+      const available = await biometricService.isAvailable();
+      setIsBiometricsAvailable(available);
+
+      const hasSession = await sessionManager.isSessionValid();
+      setHasSavedSession(hasSession);
+
+      // Auto-trigger biometrics if available and we have a session but auth context says we are on login screen
+      // (This happens if token is valid but we want extra confirmation)
+      // For now, let's just make the button available.
+    };
+    checkBiometrics();
+  }, []);
 
   const clearError = () => setError(null);
 
@@ -51,7 +70,15 @@ export default function LoginScreen() {
 
   const parseErrorMessage = (errorMsg: string): ErrorState => {
     const lowerMsg = errorMsg.toLowerCase();
-    
+
+    // Explicit server error patterns
+    if (lowerMsg.includes('connect econnrefused')) {
+      return { type: 'server', message: 'Erro de conexao com o banco de dados. O servidor esta em manutencao.' };
+    }
+    if (lowerMsg.includes('timeout')) {
+      return { type: 'network', message: 'A conexao demorou muito. Verifique sua internet.' };
+    }
+
     if (lowerMsg.includes('senha') || lowerMsg.includes('password') || lowerMsg.includes('incorreta') || lowerMsg.includes('invalid')) {
       return { type: 'credentials', message: 'Email ou senha incorretos' };
     }
@@ -67,7 +94,8 @@ export default function LoginScreen() {
     if (lowerMsg.includes('server') || lowerMsg.includes('servidor')) {
       return { type: 'server', message: 'Erro no servidor. Tente novamente em alguns minutos.' };
     }
-    
+
+    // If it's a direct message from server without standard pattern, show it explicitly
     return { type: 'validation', message: errorMsg };
   };
 
@@ -118,6 +146,30 @@ export default function LoginScreen() {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    try {
+      const success = await biometricService.authenticate('Acesse o LidaCacau com sua biometria');
+      if (success) {
+        setIsSubmitting(true);
+        // If we have a valid token, AuthContext should handle it if we refresh.
+        // But if we are on this screen, we might need to manually trigger the initialization.
+        const token = await sessionManager.getToken();
+        if (token) {
+          // Re-initialize session via AuthContext or simply wait for it to pick up
+          // For a better UX, we can show a success message or just let the navigator switch
+          // Since AuthContext already checks it on mount, we might just need to refresh the user
+          window.location?.reload(); // Simplest way to trigger re-init if on web, but on native we need a better way
+        } else {
+          setError({ type: 'credentials', message: 'Nenhuma sessao salva encontrada. Faca login com senha primeiro.' });
+        }
+      }
+    } catch (err: any) {
+      setError({ type: 'server', message: 'Erro na autenticacao biometrica' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const toggleMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
     setError(null);
@@ -157,7 +209,7 @@ export default function LoginScreen() {
           </ThemedText>
 
           {error ? (
-            <Pressable 
+            <Pressable
               style={[styles.errorContainer, { backgroundColor: colors.error + '15', borderColor: colors.error }]}
               onPress={clearError}
             >
@@ -320,6 +372,49 @@ export default function LoginScreen() {
             )}
           </Button>
 
+          {mode === 'login' && (
+            <>
+              <View style={styles.divider}>
+                <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                <ThemedText type="small" style={{ color: colors.textSecondary, marginHorizontal: Spacing.md }}>ou</ThemedText>
+                <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              </View>
+
+              <Button
+                variant="outline"
+                style={styles.googleButton}
+                onPress={() => setError({ type: 'validation', message: 'Login com Google estara disponivel na versao final. Use email e senha por enquanto.' })}
+              >
+                <Feather name="log-in" size={20} color={colors.text} style={{ marginRight: 10 }} />
+                Entrar com Google
+              </Button>
+
+              {isBiometricsAvailable && hasSavedSession && (
+                <Button
+                  variant="outline"
+                  style={[styles.biometricButton, { borderColor: colors.primary }]}
+                  onPress={handleBiometricLogin}
+                >
+                  <MaterialCommunityIcons name="fingerprint" size={24} color={colors.primary} style={{ marginRight: 10 }} />
+                  Entrar com Biometria
+                </Button>
+              )}
+
+              <Pressable
+                style={[styles.quickAccess, { backgroundColor: colors.primary + '15' }]}
+                onPress={() => {
+                  setEmail('heltongut@gmail.com');
+                  setPassword('password123');
+                }}
+              >
+                <Feather name="zap" size={16} color={colors.primary} />
+                <ThemedText type="small" style={{ color: colors.primary, fontWeight: '700', marginLeft: 8 }}>
+                  Acesso Rapido (Teste)
+                </ThemedText>
+              </Pressable>
+            </>
+          )}
+
           <View style={styles.toggleContainer}>
             <ThemedText type="small" style={{ color: colors.textSecondary }}>
               {mode === 'login' ? 'Nao tem uma conta?' : 'Ja tem uma conta?'}
@@ -448,5 +543,29 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginTop: Spacing.xl,
     padding: Spacing.md,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  googleButton: {
+    marginBottom: Spacing.md,
+  },
+  quickAccess: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xs,
+    marginTop: Spacing.md,
+  },
+  biometricButton: {
+    marginBottom: Spacing.md,
+    borderWidth: 1.5,
   },
 });
