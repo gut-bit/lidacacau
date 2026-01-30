@@ -23,6 +23,7 @@ export interface CheckOutData {
   latitude: number;
   longitude: number;
   photoAfter?: string;
+  photoBefore?: string;
 }
 
 export interface CreateReviewData {
@@ -39,23 +40,25 @@ export interface CreateReviewData {
 }
 
 export interface IWorkOrderService {
+  getWorkOrderByJobId(jobId: string): Promise<ServiceResult<WorkOrderWithDetails | null>>;
+
   getWorkOrder(id: string): Promise<ServiceResult<WorkOrderWithDetails>>;
-  
+
   getWorkOrders(filters?: WorkOrderFilters): Promise<ServiceResult<WorkOrder[]>>;
-  
+
   getWorkOrdersByWorker(workerId: string): Promise<ServiceResult<WorkOrderWithDetails[]>>;
-  
+
   getWorkOrdersByProducer(producerId: string): Promise<ServiceResult<WorkOrderWithDetails[]>>;
-  
+
   checkIn(workOrderId: string, data: CheckInData): Promise<ServiceResult<WorkOrder>>;
-  
+
   checkOut(workOrderId: string, data: CheckOutData): Promise<ServiceResult<WorkOrder>>;
-  
+
   complete(workOrderId: string): Promise<ServiceResult<WorkOrder>>;
-  
+
   signContract(workOrderId: string, role: 'producer' | 'worker'): Promise<ServiceResult<SignedContract>>;
-  
+
   createReview(data: CreateReviewData): Promise<ServiceResult<Review>>;
-  
+
   getReviewsForUser(userId: string, asRole?: 'producer' | 'worker'): Promise<ServiceResult<Review[]>>;
 }

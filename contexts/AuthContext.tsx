@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, ProfileCompletion, DEFAULT_GOALS } from '@/types';
 import { serviceFactory } from '@/services';
-import { initializeStorage, updateUser } from '@/utils/storage';
+import { initializeStorage } from '@/utils/storage';
 import { shouldUseDevFallback } from '@/config';
 
 interface AuthContextType {

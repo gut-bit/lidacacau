@@ -17,17 +17,8 @@ import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants
 import { shareCard, copyCardLink } from '@/utils/sharing';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, Bid, User, WorkOrder, WorkOrderWithDetails } from '@/types';
-import {
-  getJobById,
-  getBidsByJob,
-  getUserById,
-  createBid,
-  acceptBid,
-  getWorkOrderByJobId,
-  updateWorkOrder,
-  getBidsByWorker,
-  deleteJob,
-} from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
+
 import { getServiceTypeById } from '@/data/serviceTypes';
 import {
   formatCurrency,
@@ -71,37 +62,48 @@ export default function JobDetailScreen() {
 
   const loadJobDetails = useCallback(async () => {
     try {
-      const jobData = await getJobById(jobId);
+      const jobService = serviceFactory.getJobService();
+
+      // 1. Get Job Details
+      const jobResult = await jobService.getJob(jobId);
+      if (!jobResult.success || !jobResult.data) {
+        setJob(null);
+        return;
+      }
+      const jobData = jobResult.data;
       setJob(jobData);
 
+      // 2. Get Producer Details (Service)
       if (jobData) {
-        const producerData = await getUserById(jobData.producerId);
+        const authService = serviceFactory.getAuthService();
+        const producerData = await authService.getUserById(jobData.producerId);
         setProducer(producerData);
 
-        const jobBids = await getBidsByJob(jobId);
-        const bidsWithWorkers: BidWithWorker[] = [];
-        for (const bid of jobBids) {
-          const workerData = await getUserById(bid.workerId);
-          if (workerData) {
-            bidsWithWorkers.push({ ...bid, worker: workerData });
-          }
+        // 3. Get Bids (Service - includes Worker)
+        const bidsResult = await jobService.getBidsForJob(jobId);
+        if (bidsResult.success && bidsResult.data) {
+          setBids(bidsResult.data.sort((a, b) => a.price - b.price));
         }
-        setBids(bidsWithWorkers.sort((a, b) => a.price - b.price));
 
         if (isWorker && user) {
-          const workerBid = jobBids.find((b) => b.workerId === user.id);
-          if (workerBid) {
-            setMyBid(workerBid);
-            setBidPrice(workerBid.price.toString());
-            setBidMessage(workerBid.message || '');
+          // Check if I have a bid
+          const myBidFound = (bidsResult.success && bidsResult.data)
+            ? bidsResult.data.find((b) => b.workerId === user.id)
+            : null;
+
+          if (myBidFound) {
+            setMyBid(myBidFound);
+            setBidPrice(myBidFound.price.toString());
+            setBidMessage(myBidFound.message || '');
           }
         }
 
-        const wo = await getWorkOrderByJobId(jobId);
-        setWorkOrder(wo);
-        if (wo) {
-          const workerData = await getUserById(wo.workerId);
-          setWorker(workerData);
+        // 4. Get Work Order (Service)
+        const workOrderService = serviceFactory.getWorkOrderService();
+        const woResult = await workOrderService.getWorkOrderByJobId(jobId);
+        if (woResult.success && woResult.data) {
+          setWorkOrder(woResult.data);
+          setWorker(woResult.data.worker);
         }
       }
     } catch (error) {
@@ -125,14 +127,19 @@ export default function JobDetailScreen() {
       return;
     }
 
-    setSubmitting(true);
     try {
-      await createBid({
+      setSubmitting(true);
+      const jobService = serviceFactory.getJobService();
+      const createBidResult = await jobService.createBid({
         jobId,
         workerId: user!.id,
         price: parseFloat(bidPrice),
         message: bidMessage.trim() || undefined,
       });
+
+      if (!createBidResult.success) {
+        throw new Error(createBidResult.error || 'Erro ao criar proposta');
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -176,7 +183,19 @@ export default function JobDetailScreen() {
           onPress: async () => {
             setSubmitting(true);
             try {
-              const newWorkOrder = await acceptBid(selectedBidId);
+              const jobService = serviceFactory.getJobService();
+              const result = await jobService.acceptBid(selectedBidId);
+
+              if (!result.success) throw new Error(result.error || 'Erro ao aceitar proposta');
+
+              const workOrderService = serviceFactory.getWorkOrderService();
+              const woResult = await workOrderService.getWorkOrderByJobId(jobId);
+
+              if (!woResult.success || !woResult.data) {
+                throw new Error('Ordem de servico nao encontrada apos aceite');
+              }
+              const newWorkOrder = woResult.data;
+
               navigation.navigate('NegotiationMatch', {
                 workOrderId: newWorkOrder.id,
                 worker: selectedBid.worker,
@@ -209,7 +228,10 @@ export default function JobDetailScreen() {
           onPress: async () => {
             setSubmitting(true);
             try {
-              await updateWorkOrder(workOrder.id, { status: 'completed' });
+              const workOrderService = serviceFactory.getWorkOrderService();
+              const result = await workOrderService.complete(workOrder.id);
+              if (!result.success) throw new Error(result.error || 'Erro ao concluir');
+
               Alert.alert('Sucesso', 'Serviço concluído!', [
                 {
                   text: 'Avaliar Trabalhador',
@@ -293,13 +315,15 @@ export default function JobDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const deleted = await deleteJob(jobId);
-              if (deleted) {
+              const jobService = serviceFactory.getJobService();
+              const result = await jobService.deleteJob(jobId);
+
+              if (result.success) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 Alert.alert('Sucesso', 'Demanda excluida com sucesso!');
                 navigation.goBack();
               } else {
-                throw new Error('Falha ao excluir');
+                throw new Error(result.error || 'Falha ao excluir');
               }
             } catch (error) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

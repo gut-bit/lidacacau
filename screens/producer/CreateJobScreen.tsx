@@ -16,7 +16,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { SERVICE_TYPES } from '@/data/serviceTypes';
-import { createJob } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
+import { CreateJobData } from '@/services/interfaces/IJobService';
 import { formatCurrency } from '@/utils/format';
 
 export default function CreateJobScreen() {
@@ -91,7 +92,7 @@ export default function CreateJobScreen() {
 
     setIsSubmitting(true);
     try {
-      await createJob({
+      const jobData: CreateJobData = {
         producerId: user!.id,
         serviceTypeId,
         quantity: parseFloat(quantity),
@@ -101,7 +102,14 @@ export default function CreateJobScreen() {
         offer: parseFloat(offer),
         notes: notes.trim(),
         photos: photos.length > 0 ? photos : undefined,
-      });
+      };
+
+      const jobService = serviceFactory.getJobService();
+      const result = await jobService.createJob(jobData);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       Alert.alert('Sucesso', 'Demanda criada com sucesso!', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);

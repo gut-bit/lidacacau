@@ -24,11 +24,19 @@ LidaCacau é um marketplace mobile (Expo React Native) que conecta proprietário
 | Social (Chat, Amigos) | Legacy | `utils/storage.ts` |
 | Comércio (LidaShop) | Não impl. | N/A |
 
-### Limitações Atuais
+### Limitações Atuais e Plano de Evolução
+1. **Injeção de Dependência**:
+   - **Status**: [EM PROGRESSO] Implementado `ServiceFactory` e `ApiJobService`.
+   - As telas do domínio de Demandas (`Job`) já utilizam a `ServiceFactory`.
+   - Próximos passos: Migrar domínios de `Auth`, `WorkOrder` e `Social`.
 
-1. **Configuração estática**: `AppConfiguration` é lido em tempo de build. Mudanças de ambiente requerem rebuild.
-2. **Serviços legacy**: A maioria dos serviços ainda usa funções diretas em `utils/storage.ts` em vez de interfaces.
-3. **Dados mock**: Habilitados por padrão via `enableMockData: true` em `config/app.config.ts`.
+2. **Configuração Estática**:
+   - **Status**: [RESOLVIDO] Utiliza detecção em tempo de execução via `AppConfiguration.ts` e `ServiceFactory`.
+   - Web: Detecta `window.location.hostname`.
+   - Native: Usa flag `__DEV__` ou configuração de build.
+
+3. **Dependência do `storage.ts`**:
+   - **Status**: [EM PROGRESSO] Código legado sendo substituído gradualmente por interfaces de serviço.
 
 ## Estrutura de Diretórios
 

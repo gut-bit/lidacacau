@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start",
     "start": "npx expo start",
+    "start:server": "tsx -r dotenv/config server/index.ts",
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
     "web": "npx expo start --web",

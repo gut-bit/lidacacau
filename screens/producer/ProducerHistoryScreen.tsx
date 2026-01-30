@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job } from '@/types';
-import { getJobsByProducer, getWorkOrderByJobId, getUserById } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
+
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, formatDate, getStatusLabel } from '@/utils/format';
 
@@ -35,14 +36,22 @@ export default function ProducerHistoryScreen() {
   const loadJobs = useCallback(async () => {
     if (!user) return;
     try {
-      const userJobs = await getJobsByProducer(user.id);
+      const jobService = serviceFactory.getJobService();
+      const jobsResult = await jobService.getJobsByProducer(user.id);
+      const userJobs = (jobsResult.success && jobsResult.data) ? jobsResult.data : [];
+
       const closedJobs = userJobs.filter((j) => j.status === 'closed');
       const jobsWithWorker: HistoryItem[] = [];
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const authService = serviceFactory.getAuthService();
+
       for (const job of closedJobs) {
-        const workOrder = await getWorkOrderByJobId(job.id);
+        const woResult = await workOrderService.getWorkOrderByJobId(job.id);
+        const workOrder = (woResult.success && woResult.data) ? woResult.data : null;
+
         let workerName: string | undefined;
         if (workOrder) {
-          const worker = await getUserById(workOrder.workerId);
+          const worker = await authService.getUserById(workOrder.workerId);
           workerName = worker?.name;
         }
         jobsWithWorker.push({ ...job, workerName });

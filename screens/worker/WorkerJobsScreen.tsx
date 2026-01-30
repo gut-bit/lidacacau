@@ -10,12 +10,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { MapHub } from '@/components/MapHub';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
+import { Avatar } from '@/components/Avatar';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, MapActivity } from '@/types';
-import { getOpenJobs, getBidsByWorker } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getRelativeTime, getLevelLabel } from '@/utils/format';
 import { ActivityItem, getActivityItems, getInProgressJobs, getMapActivities } from '@/data/sampleData';
@@ -40,14 +41,38 @@ export default function WorkerJobsScreen() {
   const loadJobs = useCallback(async () => {
     if (!user) return;
     try {
-      const openJobs = await getOpenJobs(user.level || 1);
-      const myBids = await getBidsByWorker(user.id);
+      const jobService = serviceFactory.getJobService();
+
+      // Fetch open jobs
+      const jobsResult = await jobService.getJobs({ status: 'open' });
+      const openJobs = (jobsResult.success && jobsResult.data) ? jobsResult.data : [];
+
+      // Fetch my bids
+      const bidsResult = await jobService.getBidsByWorker(user.id);
+      const myBids = (bidsResult.success && bidsResult.data) ? bidsResult.data : [];
       const bidJobIds = new Set(myBids.filter((b) => b.status === 'pending').map((b) => b.jobId));
       setMyBidJobIds(bidJobIds);
       setJobs(openJobs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setActivityFeed(getActivityItems());
       setInProgressJobs(getInProgressJobs());
-      setMapActivities(getMapActivities(searchRadius));
+
+      // Map real jobs to map activities
+      const jobActivities: MapActivity[] = openJobs
+        .filter(j => j.latitude && j.longitude)
+        .map(j => ({
+          id: j.id,
+          type: 'job',
+          status: 'open',
+          latitude: Number(j.latitude),
+          longitude: Number(j.longitude),
+          title: j.serviceTypeName || 'Trabalho',
+          subtitle: formatCurrency(Number(j.offer)),
+          price: Number(j.offer),
+          icon: j.serviceTypeIcon || 'briefcase',
+          jobId: j.id,
+          avatar: j.producerAvatar,
+        }));
+      setMapActivities(jobActivities);
     } catch (error) {
       console.error('Error loading jobs:', error);
     } finally {
@@ -87,7 +112,7 @@ export default function WorkerJobsScreen() {
 
   const renderInProgressItem = ({ item }: { item: ActivityItem }) => {
     const levelColor = item.level ? LevelColors[`N${item.level}` as keyof typeof LevelColors] : colors.primary;
-    
+
     return (
       <View style={[styles.inProgressCard, { backgroundColor: colors.accent + '15', borderColor: colors.accent }]}>
         <View style={styles.inProgressHeader}>
@@ -136,17 +161,16 @@ export default function WorkerJobsScreen() {
         onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
       >
         <View style={styles.jobHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primary + '20' }]}>
-            <Feather
-              name={serviceType?.icon as any || 'briefcase'}
-              size={28}
-              color={colors.primary}
-            />
-          </View>
+          <Avatar
+            uri={item.producerAvatar}
+            name={item.producerName || 'Produtor'}
+            size={56}
+            style={{ marginRight: Spacing.md }}
+          />
           <View style={styles.jobInfo}>
-            <ThemedText type="h3">{serviceType?.name || 'Servico'}</ThemedText>
+            <ThemedText type="h3">{serviceType?.name || item.serviceTypeName || 'Servico'}</ThemedText>
             <ThemedText type="body" style={{ color: colors.textSecondary }}>
-              {formatQuantityWithUnit(item.quantity, serviceType?.unit || '')}
+              {item.producerName} • {formatQuantityWithUnit(item.quantity, serviceType?.unit || item.serviceTypeUnit || '')}
             </ThemedText>
           </View>
           {serviceType && serviceType.minLevel > 1 ? (
@@ -205,16 +229,16 @@ export default function WorkerJobsScreen() {
 
   const renderRecentActivity = ({ item }: { item: ActivityItem }) => {
     const levelColor = item.level ? LevelColors[`N${item.level}` as keyof typeof LevelColors] : colors.textSecondary;
-    
+
     if (item.type !== 'job_completed' && item.type !== 'review_received') return null;
-    
+
     return (
       <View style={[styles.activityItem, { backgroundColor: colors.card }]}>
         <View style={[styles.activityIcon, { backgroundColor: item.type === 'review_received' ? '#FFB80020' : colors.success + '20' }]}>
-          <Feather 
-            name={item.type === 'review_received' ? 'star' : 'check-circle'} 
-            size={18} 
-            color={item.type === 'review_received' ? '#FFB800' : colors.success} 
+          <Feather
+            name={item.type === 'review_received' ? 'star' : 'check-circle'}
+            size={18}
+            color={item.type === 'review_received' ? '#FFB800' : colors.success}
           />
         </View>
         <View style={styles.activityContent}>

@@ -243,6 +243,11 @@ export interface Job {
   photos?: string[];
   status: JobStatus;
   createdAt: string;
+  producerName?: string;
+  producerAvatar?: string;
+  serviceTypeName?: string;
+  serviceTypeIcon?: string;
+  serviceTypeUnit?: string;
 }
 
 export interface Bid {
@@ -345,6 +350,7 @@ export interface MapActivity {
   icon: string;
   userId?: string;
   jobId?: string;
+  avatar?: string;
 }
 
 export interface MapRegion {

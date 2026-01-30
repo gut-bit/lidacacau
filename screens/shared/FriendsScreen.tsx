@@ -13,25 +13,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, LevelColors, Typography } from '@/constants/theme';
 import { User, FriendConnection } from '@/types';
-import {
-  getFriends,
-  getFriendRequests,
-  getSentFriendRequests,
-  acceptFriendRequest,
-  rejectFriendRequest,
-  removeFriend,
-  getUserById,
-  getOrCreateChatRoom,
-} from '@/utils/storage';
+import { serviceFactory } from '@/services';
+import { FriendWithUser } from '@/services/interfaces/ISocialService';
 import { getLevelLabel } from '@/utils/format';
 import { trackEvent } from '@/utils/analytics';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
 type TabType = 'friends' | 'received' | 'sent';
 
-interface FriendWithUser extends FriendConnection {
-  friend: User;
-}
+
+// Type alias already matches interface name but strict import is better
+// removed local interface definition
 
 export default function FriendsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -52,40 +44,25 @@ export default function FriendsScreen() {
     if (!user) return;
 
     try {
-      const [friendConnections, received, sent] = await Promise.all([
-        getFriends(user.id),
-        getFriendRequests(user.id),
-        getSentFriendRequests(user.id),
+      const socialService = serviceFactory.getSocialService();
+
+      const [friendsRes, receivedRes, sentRes] = await Promise.all([
+        socialService.getFriends(user.id),
+        socialService.getPendingRequests(user.id),
+        socialService.getSentRequests(user.id),
       ]);
 
-      const friendsWithUsers: FriendWithUser[] = [];
-      for (const connection of friendConnections) {
-        const friendId = connection.requesterId === user.id ? connection.receiverId : connection.requesterId;
-        const friendUser = await getUserById(friendId);
-        if (friendUser) {
-          friendsWithUsers.push({ ...connection, friend: friendUser });
-        }
+      if (friendsRes.success && friendsRes.data) {
+        setFriends(friendsRes.data);
       }
 
-      const receivedWithUsers: FriendWithUser[] = [];
-      for (const connection of received) {
-        const requester = await getUserById(connection.requesterId);
-        if (requester) {
-          receivedWithUsers.push({ ...connection, friend: requester });
-        }
+      if (receivedRes.success && receivedRes.data) {
+        setReceivedRequests(receivedRes.data);
       }
 
-      const sentWithUsers: FriendWithUser[] = [];
-      for (const connection of sent) {
-        const receiver = await getUserById(connection.receiverId);
-        if (receiver) {
-          sentWithUsers.push({ ...connection, friend: receiver });
-        }
+      if (sentRes.success && sentRes.data) {
+        setSentRequests(sentRes.data);
       }
-
-      setFriends(friendsWithUsers);
-      setReceivedRequests(receivedWithUsers);
-      setSentRequests(sentWithUsers);
     } catch (error) {
       console.error('Error loading friends:', error);
     } finally {
@@ -108,7 +85,9 @@ export default function FriendsScreen() {
   const handleAcceptRequest = async (connectionId: string) => {
     setActionLoading(connectionId);
     try {
-      await acceptFriendRequest(connectionId);
+      const result = await serviceFactory.getSocialService().acceptFriendRequest(connectionId);
+      if (!result.success) throw new Error(result.error);
+
       await trackEvent('friend_request_accept', { connectionId });
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -124,7 +103,9 @@ export default function FriendsScreen() {
   const handleRejectRequest = async (connectionId: string) => {
     setActionLoading(connectionId);
     try {
-      await rejectFriendRequest(connectionId);
+      const result = await serviceFactory.getSocialService().rejectFriendRequest(connectionId);
+      if (!result.success) throw new Error(result.error);
+
       await trackEvent('friend_request_reject', { connectionId });
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -149,7 +130,9 @@ export default function FriendsScreen() {
           onPress: async () => {
             setActionLoading(connectionId);
             try {
-              await removeFriend(connectionId);
+              const result = await serviceFactory.getSocialService().removeFriend(connectionId);
+              if (!result.success) throw new Error(result.error);
+
               await trackEvent('friend_remove', { connectionId });
               if (Platform.OS !== 'web') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -170,12 +153,12 @@ export default function FriendsScreen() {
     if (!user) return;
 
     try {
-      const room = await getOrCreateChatRoom(user.id, friendId);
-      if (!room || !room.id) {
-        Alert.alert('Erro', 'Nao foi possivel criar a sala de conversa');
+      const result = await serviceFactory.getSocialService().getOrCreateChatRoom(user.id, friendId);
+      if (!result.success || !result.data) {
+        Alert.alert('Erro', result.error || 'Nao foi possivel criar a sala de conversa');
         return;
       }
-      navigation.navigate('ChatRoom', { roomId: room.id, otherUserId: friendId });
+      navigation.navigate('ChatRoom', { roomId: result.data.id, otherUserId: friendId });
     } catch (error) {
       console.error('Error creating chat room:', error);
       Alert.alert('Erro', 'Nao foi possivel iniciar a conversa');

@@ -20,8 +20,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { DirectMessage, User } from '@/types';
-import { getMessages, sendDirectMessage, markMessagesAsRead, getUserById } from '@/utils/storage';
+import { User } from '@/types';
+import { DirectMessage } from '@/services/interfaces/ISocialService';
+import { serviceFactory } from '@/services';
 import { trackEvent } from '@/utils/analytics';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 
@@ -49,16 +50,23 @@ export default function ChatRoomScreen() {
     if (!roomId || !otherUserId) return;
 
     try {
-      const [loadedMessages, loadedUser] = await Promise.all([
-        getMessages(roomId),
-        getUserById(otherUserId),
+      const socialService = serviceFactory.getSocialService();
+
+      const [messagesRes, userRes] = await Promise.all([
+        socialService.getMessages(roomId),
+        socialService.getUserProfile(otherUserId),
       ]);
 
-      setMessages(loadedMessages);
-      setOtherUser(loadedUser);
+      if (messagesRes.success && messagesRes.data) {
+        setMessages(messagesRes.data);
+      }
+
+      if (userRes.success && userRes.data) {
+        setOtherUser(userRes.data);
+      }
 
       if (user) {
-        await markMessagesAsRead(roomId, user.id);
+        await socialService.markMessagesAsRead(roomId, user.id);
       }
     } catch (error) {
       console.error('Error loading chat data:', error);
@@ -118,7 +126,7 @@ export default function ChatRoomScreen() {
     );
   }
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!messageText.trim() || !user || sending) return;
 
     const text = messageText.trim();
@@ -126,24 +134,30 @@ export default function ChatRoomScreen() {
     setSending(true);
 
     try {
-      const newMessage = await sendDirectMessage(roomId, user.id, text);
-      await trackEvent('chat_send', { roomId, messageLength: text.length });
-      setMessages((prev) => [...prev, newMessage]);
+      const result = await serviceFactory.getSocialService().sendMessage(roomId!, user.id, text);
 
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (result.success && result.data) {
+        await trackEvent('chat_send', { roomId, messageLength: text.length });
+        setMessages((prev) => [...prev, result.data!]);
+
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      } else {
+        setMessageText(text);
+        console.error('Failed to send message:', result.error);
       }
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessageText(text);
     } finally {
       setSending(false);
     }
-  };
+  }, [messageText, user, sending, roomId]);
 
   const formatMessageTime = (dateString: string): string => {
     const date = new Date(dateString);

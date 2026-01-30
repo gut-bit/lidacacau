@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { ThemedText } from './ThemedText';
 import { MapActivity, MapRegion, VILA_ALVORADA_KM140 } from '@/types';
 import { Spacing } from '@/constants/theme';
+import { Avatar } from './Avatar';
 
 interface MapHubProps {
   activities?: MapActivity[];
@@ -157,11 +158,19 @@ export function MapHub({
             styles.customMarker,
             { backgroundColor: getMarkerColor(activity) }
           ]}>
-            <Feather
-              name={activity.icon as any}
-              size={16}
-              color="#FFFFFF"
-            />
+            {activity.avatar ? (
+              <Avatar
+                uri={activity.avatar}
+                size={28}
+                style={{ backgroundColor: '#fff' }}
+              />
+            ) : (
+              <Feather
+                name={activity.icon as any}
+                size={16}
+                color="#FFFFFF"
+              />
+            )}
           </View>
         </Marker>
       ))}

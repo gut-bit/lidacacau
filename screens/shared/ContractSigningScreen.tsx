@@ -24,9 +24,9 @@ import { ContractCompletedModal } from '@/components/ContractCompletedModal';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { Job, ServiceType, User, PaymentTerms, WorkOrder, SignedContract } from '@/types';
-import { getJobById, getUserById, getWorkOrderById, updateWorkOrder, saveContractToHistory } from '@/utils/storage';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { createSignedContract, ContractData } from '@/utils/contractGenerator';
+import { serviceFactory } from '@/services/ServiceFactory';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -62,7 +62,13 @@ export default function ContractSigningScreen() {
 
   const loadContractData = async () => {
     try {
-      const wo = await getWorkOrderById(workOrderId);
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const jobService = serviceFactory.getJobService();
+      const authService = serviceFactory.getAuthService();
+
+      const woResult = await workOrderService.getWorkOrder(workOrderId);
+      const wo = (woResult.success && woResult.data) ? woResult.data : null;
+
       if (!wo) {
         Alert.alert('Erro', 'Ordem de serviço não encontrada');
         navigation.goBack();
@@ -71,9 +77,10 @@ export default function ContractSigningScreen() {
 
       setWorkOrder(wo);
 
-      const jobData = await getJobById(wo.jobId);
-      const producerData = await getUserById(wo.producerId);
-      const workerData = await getUserById(wo.workerId);
+      const jobResult = await jobService.getJob(wo.jobId);
+      const producerData = await authService.getUserById(wo.producerId);
+      const workerData = await authService.getUserById(wo.workerId);
+      const jobData = (jobResult.success && jobResult.data) ? jobResult.data : null;
 
       if (!jobData || !producerData || !workerData) {
         Alert.alert('Erro', 'Dados incompletos para gerar contrato');
@@ -131,41 +138,15 @@ export default function ContractSigningScreen() {
         throw new Error('Dados do contrato incompletos');
       }
 
-      const updatedContract: SignedContract = {
-        ...contract,
-        [isProducer ? 'producerSignedAt' : 'workerSignedAt']: new Date().toISOString(),
-      };
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const result = await workOrderService.signContract(workOrderId, isProducer ? 'producer' : 'worker');
 
-      await updateWorkOrder(workOrderId, {
-        signedContract: updatedContract,
-        negotiationStatus: 'accepted',
-      });
-
-      const bothSignedNow = updatedContract.producerSignedAt && updatedContract.workerSignedAt;
-
-      if (bothSignedNow) {
-        await saveContractToHistory(
-          workOrderId,
-          job.id,
-          updatedContract,
-          producer.id,
-          'producer',
-          worker.id,
-          worker.name,
-          serviceType?.name || 'Servico'
-        );
-
-        await saveContractToHistory(
-          workOrderId,
-          job.id,
-          updatedContract,
-          worker.id,
-          'worker',
-          producer.id,
-          producer.name,
-          serviceType?.name || 'Servico'
-        );
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Erro ao assinar contrato');
       }
+
+      const updatedContract = result.data;
+      const bothSignedNow = updatedContract.producerSignedAt && updatedContract.workerSignedAt;
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 

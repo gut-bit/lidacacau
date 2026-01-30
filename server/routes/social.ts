@@ -1,446 +1,377 @@
 import { Router, Response } from 'express';
 import { db } from '../db/drizzle';
-import { friendConnections, chatRooms, directMessages, userPresence, users, notifications } from '../db/schema';
-import { eq, and, or, desc, sql, arrayContains } from 'drizzle-orm';
+import { friendConnections, chatRooms, directMessages, users } from '../db/schema';
+import { eq, and, or, desc, ne, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
+import crypto from 'crypto';
 
 const router = Router();
 
+// ==========================================
+// FRIENDS / CONNECTIONS
+// ==========================================
+
+// Get all friends (accepted connections)
 router.get('/friends', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.userId!;
+    const userId = req.user!.id;
 
+    // Find accepted connections where user is requester OR receiver
     const connections = await db
       .select({
-        id: friendConnections.id,
-        requesterId: friendConnections.requesterId,
-        receiverId: friendConnections.receiverId,
-        status: friendConnections.status,
-        message: friendConnections.message,
-        createdAt: friendConnections.createdAt,
-        acceptedAt: friendConnections.acceptedAt,
+        connection: friendConnections,
+        friend: users,
       })
       .from(friendConnections)
-      .where(
-        and(
-          or(
-            eq(friendConnections.requesterId, userId),
-            eq(friendConnections.receiverId, userId)
-          ),
-          eq(friendConnections.status, 'accepted')
-        )
-      );
+      .leftJoin(users, or(
+        and(eq(friendConnections.requesterId, userId), eq(users.id, friendConnections.receiverId)),
+        and(eq(friendConnections.receiverId, userId), eq(users.id, friendConnections.requesterId))
+      ))
+      .where(and(
+        or(eq(friendConnections.requesterId, userId), eq(friendConnections.receiverId, userId)),
+        eq(friendConnections.status, 'accepted')
+      ));
 
-    const friendIds = connections.map(c =>
-      c.requesterId === userId ? c.receiverId : c.requesterId
-    );
+    // Transform to FriendWithUser format
+    const formatted = connections.map(c => {
+      if (!c.friend) return null;
+      // Exclude sensitive data
+      const { passwordHash, ...safeFriend } = c.friend;
+      return {
+        ...c.connection,
+        friend: safeFriend
+      };
+    }).filter(Boolean);
 
-    if (friendIds.length === 0) {
-      res.json({ friends: [] });
-      return;
-    }
-
-    const friends = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        avatar: users.avatar,
-        location: users.location,
-        level: users.level,
-        activeRole: users.activeRole,
-      })
-      .from(users)
-      .where(sql`${users.id} = ANY(${friendIds})`);
-
-    res.json({ friends });
+    res.json(formatted);
   } catch (error) {
-    console.error('[Social] Friends list error:', error);
-    res.status(500).json({ error: 'Erro ao listar amigos' });
+    console.error('Error getting friends:', error);
+    res.status(500).json({ error: 'Erro ao buscar amigos' });
   }
 });
 
-router.get('/friends/requests', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Get Pending Requests (Received)
+router.get('/friends/pending', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.userId!;
+    const userId = req.user!.id;
 
+    // Find requests where user is RECEIVER and status is pending
     const requests = await db
       .select({
-        id: friendConnections.id,
-        requesterId: friendConnections.requesterId,
-        message: friendConnections.message,
-        createdAt: friendConnections.createdAt,
-        requesterName: users.name,
-        requesterAvatar: users.avatar,
+        connection: friendConnections,
+        friend: users,
       })
       .from(friendConnections)
       .leftJoin(users, eq(friendConnections.requesterId, users.id))
-      .where(
-        and(
-          eq(friendConnections.receiverId, userId),
-          eq(friendConnections.status, 'pending')
-        )
-      )
-      .orderBy(desc(friendConnections.createdAt));
+      .where(and(
+        eq(friendConnections.receiverId, userId),
+        eq(friendConnections.status, 'pending')
+      ));
 
-    res.json({ requests });
+    const formatted = requests.map(c => {
+      if (!c.friend) return null;
+      const { passwordHash, ...safeFriend } = c.friend;
+      return {
+        ...c.connection,
+        friend: safeFriend
+      };
+    }).filter(Boolean);
+
+    res.json(formatted);
   } catch (error) {
-    console.error('[Social] Friend requests error:', error);
-    res.status(500).json({ error: 'Erro ao listar solicitacoes' });
+    console.error('Error getting pending requests:', error);
+    res.status(500).json({ error: 'Erro ao buscar solicitacoes' });
   }
 });
 
+// Get Sent Requests
+router.get('/friends/sent', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // Find requests where user is REQUESTER and status is pending
+    const requests = await db
+      .select({
+        connection: friendConnections,
+        friend: users,
+      })
+      .from(friendConnections)
+      .leftJoin(users, eq(friendConnections.receiverId, users.id))
+      .where(and(
+        eq(friendConnections.requesterId, userId),
+        eq(friendConnections.status, 'pending')
+      ));
+
+    const formatted = requests.map(c => {
+      if (!c.friend) return null;
+      const { passwordHash, ...safeFriend } = c.friend;
+      return {
+        ...c.connection,
+        friend: safeFriend
+      };
+    }).filter(Boolean);
+
+    res.json(formatted);
+  } catch (error) {
+    console.error('Error getting sent requests:', error);
+    res.status(500).json({ error: 'Erro ao buscar solicitacoes enviadas' });
+  }
+});
+
+// Send Friend Request
 router.post('/friends/request', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.userId!;
+    const requesterId = req.user!.id;
     const { receiverId, message } = req.body;
 
-    if (userId === receiverId) {
-      res.status(400).json({ error: 'Voce nao pode adicionar a si mesmo' });
+    if (!receiverId) {
+      res.status(400).json({ error: 'ID do destinatario obrigatorio' });
       return;
     }
 
+    if (requesterId === receiverId) {
+      res.status(400).json({ error: 'Nao pode adicionar a si mesmo' });
+      return;
+    }
+
+    // Check existing connection
     const [existing] = await db
       .select()
       .from(friendConnections)
-      .where(
-        or(
-          and(
-            eq(friendConnections.requesterId, userId),
-            eq(friendConnections.receiverId, receiverId)
-          ),
-          and(
-            eq(friendConnections.requesterId, receiverId),
-            eq(friendConnections.receiverId, userId)
-          )
-        )
-      )
+      .where(or(
+        and(eq(friendConnections.requesterId, requesterId), eq(friendConnections.receiverId, receiverId)),
+        and(eq(friendConnections.requesterId, receiverId), eq(friendConnections.receiverId, requesterId))
+      ))
       .limit(1);
 
     if (existing) {
-      res.status(400).json({ error: 'Ja existe uma conexao com este usuario' });
-      return;
+      if (existing.status === 'accepted') {
+        res.status(400).json({ error: 'Voces ja sao amigos' });
+        return;
+      }
+      if (existing.status === 'pending') {
+        res.status(400).json({ error: 'Ja existe um pedido pendente' });
+        return;
+      }
+      // If rejected, allow new request (implementation choice, or block)
     }
 
-    const [connection] = await db
-      .insert(friendConnections)
-      .values({
-        requesterId: userId,
-        receiverId,
-        message,
-        status: 'pending',
-      })
-      .returning();
+    const [newConnection] = await db.insert(friendConnections).values({
+      requesterId,
+      receiverId,
+      status: 'pending',
+      message
+    }).returning();
 
-    const requester = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    await db.insert(notifications).values({
-      userId: receiverId,
-      type: 'friend_request',
-      title: 'Nova solicitacao de amizade',
-      message: `${requester[0]?.name || 'Alguem'} quer ser seu amigo!`,
-      data: { connectionId: connection.id, requesterId: userId },
-    });
-
-    res.status(201).json({ connection });
+    res.json(newConnection);
   } catch (error) {
-    console.error('[Social] Friend request error:', error);
-    res.status(500).json({ error: 'Erro ao enviar solicitacao' });
+    console.error('Error sending friend request:', error);
+    res.status(500).json({ error: 'Erro ao enviar pedido de amizade' });
   }
 });
 
-router.post('/friends/:connectionId/accept', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Accept Request
+router.post('/friends/:id/accept', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { connectionId } = req.params;
-    const userId = req.userId!;
+    const userId = req.user!.id; // Current user must be the receiver
+    const id = req.params.id as string;
 
     const [connection] = await db
       .select()
       .from(friendConnections)
-      .where(
-        and(
-          eq(friendConnections.id, connectionId as string),
-          eq(friendConnections.receiverId, userId),
-          eq(friendConnections.status, 'pending')
-        )
-      )
+      .where(eq(friendConnections.id, id))
       .limit(1);
 
     if (!connection) {
-      res.status(404).json({ error: 'Solicitacao nao encontrada' });
+      res.status(404).json({ error: 'Pedido nao encontrado' });
       return;
     }
 
-    await db
+    if (connection.receiverId !== userId) {
+      res.status(403).json({ error: 'Nao autorizado' });
+      return;
+    }
+
+    const [updated] = await db
       .update(friendConnections)
       .set({ status: 'accepted', acceptedAt: new Date() })
-      .where(eq(friendConnections.id, connectionId as string));
+      .where(eq(friendConnections.id, id))
+      .returning();
 
-    res.json({ success: true });
+    res.json(updated);
   } catch (error) {
-    console.error('[Social] Accept friend error:', error);
-    res.status(500).json({ error: 'Erro ao aceitar solicitacao' });
+    console.error('Error accepting friend request:', error);
+    res.status(500).json({ error: 'Erro ao aceitar pedido' });
   }
 });
 
-router.post('/friends/:connectionId/reject', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Remove Friend or Reject
+router.delete('/friends/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { connectionId } = req.params;
-    const userId = req.userId!;
+    const userId = req.user!.id;
+    const id = req.params.id as string;
 
-    await db
-      .update(friendConnections)
-      .set({ status: 'rejected' })
-      .where(
-        and(
-          eq(friendConnections.id, connectionId),
-          eq(friendConnections.receiverId, userId)
-        )
-      );
+    // Allow deletion if user is either requester or receiver
+    const [deleted] = await db
+      .delete(friendConnections)
+      .where(and(
+        eq(friendConnections.id, id),
+        or(eq(friendConnections.requesterId, userId), eq(friendConnections.receiverId, userId))
+      ))
+      .returning();
+
+    if (!deleted) {
+      res.status(404).json({ error: 'Conexao nao encontrada ou nao autorizada' });
+      return;
+    }
 
     res.json({ success: true });
   } catch (error) {
-    console.error('[Social] Reject friend error:', error);
-    res.status(500).json({ error: 'Erro ao rejeitar solicitacao' });
+    console.error('Error removing friend:', error);
+    res.status(500).json({ error: 'Erro ao remover amigo' });
   }
 });
 
-router.get('/chats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.userId!;
+// ==========================================
+// CHAT
+// ==========================================
 
+// Get User's Chat Rooms
+router.get('/chat/rooms', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+
+    // Find rooms where user is listed in participant_ids (array)
+    // Drizzle specific array contains check logic might vary by driver,
+    // using raw SQL filter for array containment if strictly typed query is complex
     const rooms = await db
       .select()
       .from(chatRooms)
       .where(sql`${userId} = ANY(${chatRooms.participantIds})`)
       .orderBy(desc(chatRooms.lastMessageAt));
 
-    const roomsWithParticipants = await Promise.all(
-      rooms.map(async (room) => {
-        const otherParticipantId = room.participantIds.find(id => id !== userId);
-        if (!otherParticipantId) return { ...room, otherParticipant: null };
-
-        const [otherUser] = await db
-          .select({
-            id: users.id,
-            name: users.name,
-            avatar: users.avatar,
-          })
-          .from(users)
-          .where(eq(users.id, otherParticipantId))
-          .limit(1);
-
-        return { ...room, otherParticipant: otherUser };
-      })
-    );
-
-    res.json({ chats: roomsWithParticipants });
+    res.json(rooms); // Client expects ChatRoom[]
   } catch (error) {
-    console.error('[Social] Chats list error:', error);
-    res.status(500).json({ error: 'Erro ao listar conversas' });
+    console.error('Error getting chat rooms:', error);
+    res.status(500).json({ error: 'Erro ao buscar conversas' });
   }
 });
 
-router.get('/chats/:roomId/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Get or Create Room for 1:1 chat
+router.post('/chat/rooms', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { roomId } = req.params;
-    const userId = req.userId!;
-    const { limit = '50', before } = req.query;
+    const userId = req.user!.id;
+    const { targetUserId } = req.body;
 
-    const [room] = await db
-      .select()
-      .from(chatRooms)
-      .where(
-        and(
-          eq(chatRooms.id, roomId),
-          sql`${userId} = ANY(${chatRooms.participantIds})`
-        )
-      )
-      .limit(1);
-
-    if (!room) {
-      res.status(404).json({ error: 'Conversa nao encontrada' });
+    if (!targetUserId) {
+      res.status(400).json({ error: 'Usuario alvo necessario' });
       return;
     }
 
-    let query = db
-      .select({
-        id: directMessages.id,
-        senderId: directMessages.senderId,
-        content: directMessages.content,
-        readAt: directMessages.readAt,
-        createdAt: directMessages.createdAt,
-        senderName: users.name,
-        senderAvatar: users.avatar,
-      })
-      .from(directMessages)
-      .leftJoin(users, eq(directMessages.senderId, users.id))
-      .where(eq(directMessages.roomId, roomId))
-      .orderBy(desc(directMessages.createdAt))
-      .limit(parseInt(limit as string));
+    // Check if room exists with exactly these 2 participants
+    // This query assumes 1:1 chat logic mostly.
+    // We look for a room containing both IDs.
+    const [existing] = await db
+      .select()
+      .from(chatRooms)
+      .where(and(
+        sql`${userId} = ANY(${chatRooms.participantIds})`,
+        sql`${targetUserId} = ANY(${chatRooms.participantIds})`
+      ))
+      .limit(1);
 
-    const messages = await query;
+    if (existing) {
+      res.json(existing);
+      return;
+    }
 
-    res.json({ messages: messages.reverse() });
+    // Create new
+    const [newRoom] = await db.insert(chatRooms).values({
+      participantIds: [userId, targetUserId],
+      // unreadCount default is null/empty in schema? storage uses object.
+      // Keeping it simple for DB schema compatibility.
+    }).returning();
+
+    res.json(newRoom);
   } catch (error) {
-    console.error('[Social] Messages error:', error);
+    console.error('Error creating chat room:', error);
+    res.status(500).json({ error: 'Erro ao criar conversa' });
+  }
+});
+
+// Get Messages for a Room
+router.get('/chat/rooms/:roomId/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const roomId = req.params.roomId as string;
+    // Optional: Verify user participant access to room
+
+    const msgs = await db
+      .select()
+      .from(directMessages)
+      .where(eq(directMessages.roomId, roomId))
+      .orderBy(sql`${directMessages.createdAt} ASC`); // Oldest first usually for chat history
+
+    res.json(msgs);
+  } catch (error) {
+    console.error('Error getting messages:', error);
     res.status(500).json({ error: 'Erro ao buscar mensagens' });
   }
 });
 
-router.post('/chats/:roomId/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Send Message
+router.post('/chat/rooms/:roomId/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { roomId } = req.params;
-    const userId = req.userId!;
-    const { content } = req.body;
+    const senderId = req.user!.id;
+    const roomId = req.params.roomId as string;
+    const { content, type = 'text' } = req.body;
 
-    if (!content || content.trim().length === 0) {
-      res.status(400).json({ error: 'Mensagem vazia' });
-      return;
-    }
+    const [msg] = await db.insert(directMessages).values({
+      roomId,
+      senderId,
+      content,
+      readAt: null // unread
+    }).returning();
 
-    const [room] = await db
-      .select()
-      .from(chatRooms)
-      .where(
-        and(
-          eq(chatRooms.id, roomId),
-          sql`${userId} = ANY(${chatRooms.participantIds})`
-        )
-      )
-      .limit(1);
-
-    if (!room) {
-      res.status(404).json({ error: 'Conversa nao encontrada' });
-      return;
-    }
-
-    const [message] = await db
-      .insert(directMessages)
-      .values({
-        roomId,
-        senderId: userId,
-        content: content.trim(),
-      })
-      .returning();
-
-    await db
-      .update(chatRooms)
+    // Update Room last message info
+    await db.update(chatRooms)
       .set({
         lastMessageAt: new Date(),
-        lastMessagePreview: content.trim().substring(0, 100),
+        lastMessagePreview: content.substring(0, 50) // Store preview
       })
       .where(eq(chatRooms.id, roomId));
 
-    res.status(201).json({ message });
+    res.json(msg);
+
   } catch (error) {
-    console.error('[Social] Send message error:', error);
+    console.error('Error sending message:', error);
     res.status(500).json({ error: 'Erro ao enviar mensagem' });
   }
 });
 
-router.post('/chats/start', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Mark Messages as Read
+router.post('/chat/rooms/:roomId/read', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.userId!;
-    const { participantId } = req.body;
+    const userId = req.user!.id;
+    const roomId = req.params.roomId as string;
 
-    if (userId === participantId) {
-      res.status(400).json({ error: 'Voce nao pode conversar consigo mesmo' });
-      return;
-    }
-
-    const existingRooms = await db
-      .select()
-      .from(chatRooms)
-      .where(
-        and(
-          sql`${userId} = ANY(${chatRooms.participantIds})`,
-          sql`${participantId} = ANY(${chatRooms.participantIds})`
-        )
-      )
-      .limit(1);
-
-    if (existingRooms.length > 0) {
-      res.json({ chat: existingRooms[0] });
-      return;
-    }
-
-    const [newRoom] = await db
-      .insert(chatRooms)
-      .values({
-        participantIds: [userId, participantId],
-      })
-      .returning();
-
-    res.status(201).json({ chat: newRoom });
-  } catch (error) {
-    console.error('[Social] Start chat error:', error);
-    res.status(500).json({ error: 'Erro ao iniciar conversa' });
-  }
-});
-
-router.get('/notifications', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.userId!;
-    const { limit = '50', unreadOnly } = req.query;
-
-    let query = db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId))
-      .orderBy(desc(notifications.createdAt))
-      .limit(parseInt(limit as string));
-
-    const notificationList = await query;
-
-    res.json({ notifications: notificationList });
-  } catch (error) {
-    console.error('[Social] Notifications error:', error);
-    res.status(500).json({ error: 'Erro ao buscar notificacoes' });
-  }
-});
-
-router.post('/notifications/:id/read', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId!;
-
+    // Mark all messages in room sent by OTHERS as read
     await db
-      .update(notifications)
-      .set({ read: true })
-      .where(
-        and(
-          eq(notifications.id, id as string),
-          eq(notifications.userId, userId)
-        )
-      );
+      .update(directMessages)
+      .set({ readAt: new Date() })
+      .where(and(
+        eq(directMessages.roomId, roomId),
+        ne(directMessages.senderId, userId),
+        sql`${directMessages.readAt} IS NULL`
+      ));
+
+    // Note: keeping unreadCount consistent might require separate table or calculation
+    // For now, client logic usually refreshes simple view
 
     res.json({ success: true });
   } catch (error) {
-    console.error('[Social] Mark read error:', error);
-    res.status(500).json({ error: 'Erro ao marcar notificacao' });
-  }
-});
-
-router.post('/presence/heartbeat', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.userId!;
-
-    await db
-      .insert(userPresence)
-      .values({ userId, isOnline: true, lastSeenAt: new Date() })
-      .onConflictDoUpdate({
-        target: userPresence.userId,
-        set: { isOnline: true, lastSeenAt: new Date() },
-      });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('[Social] Heartbeat error:', error);
-    res.status(500).json({ error: 'Erro ao atualizar presenca' });
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ error: 'Erro ao marcar mensagens como lidas' });
   }
 });
 

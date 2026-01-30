@@ -175,7 +175,7 @@ const developmentConfig: AppConfig = {
 
   services: {
     openPixAppId: '',
-    mapsApiKey: 'AIzaSyDRPIbKjl6at1fUMSgegDvLCUoIpcgRUT4',
+    mapsApiKey: 'AIzaSyCA47u3ceKJBFtrMfA_8zR5z1N-5TpWf9s',
     analyticsId: '',
   },
 
@@ -221,7 +221,7 @@ const productionConfig: AppConfig = {
 
   services: {
     openPixAppId: '',
-    mapsApiKey: 'AIzaSyDRPIbKjl6at1fUMSgegDvLCUoIpcgRUT4',
+    mapsApiKey: 'AIzaSyCA47u3ceKJBFtrMfA_8zR5z1N-5TpWf9s',
     analyticsId: '',
   },
 

@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/theme';
 import { ChatRoom, User } from '@/types';
-import { getChatRooms, getUserById, getOrCreateChatRoom } from '@/utils/storage';
+import { serviceFactory } from '@/services';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { useSimpleScreenInsets } from '@/hooks/useScreenInsets';
 
@@ -36,19 +36,27 @@ export default function ChatListScreen() {
     if (!user) return;
 
     try {
-      const rooms = await getChatRooms(user.id);
-      const roomsWithUsers: ChatRoomWithUser[] = [];
+      const socialService = serviceFactory.getSocialService();
+      const roomsResult = await socialService.getChatRooms(user.id);
 
-      for (const room of rooms) {
-        const otherUserId = room.participantIds.find((id) => id !== user.id);
-        if (otherUserId) {
-          const otherUser = await getUserById(otherUserId);
-          if (otherUser) {
-            roomsWithUsers.push({ ...room, otherUser });
-          }
-        }
+      if (!roomsResult.success || !roomsResult.data) {
+        console.error('Failed to load rooms:', roomsResult.error);
+        return;
       }
 
+      const rooms = roomsResult.data;
+      const roomsWithUsersPromises = rooms.map(async (room) => {
+        const otherUserId = room.participantIds.find((id) => id !== user.id);
+        if (!otherUserId) return null;
+
+        const userResult = await socialService.getUserProfile(otherUserId);
+        if (userResult.success && userResult.data) {
+          return { ...room, otherUser: userResult.data } as ChatRoomWithUser;
+        }
+        return null;
+      });
+
+      const roomsWithUsers = (await Promise.all(roomsWithUsersPromises)).filter((r): r is ChatRoomWithUser => r !== null);
       setChatRooms(roomsWithUsers);
     } catch (error) {
       console.error('Error loading chat rooms:', error);
@@ -69,8 +77,12 @@ export default function ChatListScreen() {
       const newChatWithUserId = route.params?.newChatWithUserId;
       if (newChatWithUserId && user) {
         try {
-          const room = await getOrCreateChatRoom(user.id, newChatWithUserId);
-          navigation.navigate('ChatRoom', { roomId: room.id, otherUserId: newChatWithUserId });
+          const result = await serviceFactory.getSocialService().getOrCreateChatRoom(user.id, newChatWithUserId);
+          if (result.success && result.data) {
+            navigation.navigate('ChatRoom', { roomId: result.data.id, otherUserId: newChatWithUserId });
+          } else {
+            console.error('Failed to create chat room:', result.error);
+          }
         } catch (error) {
           console.error('Error creating chat room:', error);
         }
@@ -95,7 +107,7 @@ export default function ChatListScreen() {
 
   const formatTime = (dateString: string | undefined): string => {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();

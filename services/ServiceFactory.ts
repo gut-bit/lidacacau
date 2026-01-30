@@ -57,6 +57,7 @@ import { ApiAuthService } from './api/ApiAuthService';
 import { ApiJobService } from './api/ApiJobService';
 import { ApiPropertyService } from './api/ApiPropertyService';
 import { ApiSocialService } from './api/ApiSocialService';
+import { ApiWorkOrderService } from './api/ApiWorkOrderService';
 
 export type ServiceProvider = 'mock' | 'api';
 
@@ -83,7 +84,7 @@ class ServiceFactory {
     // RUNTIME detection - use mock only for localhost, API for everything else
     this.initializeProvider();
   }
-  
+
   private initializeProvider(): void {
     // Check at runtime which provider to use
     const useMock = shouldUseMockData();
@@ -114,8 +115,8 @@ class ServiceFactory {
    */
   getAuthService(): IAuthService {
     if (!this.instances.auth) {
-      this.instances.auth = this.provider === 'api' 
-        ? new ApiAuthService() 
+      this.instances.auth = this.provider === 'api'
+        ? new ApiAuthService()
         : new MockAuthService();
     }
     return this.instances.auth;
@@ -139,7 +140,9 @@ class ServiceFactory {
    */
   getWorkOrderService(): IWorkOrderService {
     if (!this.instances.workOrder) {
-      this.instances.workOrder = new MockWorkOrderService();
+      this.instances.workOrder = this.provider === 'api'
+        ? new ApiWorkOrderService()
+        : new MockWorkOrderService();
     }
     return this.instances.workOrder;
   }

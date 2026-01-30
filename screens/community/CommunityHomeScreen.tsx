@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenScrollView } from '@/components/ScreenScrollView';
+import { Avatar } from '@/components/Avatar';
 import { roadsKm140, km140Center, occurrenceTypes, Road } from '@/data/roads-km140';
 
 import Constants from 'expo-constants';
@@ -13,23 +14,23 @@ import Constants from 'expo-constants';
 function getApiBaseUrl(): string {
   try {
     const isProduction = !__DEV__;
-    
+
     if (isProduction) {
       return 'https://lidacacau.com';
     }
-    
+
     if (typeof window !== 'undefined' && window.location) {
       const hostname = window.location.hostname;
       const protocol = window.location.protocol;
       return `${protocol}//${hostname}:5000`;
     }
-    
+
     const expoHostUri = Constants.expoConfig?.hostUri;
     if (expoHostUri) {
       const host = expoHostUri.split(':')[0];
       return `http://${host}:5000`;
     }
-    
+
     return '';
   } catch {
     return '';
@@ -45,6 +46,7 @@ interface Occurrence {
   longitude: number;
   createdAt: string;
   userName?: string;
+  userAvatar?: string;
 }
 
 interface Vicinal {
@@ -105,7 +107,7 @@ export default function CommunityHomeScreen() {
     setLoading(true);
     try {
       const baseUrl = getApiBaseUrl();
-      
+
       const [roadsRes, vicinaisRes, occurrencesRes] = await Promise.all([
         fetch(`${baseUrl}/api/community/roads`).catch(() => null),
         fetch(`${baseUrl}/api/community/vicinais`).catch(() => null),
@@ -172,7 +174,7 @@ export default function CommunityHomeScreen() {
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffHours < 1) return 'Agora';
     if (diffHours < 24) return `${diffHours}h atras`;
     if (diffDays === 1) return 'Ontem';
@@ -241,7 +243,7 @@ export default function CommunityHomeScreen() {
             key={road.id}
             style={[
               styles.roadItem,
-              { 
+              {
                 backgroundColor: colors.backgroundSecondary,
                 borderLeftColor: road.color || colors.primary,
               }
@@ -250,10 +252,10 @@ export default function CommunityHomeScreen() {
           >
             <View style={styles.roadHeader}>
               <View style={[styles.roadBadge, { backgroundColor: road.color || colors.primary }]}>
-                <Feather 
-                  name={road.classification === 'principal' ? 'trending-up' : 'git-branch'} 
-                  size={14} 
-                  color="#fff" 
+                <Feather
+                  name={road.classification === 'principal' ? 'trending-up' : 'git-branch'}
+                  size={14}
+                  color="#fff"
                 />
               </View>
               <View style={styles.roadInfo}>
@@ -262,10 +264,10 @@ export default function CommunityHomeScreen() {
                   {road.classification === 'principal' ? 'Rodovia Principal' : 'Vicinal/Ramal'}
                 </ThemedText>
               </View>
-              <Feather 
-                name={selectedRoad === road.id ? 'chevron-up' : 'chevron-down'} 
-                size={20} 
-                color={colors.textSecondary} 
+              <Feather
+                name={selectedRoad === road.id ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={colors.textSecondary}
               />
             </View>
             {selectedRoad === road.id && (
@@ -292,9 +294,14 @@ export default function CommunityHomeScreen() {
           return (
             <View key={occurrence.id} style={[styles.occurrenceCard, { backgroundColor: colors.backgroundSecondary }]}>
               <View style={styles.occurrenceHeader}>
-                <View style={[styles.typeBadge, { backgroundColor: type.color + '20' }]}>
-                  <Feather name={type.icon as any} size={16} color={type.color} />
-                </View>
+                <Avatar
+                  uri={occurrence.userAvatar}
+                  name={occurrence.userName || 'Usuario'}
+                  size={40}
+                  style={{ marginRight: Spacing.md }}
+                  borderColor={type.color}
+                  borderWidth={2}
+                />
                 <View style={styles.occurrenceInfo}>
                   <ThemedText type="body" style={{ fontWeight: '600' }}>{occurrence.titulo}</ThemedText>
                   <View style={styles.occurrenceMeta}>
@@ -304,8 +311,8 @@ export default function CommunityHomeScreen() {
                   </View>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(occurrence.status) + '20' }]}>
-                  <ThemedText 
-                    type="small" 
+                  <ThemedText
+                    type="small"
                     style={{ color: getStatusColor(occurrence.status), fontWeight: '600', fontSize: 10 }}
                   >
                     {getStatusLabel(occurrence.status)}

@@ -38,6 +38,8 @@ export interface DirectMessage {
   senderId: string;
   content: string;
   readAt?: string;
+  read?: boolean; // Convenience property often derived
+  type?: 'text' | 'image' | 'audio';
   createdAt: string;
 }
 
@@ -56,34 +58,38 @@ export interface UserSearchFilters extends ListFilters {
 
 export interface ISocialService {
   sendFriendRequest(requesterId: string, receiverId: string, message?: string): Promise<ServiceResult<FriendConnection>>;
-  
+
   acceptFriendRequest(connectionId: string): Promise<ServiceResult<FriendConnection>>;
-  
+
   rejectFriendRequest(connectionId: string): Promise<ServiceResult<FriendConnection>>;
-  
+
   removeFriend(connectionId: string): Promise<ServiceResult<void>>;
-  
+
   getFriends(userId: string): Promise<ServiceResult<FriendWithUser[]>>;
-  
+
   getPendingRequests(userId: string): Promise<ServiceResult<FriendWithUser[]>>;
-  
+
+  getSentRequests(userId: string): Promise<ServiceResult<FriendWithUser[]>>;
+
   areFriends(userId1: string, userId2: string): Promise<ServiceResult<boolean>>;
-  
+
   getChatRooms(userId: string): Promise<ServiceResult<ChatRoom[]>>;
-  
+
   getOrCreateChatRoom(userId1: string, userId2: string): Promise<ServiceResult<ChatRoom>>;
-  
+
   getMessages(roomId: string, limit?: number, beforeId?: string): Promise<ServiceResult<DirectMessage[]>>;
-  
+
   sendMessage(roomId: string, senderId: string, content: string): Promise<ServiceResult<DirectMessage>>;
-  
+
   markMessagesAsRead(roomId: string, userId: string): Promise<ServiceResult<void>>;
-  
+
   updatePresence(userId: string): Promise<ServiceResult<UserPresence>>;
-  
+
   getPresence(userId: string): Promise<ServiceResult<UserPresence>>;
-  
+
   getOnlineUsers(): Promise<ServiceResult<UserPresence[]>>;
-  
+
   searchUsers(filters: UserSearchFilters): Promise<ServiceResult<User[]>>;
+
+  getUserProfile(userId: string): Promise<ServiceResult<User>>;
 }

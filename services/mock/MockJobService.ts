@@ -4,12 +4,12 @@
  * Implementação mock usando AsyncStorage para demandas de trabalho.
  */
 
-import { Job, Bid, ServiceType, JobWithDetails, BidWithWorker, User } from '@/types';
-import { 
-  IJobService, 
-  CreateJobData, 
-  JobFilters, 
-  CreateBidData 
+import { Job, Bid, ServiceType, JobWithDetails, BidWithWorker, User, WorkOrder } from '@/types';
+import {
+  IJobService,
+  CreateJobData,
+  JobFilters,
+  CreateBidData
 } from '../interfaces/IJobService';
 import { ServiceResult, createSuccess, createError } from '../common/types';
 import storageAdapter, { StorageKeys } from '../common/AsyncStorageAdapter';
@@ -145,7 +145,7 @@ export class MockJobService implements IJobService {
     try {
       const bids = await storageAdapter.getList<Bid>(StorageKeys.BIDS);
       const users = await storageAdapter.getList<User>(StorageKeys.USERS);
-      
+
       const jobBids = bids
         .filter(b => b.jobId === jobId)
         .map(bid => ({
@@ -172,18 +172,38 @@ export class MockJobService implements IJobService {
 
   async acceptBid(bidId: string): Promise<ServiceResult<Bid>> {
     try {
-      const updated = await storageAdapter.updateInList<Bid>(StorageKeys.BIDS, bidId, { status: 'accepted' });
-      if (!updated) {
+      const bid = await storageAdapter.findById<Bid>(StorageKeys.BIDS, bidId);
+      if (!bid) {
         return createError('Proposta nao encontrada', 'NOT_FOUND');
       }
 
+      const updated = await storageAdapter.updateInList<Bid>(StorageKeys.BIDS, bidId, { status: 'accepted' });
+      if (!updated) {
+        return createError('Erro ao atualizar proposta', 'UPDATE_FAILED');
+      }
+
       await this.updateJob(updated.jobId, { status: 'assigned' });
-      
+
       const otherBids = await storageAdapter.getList<Bid>(StorageKeys.BIDS);
-      for (const bid of otherBids) {
-        if (bid.jobId === updated.jobId && bid.id !== bidId) {
-          await storageAdapter.updateInList<Bid>(StorageKeys.BIDS, bid.id, { status: 'rejected' });
+      for (const b of otherBids) {
+        if (b.jobId === updated.jobId && b.id !== bidId) {
+          await storageAdapter.updateInList<Bid>(StorageKeys.BIDS, b.id, { status: 'rejected' });
         }
+      }
+
+      // Create Work Order
+      const job = await storageAdapter.findById<Job>(StorageKeys.JOBS, updated.jobId);
+      if (job) {
+        const workOrder: WorkOrder = {
+          id: storageAdapter.generateId(),
+          jobId: job.id,
+          workerId: updated.workerId,
+          producerId: job.producerId,
+          finalPrice: updated.price,
+          status: 'assigned',
+          createdAt: new Date().toISOString(),
+        };
+        await storageAdapter.addToList(StorageKeys.WORK_ORDERS, workOrder);
       }
 
       return createSuccess(updated);

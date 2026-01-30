@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { WorkOrder, Job, User } from '@/types';
-import { getWorkOrderById, getJobById, getUserById, updateWorkOrder } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, formatDateTime, getStatusLabel, getStatusColor } from '@/utils/format';
 import { generateAndShareContract } from '@/utils/contractGenerator';
@@ -42,15 +42,25 @@ export default function ActiveWorkOrderScreen() {
 
   const loadWorkOrder = useCallback(async () => {
     try {
-      const wo = await getWorkOrderById(workOrderId);
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const jobService = serviceFactory.getJobService();
+      const authService = serviceFactory.getAuthService();
+
+      const woResult = await workOrderService.getWorkOrder(workOrderId);
+      const wo = (woResult.success && woResult.data) ? woResult.data : null;
+
       setWorkOrder(wo);
       if (wo) {
         setPhotoBefore(wo.photoBefore || null);
         setPhotoAfter(wo.photoAfter || null);
-        const jobData = await getJobById(wo.jobId);
-        setJob(jobData);
-        const producerData = await getUserById(wo.producerId);
-        setProducer(producerData);
+
+        const jobResult = await jobService.getJob(wo.jobId);
+        if (jobResult.success && jobResult.data) {
+          setJob(jobResult.data);
+        }
+
+        const producerData = await authService.getUserById(wo.producerId);
+        if (producerData) setProducer(producerData);
       }
     } catch (error) {
       console.error('Error loading work order:', error);
@@ -77,12 +87,14 @@ export default function ActiveWorkOrderScreen() {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      await updateWorkOrder(workOrderId, {
-        status: 'checked_in',
-        checkInTime: new Date().toISOString(),
-        checkInLatitude: location.coords.latitude,
-        checkInLongitude: location.coords.longitude,
+
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const result = await workOrderService.checkIn(workOrderId, {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        photoBefore: photoBefore || undefined
       });
+      if (!result.success) throw new Error(result.error || 'Erro ao fazer check-in');
       Alert.alert('Sucesso', 'Check-in realizado com sucesso!');
       await loadWorkOrder();
     } catch (error: any) {
@@ -102,14 +114,15 @@ export default function ActiveWorkOrderScreen() {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      await updateWorkOrder(workOrderId, {
-        status: 'checked_out',
-        checkOutTime: new Date().toISOString(),
-        checkOutLatitude: location.coords.latitude,
-        checkOutLongitude: location.coords.longitude,
-        photoBefore: photoBefore || undefined,
+
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const result = await workOrderService.checkOut(workOrderId, {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
         photoAfter: photoAfter || undefined,
+        photoBefore: photoBefore || undefined,
       });
+      if (!result.success) throw new Error(result.error || 'Erro ao fazer check-out');
       Alert.alert('Sucesso', 'Check-out realizado! Aguarde a confirmação do produtor.');
       await loadWorkOrder();
     } catch (error: any) {

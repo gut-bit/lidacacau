@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { WorkOrder, Job } from '@/types';
-import { getWorkOrdersByWorker, getJobById, getUserById, getReviewsByWorkOrder } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -38,26 +38,23 @@ export default function WorkerHistoryScreen() {
   const loadHistory = useCallback(async () => {
     if (!user) return;
     try {
-      const workOrders = await getWorkOrdersByWorker(user.id);
-      const completedWOs = workOrders.filter((wo) => wo.status === 'completed');
-      const historyItems: HistoryItem[] = [];
-      for (const wo of completedWOs) {
-        const job = await getJobById(wo.jobId);
-        const producer = await getUserById(wo.producerId);
-        const reviews = await getReviewsByWorkOrder(wo.id);
-        const workerReview = reviews.find((r) => r.reviewerId === user.id);
-        if (job && producer) {
-          historyItems.push({
-            workOrder: wo,
-            job,
-            producerName: producer.name,
-            hasReview: !!workerReview,
-          });
-        }
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const result = await workOrderService.getWorkOrdersByWorker(user.id);
+
+      if (result.success && result.data) {
+        const completedWOs = result.data.filter((wo) => wo.status === 'completed');
+
+        const historyItems: HistoryItem[] = completedWOs.map(wo => ({
+          workOrder: wo,
+          job: wo.job,
+          producerName: wo.producer?.name || 'Produtor',
+          hasReview: !!wo.workerReview
+        }));
+
+        setItems(historyItems.sort((a, b) =>
+          new Date(b.workOrder.createdAt).getTime() - new Date(a.workOrder.createdAt).getTime()
+        ));
       }
-      setItems(historyItems.sort((a, b) => 
-        new Date(b.workOrder.createdAt).getTime() - new Date(a.workOrder.createdAt).getTime()
-      ));
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {

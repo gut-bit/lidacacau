@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { WorkOrder, Job } from '@/types';
-import { getActiveWorkOrderByWorker, getJobById } from '@/utils/storage';
+import { serviceFactory } from '@/services/ServiceFactory';
 import { getServiceTypeById } from '@/data/serviceTypes';
 import { formatCurrency, formatQuantityWithUnit, getStatusLabel, getStatusColor } from '@/utils/format';
 
@@ -32,12 +32,19 @@ export default function WorkerActiveScreen() {
   const loadActiveWorkOrder = useCallback(async () => {
     if (!user) return;
     try {
-      const activeWO = await getActiveWorkOrderByWorker(user.id);
-      setWorkOrder(activeWO);
-      if (activeWO) {
-        const jobData = await getJobById(activeWO.jobId);
-        setJob(jobData);
+      const workOrderService = serviceFactory.getWorkOrderService();
+      const result = await workOrderService.getWorkOrdersByWorker(user.id);
+
+      if (result.success && result.data) {
+        // Find active work order
+        const activeWO = result.data.find(wo =>
+          ['assigned', 'checked_in', 'checked_out'].includes(wo.status)
+        );
+
+        setWorkOrder(activeWO || null);
+        setJob(activeWO?.job || null);
       } else {
+        setWorkOrder(null);
         setJob(null);
       }
     } catch (error) {
